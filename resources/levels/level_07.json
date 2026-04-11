@@ -1,0 +1,80 @@
+{
+  "levelNum": 7,
+  "act": 3,
+  "timeLimit": 90,
+  "blockBudget": 12,
+  "spawnPoint": {
+    "x": 60,
+    "y": 700
+  },
+  "portal": {
+    "x": 940,
+    "y": 200,
+    "w": 48,
+    "h": 80
+  },
+  "platforms": [
+    {"type": "BRICK", "x": 0, "y": 740},
+    {"type": "BRICK", "x": 32, "y": 740},
+    {"type": "BRICK", "x": 64, "y": 740},
+    {"type": "BRICK", "x": 96, "y": 740},
+    {"type": "BRICK", "x": 128, "y": 740},
+    {"type": "BRICK", "x": 200, "y": 660},
+    {"type": "BRICK", "x": 232, "y": 660},
+    {"type": "BRICK", "x": 400, "y": 540},
+    {"type": "BRICK", "x": 432, "y": 540},
+    {"type": "BRICK", "x": 600, "y": 420},
+    {"type": "BRICK", "x": 632, "y": 420},
+    {"type": "BRICK", "x": 800, "y": 260},
+    {"type": "BRICK", "x": 832, "y": 260},
+    {"type": "BRICK", "x": 864, "y": 260},
+    {"type": "BRICK", "x": 896, "y": 260},
+    {"type": "BRICK", "x": 928, "y": 260},
+    {"type": "INVISIBLE", "x": 300, "y": 580},
+    {"type": "INVISIBLE", "x": 500, "y": 460},
+    {"type": "INVISIBLE", "x": 720, "y": 340},
+    {"type": "WALL", "x": 180, "y": 596, "w": 16, "h": 80},
+    {"type": "BRICK", "x": 200, "y": 480},
+    {"type": "BRICK", "x": 232, "y": 480},
+    {"type": "BRICK", "x": 264, "y": 480}
+  ],
+  "fragments": [
+    {
+      "id": "07-A",
+      "x": 220,
+      "y": 480,
+      "bodyText": "Entry 079. I have started talking to myself in the logs. The apprentice used to read these. I do not know if they still do. I am writing them anyway. It is the only way I know to think out loud.",
+      "unlock": "NONE"
+    },
+    {
+      "id": "07-B",
+      "x": 510,
+      "y": 420,
+      "bodyText": "Entry 083. Dodge. That is what I should have done. When the corruption started — when the cores began to turn — I should have moved. Instead I stayed and tried to hold things together with intention alone. Intention is not enough when the architecture is failing. You have to move.",
+      "unlock": "DODGE"
+    }
+  ],
+  "crawlers": [],
+  "checkpoints": [
+    {"x": 400, "y": 540},
+    {"x": 720, "y": 340}
+  ],
+  "specialTriggers": [
+    {
+      "type": "REVEAL_PASSAGE",
+      "x": 180,
+      "y": 500,
+      "params": {
+        "holdDuration": 3000
+      }
+    },
+    {
+      "type": "SHADOW_SPAWN",
+      "x": 600,
+      "y": 400,
+      "params": {
+        "darknessDuration": 5000
+      }
+    }
+  ]
+}

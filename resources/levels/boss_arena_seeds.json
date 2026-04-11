@@ -1,0 +1,10 @@
+{
+  "description": "Pre-tested seeds for boss arena procedural generation. Game picks one at random each run.",
+  "validationCriteria": {
+    "minWallSegments": 4,
+    "minOverhangs": 3,
+    "minElevatedPlatforms": 2,
+    "allCoresAccessible": true
+  },
+  "seeds": [8472916, 3917284, 6250391, 7193845, 2840563, 9371024, 4628751, 1095837, 5763920, 8031476]
+}

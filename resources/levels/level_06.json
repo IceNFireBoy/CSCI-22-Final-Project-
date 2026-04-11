@@ -1,0 +1,111 @@
+{
+  "levelNum": 6,
+  "act": 2,
+  "timeLimit": 0,
+  "blockBudget": 0,
+  "spawnPoint": {
+    "x": 60,
+    "y": 700
+  },
+  "portal": {
+    "x": 940,
+    "y": 80,
+    "w": 48,
+    "h": 80
+  },
+  "platforms": [
+    {"type": "BRICK", "x": 0, "y": 740},
+    {"type": "BRICK", "x": 32, "y": 740},
+    {"type": "BRICK", "x": 64, "y": 740},
+    {"type": "BRICK", "x": 96, "y": 740},
+    {"type": "BRICK", "x": 128, "y": 740},
+    {"type": "BRICK", "x": 160, "y": 680},
+    {"type": "BRICK", "x": 192, "y": 680},
+    {"type": "BRICK", "x": 220, "y": 620},
+    {"type": "BRICK", "x": 252, "y": 620},
+    {"type": "BRICK", "x": 280, "y": 560},
+    {"type": "BRICK", "x": 312, "y": 560},
+    {"type": "BRICK", "x": 350, "y": 500},
+    {"type": "BRICK", "x": 382, "y": 500},
+    {"type": "BRICK", "x": 414, "y": 500},
+    {"type": "BRICK", "x": 446, "y": 500},
+    {"type": "BRICK", "x": 478, "y": 500},
+    {"type": "BRICK", "x": 510, "y": 500},
+    {"type": "BRICK", "x": 540, "y": 440},
+    {"type": "BRICK", "x": 572, "y": 440},
+    {"type": "BRICK", "x": 600, "y": 380},
+    {"type": "BRICK", "x": 632, "y": 380},
+    {"type": "BRICK", "x": 660, "y": 320},
+    {"type": "BRICK", "x": 692, "y": 320},
+    {"type": "BRICK", "x": 724, "y": 320},
+    {"type": "BRICK", "x": 100, "y": 260},
+    {"type": "BRICK", "x": 132, "y": 260},
+    {"type": "BRICK", "x": 164, "y": 260},
+    {"type": "BRICK", "x": 200, "y": 200},
+    {"type": "BRICK", "x": 232, "y": 200},
+    {"type": "BRICK", "x": 264, "y": 200},
+    {"type": "BRICK", "x": 60, "y": 200},
+    {"type": "BRICK", "x": 92, "y": 200},
+    {"type": "BRICK", "x": 300, "y": 260},
+    {"type": "BRICK", "x": 332, "y": 260},
+    {"type": "BRICK", "x": 364, "y": 260},
+    {"type": "BRICK", "x": 400, "y": 200},
+    {"type": "BRICK", "x": 432, "y": 200},
+    {"type": "BRICK", "x": 464, "y": 200},
+    {"type": "BRICK", "x": 500, "y": 160},
+    {"type": "BRICK", "x": 532, "y": 160},
+    {"type": "BRICK", "x": 564, "y": 160},
+    {"type": "BRICK", "x": 600, "y": 120},
+    {"type": "BRICK", "x": 632, "y": 120},
+    {"type": "BRICK", "x": 664, "y": 120},
+    {"type": "BRICK", "x": 696, "y": 120},
+    {"type": "BRICK", "x": 750, "y": 120},
+    {"type": "BRICK", "x": 782, "y": 120},
+    {"type": "BRICK", "x": 814, "y": 120},
+    {"type": "BRICK", "x": 846, "y": 120},
+    {"type": "BRICK", "x": 878, "y": 120},
+    {"type": "BRICK", "x": 910, "y": 120},
+    {"type": "BRICK", "x": 942, "y": 120}
+  ],
+  "fragments": [
+    {
+      "id": "05-B",
+      "x": 700,
+      "y": 400,
+      "bodyText": "Entry 067. I understand now why the wanderer's light is mine. I put it there. Not intentionally — not in the way I built the platforms or the portals. I put it there the way a person puts something in a place they forgot they had. The wanderer is not a stranger in my simulation. They are its last memory of what I was before I started to change.",
+      "unlock": "NONE"
+    },
+    {
+      "id": "06-A",
+      "x": 100,
+      "y": 200,
+      "bodyText": "Entry 071. The apprentice knows. They figured it out without being told. I watched them choose to keep building platforms even after they understood what the cores are. That choice is either the bravest thing I have seen in this simulation or the most naïve. I have not decided which.",
+      "unlock": "NONE"
+    }
+  ],
+  "crawlers": [
+    {"x": 400, "y": 500, "initialState": "DORMANT"},
+    {"x": 600, "y": 380, "initialState": "DORMANT"},
+    {"x": 200, "y": 260, "initialState": "DORMANT"},
+    {"x": 800, "y": 120, "initialState": "DORMANT"}
+  ],
+  "checkpoints": [],
+  "specialTriggers": [
+    {
+      "type": "LIGHT_HOLD_REQUIRED",
+      "x": 100,
+      "y": 200,
+      "params": {
+        "duration": 8000
+      }
+    },
+    {
+      "type": "BEAM_UNLOCK",
+      "x": 940,
+      "y": 80,
+      "params": {
+        "beamDuration": 3000
+      }
+    }
+  ]
+}

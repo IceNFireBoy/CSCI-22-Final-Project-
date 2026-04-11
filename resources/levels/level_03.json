@@ -1,0 +1,63 @@
+{
+  "levelNum": 3,
+  "act": 1,
+  "timeLimit": 90,
+  "blockBudget": 12,
+  "spawnPoint": {
+    "x": 60,
+    "y": 652
+  },
+  "portal": {
+    "x": 930,
+    "y": 150,
+    "w": 48,
+    "h": 80
+  },
+  "platforms": [
+    { "type": "BRICK", "x": 0, "y": 740 },
+    { "type": "BRICK", "x": 32, "y": 740 },
+    { "type": "BRICK", "x": 64, "y": 740 },
+    { "type": "BRICK", "x": 96, "y": 740 },
+    { "type": "BRICK", "x": 128, "y": 740 },
+
+    { "type": "WALL", "x": 500, "y": 496, "w": 16, "h": 64 },
+
+    { "type": "BRICK", "x": 340, "y": 580 },
+    { "type": "BRICK", "x": 372, "y": 580 },
+
+    { "type": "BRICK", "x": 640, "y": 420 },
+    { "type": "BRICK", "x": 672, "y": 420 },
+
+    { "type": "BRICK", "x": 910, "y": 230 },
+    { "type": "BRICK", "x": 942, "y": 230 }
+  ],
+  "fragments": [
+    {
+      "id": "03-A",
+      "x": 650,
+      "y": 400,
+      "bodyText": "Entry 031. The simulation is larger than I intended. I built its edges first and then filled inward. There are rooms I have never entered. I wonder what they contain now that I am no longer the only one building.",
+      "unlock": "NONE"
+    },
+    {
+      "id": "03-B",
+      "x": 350,
+      "y": 560,
+      "bodyText": "Entry 038. Something destroyed one of the inner walls today. Not with tools. With force. I checked the logs. It was not the apprentice. The patient thing at the edge of the simulation is no longer patient.",
+      "unlock": "MELEE"
+    }
+  ],
+  "crawlers": [],
+  "checkpoints": [],
+  "specialTriggers": [
+    {
+      "type": "MELEE_TUTORIAL",
+      "x": 500,
+      "y": 600,
+      "params": {
+        "triggerRadius": 60,
+        "message": "Press J to strike"
+      }
+    }
+  ]
+}
