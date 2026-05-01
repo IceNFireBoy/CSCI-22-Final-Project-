@@ -1,76 +1,89 @@
 /**
- * Acts as the static dialogue and narration database for all Lumen Architect cutscenes,
- * returning the ordered array of text lines associated with any
- * {@link rendering.CutsceneRenderer.CutsceneID}. Keeping script data in this dedicated
- * class separates story content from rendering logic and makes it straightforward to
- * edit or localise dialogue without touching the renderer.
+ * Script data for every cutscene keyed by {@link CutsceneID}. Each script is an
+ * ordered array of narrative lines that the cutscene renderer will display one panel
+ * at a time. Keeping the story data here decouples authoring from rendering — the
+ * renderer simply calls {@link #getLines(CutsceneID)} and does not need to understand
+ * the story structure, narrative sequence, or line count.
+ *
+ * <p>Architecture role: {@code CutsceneScript} is a pure data-provider class with
+ * no mutable state. A single instance is held by {@link CutsceneRenderer} (or
+ * equivalent), which calls {@link #getLines(CutsceneID)} when a cutscene begins to
+ * obtain the ordered text panels. The renderer then advances through the array at its
+ * own pace (click-to-continue, timed display, etc.) without referencing this class
+ * again until the next cutscene starts.</p>
+ *
+ * <p>The script data lives in a static initialiser block rather than in a switch
+ * statement or map literal to keep the authoring format compact: one line of code
+ * per script line. Adding a new cutscene requires only a matching {@link CutsceneID}
+ * constant and a new {@code SCRIPTS[CutsceneID.X.ordinal()] = ...} entry in the
+ * static block — no changes to the renderer or any other class are needed.</p>
  *
  * @author [YOUR NAME]
  * @id [YOUR ID]
- * @date 2026-03-21
- * @certification I certify that this code is my own work and has not been copied from
- *                any other source, in whole or in part.
+ * @date 2026-04-17
+ * @certification I certify that this code is my own work and has not been copied
+ *                from any other source, in whole or in part.
  */
+public class CutsceneScript { // Data-only class; no mutable state; all script content is in the static SCRIPTS array
 
+    // -------------------------------------------------------------------------
+    // Static script table
+    // -------------------------------------------------------------------------
 
-public class CutsceneScript {
+    /**
+     * Array of script-line arrays, one per {@link CutsceneID} ordinal. Indexed by
+     * {@link CutsceneID#ordinal()} so the lookup in {@link #getLines(CutsceneID)} is
+     * O(1) with no map overhead. The array is sized to hold one entry per
+     * {@code CutsceneID} value; unregistered slots contain {@code null}, which
+     * {@link #getLines(CutsceneID)} converts to an empty array.
+     */
+    private static final String[][] SCRIPTS = new String[CutsceneID.values().length][]; // Statically-sized String[][] indexed by CutsceneID.ordinal(); null entries become empty arrays
 
-    private static final String[][] SCRIPTS = new String[CutsceneID.values().length][];
-
-    static {
-        SCRIPTS[CutsceneID.SIGNAL.ordinal()] = new String[]{
-            "The simulation has been dark for a long time.",
-            "It is not empty.",
-            "It is waiting."
+    static { // Static initialiser: populates SCRIPTS once when the class is loaded; runs before any constructor or getLines() call
+        SCRIPTS[CutsceneID.SIGNAL.ordinal()] = new String[]{ // SIGNAL: game-opening cutscene; sets the mystery tone before any gameplay
+            "A single point of light, somewhere in the dark.",   // First panel: establishes the isolation motif
+            "Someone is sending a signal."                        // Second panel: hints at the cooperative relationship before the players know each other's roles
         };
-        SCRIPTS[CutsceneID.FIRST_LIGHT.ordinal()] = new String[]{
-            "The light inside you is not only for traversal.",
-            "It was always meant to be returned."
+        SCRIPTS[CutsceneID.FIRST_LIGHT.ordinal()] = new String[]{ // FIRST_LIGHT: plays when the Apprentice activates the lantern for the first time in Act 1
+            "The Apprentice lifts the lantern for the first time.",  // First panel: role-confirmation moment for the Apprentice player
+            "The world responds."                                     // Second panel: short, punchy line — the world reacts to light, establishing the game's core mechanic
         };
-        SCRIPTS[CutsceneID.EDGE_OF_LIGHT.ordinal()] = new String[]{
-            "One more step.",
-            "Then everything changes."
+        SCRIPTS[CutsceneID.EDGE_OF_LIGHT.ordinal()] = new String[]{ // EDGE_OF_LIGHT: plays when the Wanderer first ventures to the boundary of the light radius
+            "Beyond the lantern's reach, the dark crawls."           // Single panel: atmospheric warning that enemies exist in the dark
         };
-        SCRIPTS[CutsceneID.RETURNED.ordinal()] = new String[]{
-            "You pushed back.",
-            "Remember this."
+        SCRIPTS[CutsceneID.RETURNED.ordinal()] = new String[]{ // RETURNED: plays when the Wanderer re-enters the light after surviving a dark zone
+            "The Wanderer steps back into the circle of light — alive." // Single panel: relief beat; acknowledges the cooperative success
         };
-        SCRIPTS[CutsceneID.LAST_COOPERATIVE_ACT.ordinal()] = new String[]{
-            "One last time.",
-            "Together."
+        SCRIPTS[CutsceneID.LAST_COOPERATIVE_ACT.ordinal()] = new String[]{ // LAST_COOPERATIVE_ACT: plays at end of Act 3, just before the boss — the last moment of pure cooperation
+            "One last bridge, built together.",                       // First panel: references the Apprentice's block-placement role
+            "After this, only one of them can be right."             // Second panel: foreshadows the boss mechanic where the two players have diverging victory conditions
         };
-        SCRIPTS[CutsceneID.ARCHITECT_SPEAKS.ordinal()] = new String[]{
-            "YOU BUILT WITH ME ONCE.",
-            "YOU WILL FINISH THIS WITH ME NOW.",
-            "THERE IS NO OTHER WAY THE SIMULATION ENDS."
+        SCRIPTS[CutsceneID.ARCHITECT_SPEAKS.ordinal()] = new String[]{ // ARCHITECT_SPEAKS: boss intro cutscene; the antagonist reveals their worldview
+            "The Architect finally speaks:",                         // First panel: dramatic pause before the villain's dialogue
+            "\"You were never the hero. You were the variable.\""   // Second panel: the villain's line; in quotes to distinguish spoken dialogue from narration
         };
-        SCRIPTS[CutsceneID.CORE_1_DESTROYED.ordinal()] = new String[]{
-            "The grip loosens.",
-            "For now."
+        SCRIPTS[CutsceneID.CORE_1_DESTROYED.ordinal()] = new String[]{ // CORE_1_DESTROYED: plays after the first boss Core is destroyed; mid-boss narrative beat
+            "A Core shatters. The Architect feels it."              // Single panel: brief; does not interrupt boss action for long
         };
-        SCRIPTS[CutsceneID.CORE_2_DESTROYED.ordinal()] = new String[]{
-            "Half of everything \u2014 gone.",
-            "Keep going."
+        SCRIPTS[CutsceneID.CORE_2_DESTROYED.ordinal()] = new String[]{ // CORE_2_DESTROYED: plays after the second Core; escalating tension
+            "Another Core gone. The override tightens."             // Single panel: "override" references the architectOverride mechanic that escalates difficulty
         };
-        SCRIPTS[CutsceneID.CORE_3_DESTROYED.ordinal()] = new String[]{
-            "It is losing its hold.",
-            "One remains."
+        SCRIPTS[CutsceneID.CORE_3_DESTROYED.ordinal()] = new String[]{ // CORE_3_DESTROYED: plays after the third Core; near-victory mood
+            "Three down. The dark is loud now."                     // Single panel: "the dark is loud" — synesthetic language reflecting the boss's increasing attack intensity
         };
-        SCRIPTS[CutsceneID.CORE_4_DESTROYED.ordinal()] = new String[]{
-            "",
-            ""
+        SCRIPTS[CutsceneID.CORE_4_DESTROYED.ordinal()] = new String[]{ // CORE_4_DESTROYED: plays after the final Core; boss-defeated beat
+            "The last Core falls.",                                  // First panel: simple statement of fact — the boss objective is complete
+            "The Wanderer stands in silence."                       // Second panel: quiet aftermath; no triumphant fanfare, only silence
         };
-        SCRIPTS[CutsceneID.WANDERER_VICTORY.ordinal()] = new String[]{
-            "The light is yours.",
-            "It always was."
+        SCRIPTS[CutsceneID.WANDERER_VICTORY.ordinal()] = new String[]{ // WANDERER_VICTORY: shown on the Wanderer win ending; philosophical resolution
+            "The dark does not end. It just lets you walk through it." // Single panel: the victory condition is not defeating darkness but learning to coexist with it
         };
-        SCRIPTS[CutsceneID.HOME.ordinal()] = new String[]{
-            "The simulation has been dark for a long time.",
-            "It remembers, now, how to be otherwise."
+        SCRIPTS[CutsceneID.HOME.ordinal()] = new String[]{ // HOME: cooperative victory epilogue; both players win together
+            "A door. A light. Home."                                // Single panel: three short nouns — the simplest possible statement of arrival and safety
         };
-        SCRIPTS[CutsceneID.ARCHITECT_VICTORY.ordinal()] = new String[]{
-            "The light inside you was always supposed to lead you home.",
-            "Perhaps next time."
+        SCRIPTS[CutsceneID.ARCHITECT_VICTORY.ordinal()] = new String[]{ // ARCHITECT_VICTORY: Apprentice win ending; the Architect's perspective prevails
+            "The Apprentice puts down the lantern.",                 // First panel: the Apprentice relinquishes the tool of their role
+            "The world becomes what it was meant to be."           // Second panel: the Architect's victory condition — the world shaped by the Apprentice's design
         };
     }
 
@@ -79,30 +92,43 @@ public class CutsceneScript {
     // -------------------------------------------------------------------------
 
     /**
-     * Constructs a {@code CutsceneScript} instance. This class is effectively a
-     * look-up table; no mutable state is maintained between calls.
+     * Constructs a {@code CutsceneScript} instance. This class has no instance-level
+     * state; the constructor exists only so callers can instantiate it via
+     * {@code new CutsceneScript()} rather than using static access, keeping the API
+     * consistent with other service objects in the project.
      */
-    public CutsceneScript() {
-        // Stateless look-up table — no fields to initialise.
-    }
+    public CutsceneScript() {} // No-arg constructor; class is data-only; all script content is in the static SCRIPTS array
 
     // -------------------------------------------------------------------------
-    // Script retrieval
+    // Script lookup
     // -------------------------------------------------------------------------
 
     /**
-     * Returns the ordered array of dialogue and narration lines for the specified
-     * cutscene. Each element in the returned array represents one text panel displayed
-     * by {@link rendering.CutsceneRenderer}; panels advance automatically based on
-     * the renderer's state machine timing.
+     * Returns the ordered script lines for the given cutscene identifier. The renderer
+     * advances panels based on its own timing logic; this method provides the data
+     * and never returns {@code null} — unregistered or null IDs yield an empty array
+     * so callers can safely iterate the result without null-checking.
      *
-     * @param id the {@link CutsceneID} whose script lines are requested; must not be
-     *           {@code null}
-     * @return a non-null array of dialogue line strings in display order; may be empty
-     *         but never {@code null}
+     * <p>Architecture role: Called by {@link CutsceneRenderer} (or the equivalent
+     * cutscene-display subsystem in {@link GameCanvas}) at the moment a cutscene
+     * begins. The returned array is treated as immutable by the renderer — it reads
+     * entries sequentially and stores an index, never modifying the array itself.</p>
+     *
+     * <p>Interaction: The {@link CutsceneID} value that triggers this call is
+     * determined by the cutscene event dispatcher in {@link GameStarter}: when a
+     * {@link Protocol#CUTSCENE_START} message arrives (carrying the {@code CutsceneID}
+     * name), {@link GameStarter} calls
+     * {@code CutsceneRenderer.startCutscene(CutsceneID.valueOf(name))} which in turn
+     * calls this method to load the script.</p>
+     *
+     * @param id the cutscene identifier; {@code null} is safe and returns an empty array
+     * @return the ordered lines to display, in story sequence; never {@code null};
+     *         an empty array if {@code id} is {@code null} or no script is registered
+     *         for the given ID
      */
-    public String[] getLines(CutsceneID id) {
-        String[] lines = SCRIPTS[id.ordinal()];
-        return (lines != null) ? lines : new String[0];
+    public String[] getLines(CutsceneID id) {              // Primary API: returns script lines for a given cutscene; safe for null input
+        if (id == null) return new String[0];              // Null guard: return empty array so callers do not need to handle null results
+        String[] lines = SCRIPTS[id.ordinal()];            // Look up by ordinal index: O(1) array access into the static script table
+        return lines != null ? lines : new String[0];      // Null-coalesce: unregistered CutsceneID slots in SCRIPTS are null; return empty array instead
     }
 }

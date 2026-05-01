@@ -1,146 +1,132 @@
 /**
- * Holds the mutable runtime state of the current level in Lumen Architect, including
- * which act is active, how much block budget the Apprentice has remaining, the
- * countdown timer, and whether the timer is currently running. All game-loop and
- * server components share a single {@code LevelState} instance so that state changes
- * made in one subsystem are immediately visible to the others.
- *
- * @author [YOUR NAME]
- * @id [YOUR ID]
- * @date 2026-03-21
- * @certification I certify that this code is my own work and has not been copied from
- *                any other source, in whole or in part.
+ Shared mutable state for the active level, including current act, block budget,
+ countdown timer, and remote player state. All game-loop subsystems (GameStarter,
+ GameCanvas, InputRouter, NetworkIO) read/write fields directly. Enum GamePhase
+ drives renderer and input-routing selection each frame.
+
+ Remote-state fields (remote*) are populated from incoming network packets by
+ GameStarter.handleMessage() and read by GameCanvas to draw partner avatars and
+ light sources.
  */
 
-public class LevelState {
+public class LevelState { // Plain mutable state bag; public fields allow direct read/write from all subsystems without verbose getters/setters
 
     // =========================================================================
     // Enum — GamePhase
     // =========================================================================
 
-    /**
-     * Represents the high-level phase the game session is currently in. The phase
-     * drives which renderer, update logic, and input bindings are active on any given
-     * frame.
-     */
-    public enum GamePhase {
+    // High-level game phase; drives renderer and input routing each frame
+    public enum GamePhase { // Finite set of high-level game states; drives renderer selection and input routing
 
-        /** The title and lobby screen displayed before a session begins. */
-        MENU,
-
-        /**
-         * The first platforming act; introduces basic platforms, a single DarkCrawler,
-         * and the first lore fragments.
-         */
-        ACT1,
-
-        /**
-         * The second platforming act; introduces hazard combinations and additional
-         * lore fragments that unlock new Wanderer abilities.
-         */
-        ACT2,
-
-        /**
-         * The third platforming act; the most complex platform layout before the boss,
-         * with all Core types present.
-         */
-        ACT3,
-
-        /**
-         * The boss arena encounter; the Wanderer must destroy all four Cores while the
-         * Apprentice escalates defences.
-         */
-        BOSS,
-
-        /**
-         * A short linear gauntlet following the boss fight, leading to the final
-         * victory or defeat determination.
-         */
-        FINAL_CORRIDOR,
-
-        /**
-         * A scripted narrative sequence; normal gameplay is suspended and
-         * {@link rendering.CutsceneRenderer} takes over rendering.
-         */
-        CUTSCENE,
-
-        /** Gesture calibration screen before the game begins. */
-        CALIBRATION
+        MENU,             // Startup title/lobby screen
+        LOBBY,            // Role-selection lobby
+        ACT1,             // First platforming act
+        ACT2,             // Second platforming act
+        ACT3,             // Third platforming act
+        BOSS,             // Boss arena encounter
+        FINAL_CORRIDOR,   // Post-boss gauntlet
+        CUTSCENE,         // Narrative interlude
+        PAUSED_WAITING,   // Reconnect wait state
+        END_SCREEN        // Final victory/defeat screen
     }
 
     // -------------------------------------------------------------------------
     // Fields
     // -------------------------------------------------------------------------
 
-    /**
-     * The one-based index of the level currently loaded. Corresponds to the argument
-     * passed to {@link LevelLoader#loadLevel(int)}.
-     */
-    public int currentLevel;
+    public int currentLevel; // 1-based level index; read by GameCanvas for HUD display
 
-    /**
-     * The number of block-placement tokens the Apprentice has remaining for this
-     * phase. Decremented by {@link entities.Platform#getBudgetCost()} each time the
-     * Apprentice places a platform.
-     */
-    public int blockBudget;
+    public int blockBudget; // Placement token allowance; decremented by block placement, reset per level
 
-    /**
-     * The number of milliseconds remaining on the current phase countdown timer.
-     * Decremented each game tick while {@link #timerActive} is {@code true}. When
-     * this reaches zero the server evaluates the victory condition.
-     */
-    public long timeRemainingMs;
+    public long timeRemainingMs; // Countdown in milliseconds; decremented 16 ms/tick when timerActive is true
 
-    /**
-     * Whether the countdown timer is currently running. Set to {@code false} during
-     * cutscenes, the pause menu, and the pre-game lobby.
-     */
-    public boolean timerActive;
+    public boolean timerActive; // Timer running flag; false during lobby, cutscenes, pause
 
-    /**
-     * The active game phase, which determines which renderers and update pipelines
-     * are engaged on each frame.
-     */
-    public GamePhase currentPhase;
+    public GamePhase currentPhase; // Active phase; drives renderer and input dispatch every frame
 
-    /**
-     * Server-authoritative health snapshot for all four Cores. Updated each time the
-     * client receives a {@link server.NetworkProtocol.ServerStatePacket} containing a
-     * {@link server.NetworkProtocol.CoreStatePacket}. Index 0–3 match the ordering used
-     * in {@link server.GameServer#getCoreHealth()}.
-     */
-    public int[] coreHealth = {3, 3, 3, 3};
+    public int[] coreHealth = {3, 3, 3, 3}; // HP of each Core (index 0-3); server-authoritative, updated from network packets
+
+    // -------------------------------------------------------------------------
+    // Remote Wanderer state (Apprentice client only)
+    // -------------------------------------------------------------------------
+
+    public float remoteWandererX = -1; // Remote Wanderer x; -1 = not yet received from network
+
+    public float remoteWandererY = -1; // Remote Wanderer y; -1 = not yet received from network
+
+    public String remoteWandererState = "idle"; // Animation state for ghost sprite; defaults to idle until network packet arrives
+
+    public float remoteWandererHealth = 5; // Remote health (0-5); modulates ghost tint color
+
+    // -------------------------------------------------------------------------
+    // Remote light-source state (Wanderer client only)
+    // -------------------------------------------------------------------------
+
+    public int remoteLightX = 512; // Canvas-space light x; defaults to center until network packet arrives
+
+    public int remoteLightY = 384; // Canvas-space light y; defaults to center until network packet arrives
+
+    public int remoteLightRadius = 180; // Light radius (px); range 20-180; defaults to max
+
+    private boolean lightActive = true; // Light on/off toggle; accessed via setters
+
+    // P9.3' — crawlerStates removed alongside DarkCrawler. The new hazard suite
+    // (CorruptedSpike / CorruptedWall / PhantomBlock / LightLockedMover) is
+    // locally driven; no per-entity sync state on the wire.
 
     // -------------------------------------------------------------------------
     // Constructor
     // -------------------------------------------------------------------------
 
-    /**
-     * Constructs a {@code LevelState} initialised to the default pre-session values:
-     * level 1, full block budget, a standard timer value, timer paused, and phase set
-     * to {@link GamePhase#MENU}.
-     */
-    public LevelState() {
-        this.currentLevel = 1;
-        this.blockBudget = 20;
-        this.timeRemainingMs = 300_000L; // 5 minutes default
-        this.timerActive = false;
-        this.currentPhase = GamePhase.MENU;
+    public LevelState() {                              // Default constructor: initialise to safe pre-session values
+        this.currentLevel = 1;                         // Start at level 1; LevelLoader.loadLevel(1) will be called on session start
+        this.blockBudget = 20;                         // Default 20 placement tokens; reset by GameStarter.loadLevel() per-level spec
+        this.timeRemainingMs = 300_000L;               // 5 minutes (300,000 ms) default timer; overridden by per-level timer specs
+        this.timerActive = false;                      // Timer starts paused; GameStarter.resumeTimer() starts it after level load completes
+        this.currentPhase = GamePhase.MENU;            // Start in MENU phase; transitions to LOBBY once the network connection is established
     }
 
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
-    /**
-     * Advances the level state to the next logical phase in the campaign sequence.
-     * Transitions follow the order: MENU → ACT1 → ACT2 → ACT3 → BOSS →
-     * FINAL_CORRIDOR. Calling this when the phase is already {@link GamePhase#FINAL_CORRIDOR}
-     * or a terminal state has no effect. This stub will be fully implemented in a
-     * later phase when inter-act transition logic is complete.
-     */
-    public void advancePhase() {
-        // Stub — phase transition logic to be implemented in a later phase.
+    // Placeholder for act-to-act transition; to be implemented in later phase
+    public void advancePhase() { }
+
+
+    // -------------------------------------------------------------------------
+    // Remote-state setters (called from GameStarter.handleMessage)
+    // -------------------------------------------------------------------------
+
+    public void setWandererPosition(float x, float y) { // Called on PLAYER_STATE packets; updates ghost position
+        this.remoteWandererX = x;                        // Store remote x; read by GameCanvas to position the partner ghost sprite
+        this.remoteWandererY = y;                        // Store remote y; read by GameCanvas to position the partner ghost sprite
     }
+
+    public void setWandererState(String state) { // Called on PLAYER_STATE; null defaults to idle
+        this.remoteWandererState = (state != null) ? state : "idle"; // Normalise null to "idle" so ghost renderer always has a valid non-null key
+    }
+
+    public void setLightPosition(int x, int y) { // Called on LIGHT_POS packets; updates light cursor position
+        this.remoteLightX = x;                   // Store new canvas-space light x; read by LightRenderer on the next frame
+        this.remoteLightY = y;                   // Store new canvas-space light y; read by LightRenderer on the next frame
+    }
+
+    public void setLightRadius(int r) { // Called on LIGHT_RADIUS packets; updates light radius
+        this.remoteLightRadius = r;     // Store new radius; read by LightRenderer to compute the mask cutout circle size
+    }
+
+    public int getLightX() { return remoteLightX; } // Read light x position
+
+    public int getLightY() { return remoteLightY; } // Read light y position
+
+    public int getLightRadius() { return remoteLightRadius; } // Read light radius
+
+    public void setLightActive(boolean b) { lightActive = b; } // Set light on/off
+
+    public boolean getLightActive() { return lightActive; } // Read light active state
+
+    public void setWandererHealth(int h) { remoteWandererHealth = h; } // Called on PLAYER_STATE; modulates ghost tint
+
+    // P9.3' — updateCrawler / getCrawlerState removed alongside DarkCrawler.
 }

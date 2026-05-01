@@ -1,253 +1,147 @@
 /**
- * Represents a single ranged shot fired by the Wanderer in Lumen Architect, tracking
- * its own velocity, damage value, and the distance it has traveled so far. When the
- * cumulative traveled distance exceeds the configured maximum range the projectile
- * deactivates itself automatically, preventing it from persisting indefinitely across
- * the level.
- *
- * @author [YOUR NAME]
- * @id [YOUR ID]
- * @date 2026-03-21
- * @certification I certify that this code is my own work and has not been copied from
- *                any other source, in whole or in part.
+ Single ranged shot tracking velocity, damage, and cumulative distance. Deactivates
+ when distance exceeds maxRange. Manages range/platform collisions; target collision
+ against Hazard/Core handled by CollisionDetector.checkProjectileTarget(). Rendered
+ as 8×8 golden ellipse with trailing light streak; trail direction from velX sign.
  */
 
-import java.awt.AlphaComposite;
-import java.awt.Color;
-import java.awt.Composite;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.util.List;
+import java.awt.AlphaComposite; // Provides SRC_OVER compositing for the semi-transparent trail circles
+import java.awt.Color;           // AWT colour for the gold projectile body and trail (#f0cc7a)
+import java.awt.Composite;       // Interface type; saved before and restored after trail rendering
+import java.awt.Graphics2D;      // 2D rendering context; used for fillOval on the body and trail circles
+import java.awt.Rectangle;       // AWT rectangle for platform-collision bounds tests in update()
+import java.util.List;           // List interface for the platforms reference; iterated in update() for wall-collision checks
 
-public class Projectile extends GameElement {
+public class Projectile extends GameElement { // Extends GameElement for entity-list participation; active flag managed by range/collision deactivation
 
     // -------------------------------------------------------------------------
     // Fields
     // -------------------------------------------------------------------------
 
-    /** The horizontal velocity component of this projectile in pixels per millisecond. */
-    private float velX;
+    private float velX; // Horizontal velocity px/tick; +right/-left; used to advance x and compute trail direction
 
-    /** The vertical velocity component of this projectile in pixels per millisecond. */
-    private float velY;
+    private float velY; // Vertical velocity px/tick; +down/-up; 0 for flat shots
 
-    /** The amount of damage this projectile deals to any entity it strikes. */
-    private int damage;
+    private int damage; // Damage on contact; read by CollisionDetector.checkProjectileTarget()
 
-    /**
-     * The cumulative pixel distance this projectile has traveled since it was created.
-     * Used in conjunction with {@link #maxRange} to determine when to deactivate.
-     */
-    private int traveledDistance;
+    private int traveledDistance; // Cumulative horizontal pixels traveled; compared to maxRange each tick for auto-deactivation
 
-    /**
-     * The maximum pixel distance this projectile may travel before it is automatically
-     * deactivated and removed from play.
-     */
-    private int maxRange;
+    private int maxRange; // Maximum travel distance before auto-deactivation (typically 300-400 px)
 
-    /**
-     * Whether this projectile was fired by the player ({@code true}) or by a
-     * future boss mechanic ({@code false}).
-     */
-    private boolean isFromPlayer;
+    private boolean isFromPlayer; // Origin flag: true = player; false = boss-origin; checked by Shield.update() for interception
 
-    /** Reference to the platform list for tile collision. */
-    private List<Platform> platforms;
+    private List<Platform> platforms; // Live platform list; iterated in update() for wall-hit detection; set via setPlatforms()
 
     // -------------------------------------------------------------------------
     // Constructor
     // -------------------------------------------------------------------------
 
-    /**
-     * Constructs a new {@code Projectile} at the given world position with the
-     * specified velocity vector, damage value, maximum travel range, and origin flag.
-     *
-     * @param x            the initial x-coordinate of the projectile's left edge
-     * @param y            the initial y-coordinate of the projectile's top edge
-     * @param velX         the horizontal velocity in pixels per tick
-     * @param velY         the vertical velocity in pixels per tick
-     * @param damage       the damage dealt on contact with a valid target
-     * @param maxRange     the maximum travel distance in pixels before auto-deactivation
-     * @param isFromPlayer {@code true} if this projectile was fired by the Wanderer
-     */
     public Projectile(int x, int y, float velX, float velY, int damage, int maxRange,
-                      boolean isFromPlayer) {
-        super(x, y, 8, 8);
-        this.velX = velX;
-        this.velY = velY;
-        this.damage = damage;
-        this.traveledDistance = 0;
-        this.maxRange = maxRange;
-        this.isFromPlayer = isFromPlayer;
+                      boolean isFromPlayer) {   // Construct projectile with explicit velocity, damage, range, and origin flag
+        super(x, y, 8, 8);                     // Delegate to GameElement: 8×8 AABB at (x,y); active=true by default
+        this.velX = velX;                       // Store horizontal velocity; applied each tick in update()
+        this.velY = velY;                       // Store vertical velocity; applied each tick in update()
+        this.damage = damage;                   // Store damage value; read by CollisionDetector on hit
+        this.traveledDistance = 0;              // Start at zero traveled distance; incremented in update()
+        this.maxRange = maxRange;               // Store maximum range; projectile deactivates when traveledDistance >= maxRange
+        this.isFromPlayer = isFromPlayer;       // Store origin flag; checked by Shield.update() for interception logic
     }
 
-    /**
-     * Constructs a player-fired {@code Projectile} (backward-compatible convenience
-     * constructor that defaults {@code isFromPlayer} to {@code true}).
-     *
-     * @param x        the initial x-coordinate
-     * @param y        the initial y-coordinate
-     * @param velX     the horizontal velocity in pixels per tick
-     * @param velY     the vertical velocity in pixels per tick
-     * @param damage   the damage dealt on contact
-     * @param maxRange the maximum travel distance before auto-deactivation
-     */
-    public Projectile(int x, int y, float velX, float velY, int damage, int maxRange) {
-        this(x, y, velX, velY, damage, maxRange, true);
+    public Projectile(int x, int y, float velX, float velY, int damage, int maxRange) { // Player-fired projectile; defaults isFromPlayer=true
+        this(x, y, velX, velY, damage, maxRange, true);                                  // Delegate: player-fired shot; Shield.update() will intercept based on isFromPlayer=true
     }
 
     // -------------------------------------------------------------------------
     // GameElement overrides
     // -------------------------------------------------------------------------
 
-    /**
-     * Advances this projectile's position by its velocity, accumulates traveled
-     * distance, checks for platform collision, and deactivates when range is
-     * exceeded. Target collision is handled externally by {@link physics.CollisionDetector}.
-     *
-     * @param deltaMs the time elapsed since the last update, in milliseconds
-     */
     @Override
-    public void update(long deltaMs) {
-        if (!active) {
+    public void update(long deltaMs) {         // Advance by velocity; check range expiry and wall collision; target collision handled by CollisionDetector
+        if (!active) {                          // Early exit: already deactivated by a previous hit or range check; no further movement
             return;
         }
 
         // Move by velocity
-        x += (int) velX;
-        y += (int) velY;
+        x += (int) velX;                       // Advance x by the integer part of velX; sub-pixel remainder is truncated (acceptable for small projectiles)
+        y += (int) velY;                       // Advance y by the integer part of velY; typically 0 for horizontal shots
 
         // Accumulate distance
-        traveledDistance += (int) Math.abs(velX);
+        traveledDistance += (int) Math.abs(velX); // Accumulate horizontal pixels traveled; absolute value handles both left and right shots
 
         // Range check
-        if (traveledDistance >= maxRange) {
-            setActive(false);
-            return;
+        if (traveledDistance >= maxRange) {    // Projectile has reached or exceeded its maximum travel range
+            setActive(false);                  // Deactivate: the shot fizzles out at the end of its range
+            return;                            // Return immediately; no further platform checks needed for a deactivated projectile
         }
 
         // Platform collision — deactivate on contact with solid tiles
-        if (platforms != null) {
-            Rectangle projBounds = getBounds();
-            for (Platform pl : platforms) {
-                if (pl.isActive() && pl.isSolid()
-                        && projBounds.intersects(pl.getBounds())) {
-                    setActive(false);
-                    return;
+        if (platforms != null) {               // Only check if a platform list reference was provided via setPlatforms()
+            Rectangle projBounds = getBounds(); // Get this projectile's 8×8 AABB for intersection testing
+            for (Platform pl : platforms) {    // Iterate every platform in the current level
+                if (pl.isActive() && pl.isSolid()                   // Only test active solid platforms; non-solid platforms let projectiles pass through
+                        && projBounds.intersects(pl.getBounds())) { // AABB overlap: projectile has hit this platform tile
+                    setActive(false);                                 // Deactivate: projectile embeds in the wall
+                    return;                                           // Stop checking: the projectile is already gone after the first hit
                 }
             }
         }
     }
 
-    /**
-     * Renders this projectile as a small golden ellipse with a trailing light
-     * streak of three semi-transparent circles behind it.
-     *
-     * @param g the {@link Graphics2D} context to draw on; must not be {@code null}
-     */
     @Override
-    public void render(Graphics2D g) {
-        if (!active) {
+    public void render(Graphics2D g) {             // Draw golden ellipse and trailing light circles; trail direction from velX sign
+        if (!active) {                              // Do not render inactive projectiles (already spent or range-expired)
             return;
         }
 
-        Composite originalComposite = g.getComposite();
+        Composite originalComposite = g.getComposite(); // Save caller's composite before applying per-trail alpha; restored after all drawing
 
         // Main projectile body — filled 8x8 ellipse
-        g.setColor(new Color(0xf0, 0xcc, 0x7a));  // #f0cc7a
-        g.fillOval(x, y, width, height);
+        g.setColor(new Color(0xf0, 0xcc, 0x7a));   // Bright gold colour #f0cc7a; matches glow highlight on Portal and Shield
+        g.fillOval(x, y, width, height);             // Draw the filled 8×8 oval at the projectile's current position
 
         // Trailing light streak — 3 circles behind in opposite direction of travel
-        int trailDir = (velX >= 0) ? -1 : 1;
+        int trailDir = (velX >= 0) ? -1 : 1;        // Trail direction: -1 (left) for right-moving shot; +1 (right) for left-moving shot
 
-        for (int i = 1; i <= 3; i++) {
-            float trailAlpha = 0.5f - (i * 0.15f);
-            if (trailAlpha <= 0f) {
-                trailAlpha = 0.05f;
+        for (int i = 1; i <= 3; i++) {               // Three trail circles: i=1 is closest to the body, i=3 is farthest
+            float trailAlpha = 0.5f - (i * 0.15f);  // Alpha decreases with distance: 0.35 at i=1, 0.20 at i=2, 0.05 at i=3
+            if (trailAlpha <= 0f) {                  // Clamp: if calculated alpha is zero or negative, use minimum visible value
+                trailAlpha = 0.05f;                   // Minimum alpha so the farthest trail circle is just barely visible
             }
-            int trailSize = Math.max(2, 8 - (i * 2));
-            int offsetX = trailDir * i * 4;
+            int trailSize = Math.max(2, 8 - (i * 2)); // Trail size shrinks with distance: 6 at i=1, 4 at i=2, 2 at i=3; floor at 2
+            int offsetX = trailDir * i * 4;           // Horizontal offset: 4 px per step in the trail direction (behind the projectile)
 
             g.setComposite(AlphaComposite.getInstance(
-                    AlphaComposite.SRC_OVER, trailAlpha));
-            g.setColor(new Color(0xf0, 0xcc, 0x7a));
-            int centreX = x + width / 2 + offsetX - trailSize / 2;
-            int centreY = y + height / 2 - trailSize / 2;
-            g.fillOval(centreX, centreY, trailSize, trailSize);
+                    AlphaComposite.SRC_OVER, trailAlpha));          // Apply per-trail alpha via SRC_OVER compositing
+            g.setColor(new Color(0xf0, 0xcc, 0x7a));               // Same gold colour as body for the trail circles
+            int centreX = x + width / 2 + offsetX - trailSize / 2; // Centre-align trail circle: projectile centre + offset - half trail size
+            int centreY = y + height / 2 - trailSize / 2;          // Vertically centre trail on projectile centre
+            g.fillOval(centreX, centreY, trailSize, trailSize);    // Draw filled trail circle at the computed position
         }
 
-        g.setComposite(originalComposite);
+        g.setComposite(originalComposite); // Restore caller's composite mode; prevents alpha leak into subsequent render calls
     }
 
     // -------------------------------------------------------------------------
     // Setters
     // -------------------------------------------------------------------------
 
-    /**
-     * Sets the platform list for tile collision detection.
-     *
-     * @param platforms the current level's platforms; must not be {@code null}
-     */
-    public void setPlatforms(List<Platform> platforms) {
-        this.platforms = platforms;
+    public void setPlatforms(List<Platform> platforms) { // Set platform list for wall-hit detection; must be called before first update
+        this.platforms = platforms;                       // Store reference; iterated in update() each tick while the projectile is active
     }
 
     // -------------------------------------------------------------------------
     // Accessors
     // -------------------------------------------------------------------------
 
-    /**
-     * Returns the horizontal velocity of this projectile.
-     *
-     * @return horizontal velocity in pixels per millisecond
-     */
-    public float getVelX() {
-        return velX;
-    }
+    public float getVelX() { return velX; } // Read accessor; used by render() for trail direction
 
-    /**
-     * Returns the vertical velocity of this projectile.
-     *
-     * @return vertical velocity in pixels per millisecond
-     */
-    public float getVelY() {
-        return velY;
-    }
+    public float getVelY() { return velY; } // Read accessor
 
-    /**
-     * Returns the damage this projectile deals on contact.
-     *
-     * @return the damage value
-     */
-    public int getDamage() {
-        return damage;
-    }
+    public int getDamage() { return damage; } // Read accessor; called by CollisionDetector.checkProjectileTarget()
 
-    /**
-     * Returns the cumulative distance this projectile has traveled since creation.
-     *
-     * @return distance in pixels
-     */
-    public int getTraveledDistance() {
-        return traveledDistance;
-    }
+    public int getTraveledDistance() { return traveledDistance; } // Read accessor
 
-    /**
-     * Returns the maximum range this projectile can travel before being deactivated.
-     *
-     * @return maximum range in pixels
-     */
-    public int getMaxRange() {
-        return maxRange;
-    }
+    public int getMaxRange() { return maxRange; } // Read accessor
 
-    /**
-     * Returns whether this projectile was fired by the player.
-     *
-     * @return {@code true} if player-fired; {@code false} for boss projectiles
-     */
-    public boolean isFromPlayer() {
-        return isFromPlayer;
-    }
+    public boolean isFromPlayer() { return isFromPlayer; } // Read accessor; checked by Shield.update() for interception
 }

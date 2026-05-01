@@ -1,191 +1,124 @@
 /**
- * Drives all movement and gravity simulation for the Lumen Architect game world,
- * updating the {@link entities.Player}'s position each tick based on velocity,
- * gravitational acceleration, and the results of collision queries against the active
- * entity list. Separating physics from entity logic keeps each class focused on a
- * single responsibility and makes it easier to tune movement constants without
- * touching entity or renderer code.
- *
- * <p>The engine runs on a fixed 16 ms timestep. All velocity constants are expressed
- * in pixels per tick so that physics behaviour remains independent of the host
- * machine's frame timing. The game loop thread is responsible for calling
- * {@link #update(long, Player, List)} at the correct 60 fps cadence.
- *
- * @author [YOUR NAME]
- * @id [YOUR ID]
- * @date 2026-03-21
- * @certification I certify that this code is my own work and has not been copied from
- *                any other source, in whole or in part.
+ Stateless physics engine driving movement and gravity simulation. Updates Player
+ position each tick based on velocity, gravity, and collision results against active
+ platforms. Uses fixed 16 ms timestep; all velocity constants are pixels per tick.
+
+ Engine holds no mutable state; all simulation state (position, velocity, grounded,
+ etc.) lives on Player. Called by GameStarter once per tick during platforming phases.
  */
 
+import java.util.List; // List interface for the elements parameter in update(); allows iteration over all active entities
 
-import java.util.List;
-
-public class PhysicsEngine {
+public class PhysicsEngine { // Stateless physics engine; all simulation state lives on Player; called once per 16 ms tick
 
     // -------------------------------------------------------------------------
     // Constants — physics
     // -------------------------------------------------------------------------
 
-    /** Length of one physics tick in milliseconds (targets 60 fps). */
-    private static final int FIXED_TIMESTEP_MS = 16;
+    private static final int FIXED_TIMESTEP_MS = 16; // 16 ms per tick (60 fps)
 
-    /**
-     * Downward acceleration added to {@code velY} every tick while the Wanderer is
-     * airborne. Positive because the y-axis increases downward.
-     */
-    private static final float GRAVITY = 0.5f;
+    private static final float GRAVITY = 0.5f; // Downward acceleration per tick
 
-    /**
-     * Maximum downward speed the Wanderer can reach due to gravity, in pixels per tick.
-     * Prevents runaway acceleration during long falls.
-     */
-    private static final float TERMINAL_VELOCITY = 18f;
+    private static final float TERMINAL_VELOCITY = 18f; // Max fall speed (px/tick)
 
     // -------------------------------------------------------------------------
     // Constants — movement
     // -------------------------------------------------------------------------
 
-    /** Horizontal walk speed in pixels per tick. */
-    public static final float WALK_SPEED = 4f;
+    public static final float WALK_SPEED = 4f; // Horizontal walk speed (px/tick)
 
-    /**
-     * Initial upward velocity (negative = up) applied when a jump is started,
-     * in pixels per tick.
-     */
-    public static final float JUMP_VELOCITY = -12f;
+    public static final float JUMP_VELOCITY = -12f; // Initial upward velocity on jump
 
-    /**
-     * Maximum number of consecutive jumps allowed before the Wanderer must touch the
-     * ground. Reset to zero on grounding.
-     */
-    public static final int MAX_CONSECUTIVE_JUMPS = 2;
+    public static final int MAX_CONSECUTIVE_JUMPS = 2; // Allows double-jump (with DODGE ability)
 
     // -------------------------------------------------------------------------
     // Constants — dodge roll
     // -------------------------------------------------------------------------
 
-    /** Horizontal speed boost applied when a dodge roll starts, in pixels per tick. */
-    private static final float DODGE_BOOST = 10f;
-
-    /** How long a dodge roll lasts, in milliseconds. */
-    private static final long DODGE_DURATION_MS = 500L;
-
-    /** Minimum time between dodge rolls, in milliseconds. */
-    private static final long DODGE_COOLDOWN_MS = 3000L;
+    private static final float DODGE_BOOST = 10f; // Dodge roll speed (px/tick)
+    private static final long DODGE_DURATION_MS = 500L; // Invincibility window (ms)
+    private static final long DODGE_COOLDOWN_MS = 3000L; // Dodge cooldown (ms)
 
     // -------------------------------------------------------------------------
     // Constants — wall cling
     // -------------------------------------------------------------------------
 
-    /**
-     * Maximum downward speed while clinging to a wall and holding the direction key,
-     * in pixels per tick.
-     */
-    private static final float WALL_CLING_FALL_SPEED = 1f;
+    private static final float WALL_CLING_FALL_SPEED = 1f; // Wall slide speed (px/tick)
 
     // -------------------------------------------------------------------------
     // Constants — shadow dash
     // -------------------------------------------------------------------------
 
-    /** Distance of a shadow dash teleport, in pixels. */
-    private static final int SHADOW_DASH_DISTANCE = 80;
-
-    /** Minimum time between shadow dashes, in milliseconds. */
-    private static final long SHADOW_DASH_COOLDOWN_MS = 5000L;
+    private static final int SHADOW_DASH_DISTANCE = 80; // Teleport distance (px)
+    private static final long SHADOW_DASH_COOLDOWN_MS = 5000L; // Shadow dash cooldown (ms)
 
     // -------------------------------------------------------------------------
     // Dependencies
     // -------------------------------------------------------------------------
 
-    /** The collision resolver used to push the player out of overlapping platforms. */
-    private final CollisionDetector collisionDetector;
+    private final CollisionDetector collisionDetector; // Stateless collision resolver
 
     // -------------------------------------------------------------------------
     // Constructor
     // -------------------------------------------------------------------------
 
-    /**
-     * Constructs a {@code PhysicsEngine} and its internal {@link CollisionDetector}.
-     * No mutable simulation state is kept here; all data lives on the entities.
-     */
-    public PhysicsEngine() {
-        this.collisionDetector = new CollisionDetector();
+    public PhysicsEngine() { // Creates CollisionDetector dependency
+        this.collisionDetector = new CollisionDetector();        // Instantiate the stateless collision resolver; held for the session lifetime
     }
 
     // -------------------------------------------------------------------------
     // Per-tick update
     // -------------------------------------------------------------------------
 
-    /**
-     * Runs one physics simulation step for the player against the provided entity list.
-     *
-     * <ol>
-     *   <li>Expires any completed dodge-roll invincibility window.</li>
-     *   <li>Applies gravity to vertical velocity if the player is airborne.</li>
-     *   <li>Integrates velocity into position.</li>
-     *   <li>Resets {@code grounded} and {@code wallTouching} flags.</li>
-     *   <li>Resolves platform collisions via {@link CollisionDetector}.</li>
-     *   <li>Resets the consecutive-jump counter when the player has landed.</li>
-     * </ol>
-     *
-     * @param deltaMs  elapsed milliseconds since the last call; the engine uses the
-     *                 fixed {@value #FIXED_TIMESTEP_MS} ms constant for all physics
-     *                 calculations regardless of this value
-     * @param player   the {@link Player} whose physics state should be stepped;
-     *                 must not be {@code null}
-     * @param elements the full list of active {@link GameElement} instances to test
-     *                 collisions against; must not be {@code null}
-     */
-    public void update(long deltaMs, Player player, List<GameElement> elements) {
-        long now = System.currentTimeMillis();
+    public void update(long deltaMs, Player player, List<GameElement> elements) { // Main physics step; called every 16 ms during platforming phases
+        long now = System.currentTimeMillis();                                     // Capture current wall-clock time once for dodge expiry and cooldown comparisons
 
         // 1. Expire dodge-roll invincibility once the duration has elapsed.
-        if (player.isDodging() && now >= player.getDodgeEndTime()) {
-            player.setDodging(false);
-            player.setInvincible(false);
+        if (player.isDodging() && now >= player.getDodgeEndTime()) {              // Check if the player is still in a dodge and the dodge window has ended
+            player.setDodging(false);                                              // Clear the dodging flag so normal physics resume
+            player.setInvincible(false);                                           // Clear invincibility: the player can take damage again
         }
 
         // 2. Apply gravity only if the player is airborne.
-        if (!player.isGrounded()) {
-            applyGravity(player);
-        } else {
-            player.setVelY(0f);
+        if (!player.isGrounded()) {                                               // Only apply gravity when airborne; grounded players have velY zeroed by collision resolution
+            applyGravity(player);                                                  // Add GRAVITY to velY; clamp to TERMINAL_VELOCITY
+        } else {                                                                   // Player is on a platform: cancel any residual downward velocity
+            player.setVelY(0f);                                                   // Zero velY when grounded to prevent accumulation that would push through platforms
         }
 
         // 3. Integrate velocity into position (round to nearest pixel).
-        player.setX(player.getX() + Math.round(player.getVelX()));
-        player.setY(player.getY() + Math.round(player.getVelY()));
+        player.setX(player.getX() + Math.round(player.getVelX()));               // Advance x by rounded velX; Math.round prevents sub-pixel drift accumulation
+        player.setY(player.getY() + Math.round(player.getVelY()));               // Advance y by rounded velY; same reasoning
 
         // 4. Reset wallTouching; use groundedThisTick to avoid single-frame flicker.
-        player.setWallTouching(false);
-        boolean groundedThisTick = false;
+        player.setWallTouching(false);                                            // Reset each tick so the flag reflects this tick's collisions only
+        boolean groundedThisTick = false;                                         // Local flag tracking whether any platform collision set grounded=true this tick
 
         // 5. Resolve collisions with every active platform in the element list.
-        for (GameElement el : elements) {
-            if (!el.isActive()) continue;
-            if (el instanceof Platform) {
-                if (collisionDetector.checkPlayerPlatform(player, (Platform) el)) {
-                    if (player.isGrounded()) {
-                        groundedThisTick = true;
+        for (GameElement el : elements) {                                          // Iterate all active entities in the world
+            if (!el.isActive()) continue;                                          // Skip deactivated entities: they are not solid
+            if (el instanceof Platform) {                                          // Only platforms participate in player-platform collision resolution
+                if (collisionDetector.checkPlayerPlatform(player, (Platform) el)) { // Test and resolve AABB overlap; returns true if a solid collision occurred
+                    if (player.isGrounded()) {                                      // If the collision resolution set grounded=true on the player (top-face hit)
+                        groundedThisTick = true;                                    // Latch the per-tick grounded flag; used in step 6 to avoid one-frame flicker
                     }
                 }
             }
         }
 
         // 6. If no top collision occurred this tick, player is airborne.
-        if (!groundedThisTick) {
-            player.setGrounded(false);
+        if (!groundedThisTick) {                                                  // No platform set grounded=true this tick: player has left all platforms
+            player.setGrounded(false);                                            // Mark airborne: gravity will apply from the next tick onwards
         }
 
         // 7. Reset the consecutive-jump counter the moment the player lands.
-        if (player.isGrounded()) {
-            player.setConsecutiveJumps(0);
+        if (player.isGrounded()) {                                                // Player is now grounded (landed on a platform or stayed on one)
+            player.setConsecutiveJumps(0);                                        // Reset jump count: the player can jump again (up to MAX_CONSECUTIVE_JUMPS)
         }
 
         // 8. Fall death — if player falls below the screen, deduct a life.
-        if (player.getY() > 900) {
-            player.loseLife();
+        if (player.getY() > 900) {                                               // 900 px is below the visible canvas height (768 px); implies fell off the bottom
+            player.loseLife();                                                    // Deduct one life and respawn the player at the level start position
         }
     }
 
@@ -193,18 +126,10 @@ public class PhysicsEngine {
     // Gravity
     // -------------------------------------------------------------------------
 
-    /**
-     * Adds {@value #GRAVITY} to the player's vertical velocity if they are airborne,
-     * then clamps the result to {@value #TERMINAL_VELOCITY} pixels per tick.
-     * This method is called by {@link #update} before position integration.
-     *
-     * @param player the {@link Player} whose vertical velocity should be increased;
-     *               must not be {@code null}
-     */
-    public void applyGravity(Player player) {
-        if (!player.isGrounded()) {
-            float newVelY = player.getVelY() + GRAVITY;
-            player.setVelY(Math.min(newVelY, TERMINAL_VELOCITY));
+    public void applyGravity(Player player) { // Accelerates player downward; clamped to TERMINAL_VELOCITY
+        if (!player.isGrounded()) {                                      // Guard: only apply gravity when airborne; grounded path is handled in update()
+            float newVelY = player.getVelY() + GRAVITY;                  // Increase downward velocity by GRAVITY (0.5f px/tick)
+            player.setVelY(Math.min(newVelY, TERMINAL_VELOCITY));        // Clamp to TERMINAL_VELOCITY (18f) to prevent infinite acceleration on long falls
         }
     }
 
@@ -212,38 +137,20 @@ public class PhysicsEngine {
     // Movement actions — called by InputRouter in response to WASD input
     // -------------------------------------------------------------------------
 
-    /**
-     * Sets the player's horizontal velocity to {@value #WALK_SPEED} in the given
-     * direction and updates the facing direction.
-     *
-     * @param player    the {@link Player} to move; must not be {@code null}
-     * @param direction {@code 1} to walk right, {@code -1} to walk left
-     */
-    public void walk(Player player, int direction) {
-        player.setFacingDirection(direction);
-        player.setVelX(WALK_SPEED * direction);
+    public void walk(Player player, int direction) { // Sets horizontal velocity and facing direction
+        player.setFacingDirection(direction);                    // Update facing: used by rendering to flip the sprite and by dodge/dash to determine blast direction
+        player.setVelX(WALK_SPEED * direction);                  // Set velX: WALK_SPEED in the movement direction; replaces any previous velocity (no acceleration model)
     }
 
-    /**
-     * Zeroes the player's horizontal velocity when the movement key is released.
-     *
-     * @param player the {@link Player} to stop; must not be {@code null}
-     */
-    public void stopWalking(Player player) {
-        player.setVelX(0f);
+    public void stopWalking(Player player) { // Zeroes horizontal velocity on key-release
+        player.setVelX(0f);                  // Clear horizontal velocity; the player slides to an instant stop (no friction model)
     }
 
-    /**
-     * Applies an upward impulse if the player is grounded or within their consecutive-
-     * jump allowance. The jump count is incremented; it resets when the player lands.
-     *
-     * @param player the {@link Player} to jump; must not be {@code null}
-     */
-    public void jump(Player player) {
-        if (player.isGrounded() || player.getConsecutiveJumps() < MAX_CONSECUTIVE_JUMPS) {
-            player.setVelY(JUMP_VELOCITY);
-            player.setGrounded(false);
-            player.setConsecutiveJumps(player.getConsecutiveJumps() + 1);
+    public void jump(Player player) { // Applies upward impulse if grounded or within jump allowance
+        if (player.isGrounded() || player.getConsecutiveJumps() < MAX_CONSECUTIVE_JUMPS) {       // Allow jump if grounded (first jump) OR within consecutive-jump allowance (double-jump)
+            player.setVelY(JUMP_VELOCITY);                                                       // Apply JUMP_VELOCITY (-12f px/tick) upward; positive y is down, so negative is up
+            player.setGrounded(false);                                                           // Immediately unground the player so gravity applies on the next tick
+            player.setConsecutiveJumps(player.getConsecutiveJumps() + 1);                        // Increment counter; checked next jump to enforce MAX_CONSECUTIVE_JUMPS limit
         }
     }
 
@@ -251,44 +158,29 @@ public class PhysicsEngine {
     // Special movement — dodge roll
     // -------------------------------------------------------------------------
 
-    /**
-     * Initiates a dodge roll if the player has the dodge ability and the cooldown has
-     * elapsed. Applies a horizontal speed boost in the facing direction, marks the
-     * player as dodging and invincible for {@value #DODGE_DURATION_MS} ms, and starts
-     * the {@value #DODGE_COOLDOWN_MS} ms cooldown.
-     *
-     * @param player the {@link Player} to roll; must not be {@code null}
-     */
-    public void dodgeRoll(Player player) {
-        if (!player.isHasDodge()) return;
+    public void dodgeRoll(Player player) { // Initiates dodge if ability unlocked and cooldown elapsed
+        if (!player.isHasDodge()) return;                                             // Ability gate: DODGE lore fragment must be collected before this move is available
 
-        long now = System.currentTimeMillis();
-        if (now < player.getDodgeCooldownEnd()) return;
+        long now = System.currentTimeMillis();                                        // Capture wall-clock time for cooldown comparison
+        if (now < player.getDodgeCooldownEnd()) return;                              // Cooldown check: if within the 3-second cooldown window, block the roll
 
-        player.setVelX(DODGE_BOOST * player.getFacingDirection());
-        player.setDodging(true);
-        player.setInvincible(true);
-        player.setDodgeEndTime(now + DODGE_DURATION_MS);
-        player.setInvincibleTimer(now + DODGE_DURATION_MS);
-        player.setDodgeCooldownEnd(now + DODGE_COOLDOWN_MS);
+        player.setVelX(DODGE_BOOST * player.getFacingDirection());                   // Apply horizontal boost (10f px/tick) in the player's current facing direction
+        player.setDodging(true);                                                      // Set dodging flag so the renderer plays the roll animation
+        player.setInvincible(true);                                                   // Grant invincibility frames: damage is blocked during the roll window
+        player.setDodgeEndTime(now + DODGE_DURATION_MS);                             // Record when the roll expires (500 ms from now); checked by update() each tick
+        player.setInvincibleTimer(now + DODGE_DURATION_MS);                          // Invincibility expires at the same time as the roll duration
+        player.setDodgeCooldownEnd(now + DODGE_COOLDOWN_MS);                         // Start the 3-second cooldown; next dodge roll cannot start before this time
     }
 
     // -------------------------------------------------------------------------
     // Special movement — wall cling
     // -------------------------------------------------------------------------
 
-    /**
-     * Clamps the player's downward fall speed to {@value #WALL_CLING_FALL_SPEED}
-     * pixels per tick while they are pressing into a wall and holding the wall-cling
-     * ability. Should be called each tick that the relevant direction key is held.
-     *
-     * @param player the {@link Player} to cling; must not be {@code null}
-     */
-    public void wallCling(Player player) {
-        if (!player.isHasWallCling()) return;
-        if (player.isWallTouching() && !player.isGrounded()) {
-            if (player.getVelY() > WALL_CLING_FALL_SPEED) {
-                player.setVelY(WALL_CLING_FALL_SPEED);
+    public void wallCling(Player player) { // Reduces fall speed against wall; requires WALL_CLING ability
+        if (!player.isHasWallCling()) return;                                       // Ability gate: WALL_CLING lore fragment must be collected
+        if (player.isWallTouching() && !player.isGrounded()) {                     // Only apply when touching a wall AND airborne (not already on the ground)
+            if (player.getVelY() > WALL_CLING_FALL_SPEED) {                        // Only reduce speed if falling faster than the cling cap
+                player.setVelY(WALL_CLING_FALL_SPEED);                             // Cap fall speed to WALL_CLING_FALL_SPEED (1 px/tick) for the slow-slide effect
             }
         }
     }
@@ -297,21 +189,13 @@ public class PhysicsEngine {
     // Special movement — shadow dash
     // -------------------------------------------------------------------------
 
-    /**
-     * Teleports the player {@value #SHADOW_DASH_DISTANCE} pixels in their facing
-     * direction if the shadow-dash ability is unlocked and the cooldown has elapsed.
-     * The teleport is instantaneous (no animation arc); the renderer is responsible
-     * for playing the visual effect.
-     *
-     * @param player the {@link Player} to dash; must not be {@code null}
-     */
-    public void shadowDash(Player player) {
-        if (!player.isHasShadowDash()) return;
+    public void shadowDash(Player player) { // Teleports 80 px in facing direction; requires SHADOW_DASH ability and cooldown
+        if (!player.isHasShadowDash()) return;                                         // Ability gate: SHADOW_DASH lore fragment must be collected
 
-        long now = System.currentTimeMillis();
-        if (now < player.getShadowDashCooldownEnd()) return;
+        long now = System.currentTimeMillis();                                          // Capture wall-clock time for cooldown check
+        if (now < player.getShadowDashCooldownEnd()) return;                           // Cooldown check: 5-second window must have elapsed since the last dash
 
-        player.setX(player.getX() + SHADOW_DASH_DISTANCE * player.getFacingDirection());
-        player.setShadowDashCooldownEnd(now + SHADOW_DASH_COOLDOWN_MS);
+        player.setX(player.getX() + SHADOW_DASH_DISTANCE * player.getFacingDirection()); // Instantaneous x teleport: 80 px in the current facing direction (+1 right, -1 left)
+        player.setShadowDashCooldownEnd(now + SHADOW_DASH_COOLDOWN_MS);                // Start the 5-second cooldown timer; next shadow dash cannot begin before this time
     }
 }
