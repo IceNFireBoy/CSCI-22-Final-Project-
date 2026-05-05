@@ -38,6 +38,9 @@ public class BossArenaGenerator { // Stateless procedural generator; all per-run
 
     private static final int WALL_THICKNESS = 24; // 24 px boundary wall thickness
 
+    /** Vertical offset from the arena bottom used to place the Wanderer's boss spawn. */
+    public static final int BOSS_SPAWN_Y_OFFSET = 256; // Positions spawn 256 px above the bottom wall — clear of hazards, facing the throne
+
     // -------------------------------------------------------------------------
     // Constructor
     // -------------------------------------------------------------------------

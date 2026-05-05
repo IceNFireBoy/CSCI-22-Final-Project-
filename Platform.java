@@ -4,8 +4,8 @@
  behavior, a budget cost for Apprentice placement, and a lighting flag.
 
  Platform is the primary collision geometry class. CollisionDetector resolves player-platform
- overlaps each tick; PhysicsEngine reads isSolid() before axis resolution; LevelLoader
- instantiates platforms from JSON at level load time; BossArenaGenerator creates platforms
+ overlaps each tick; PhysicsEngine reads isSolid() before axis resolution; LevelGenerator
+ subclasses instantiate platforms at level-build time; BossArenaGenerator creates platforms
  procedurally. Apprentice places platforms via GameSession.placeBlock().
  */
 
@@ -47,6 +47,23 @@ public class Platform extends GameElement { // Extends GameElement for position,
          */
         MIMIC
     }
+
+    // -------------------------------------------------------------------------
+    // Constants
+    // -------------------------------------------------------------------------
+
+    /** Standard tile size in pixels; one tile = one grid cell in world space. */
+    public static final int TILE_SIZE = 32; // Used for default platform dimensions, wall thicknesses, and tile-aligned spacing throughout the codebase
+
+    /** Upward velocity impulse (px/tick) applied when the Wanderer lands on a SPRING platform. */
+    public static final float SPRING_BOUNCE_FORCE = 18f; // Read by CollisionDetector on SPRING top-face collision
+
+    /** Fallback fill colour shared by BRICK, SLIDE, WALL, and MIMIC when their sprite is absent. */
+    private static final Color FALLBACK_FILL   = new Color(0x2a, 0x2a, 0x35); // Dark blue-grey; matches the game's dungeon palette
+    /** Fallback fill colour for SPRING when the sprite is absent — teal-blue to distinguish it from BRICK. */
+    private static final Color SPRING_FILL     = new Color(0x3a, 0x4a, 0x5a); // Teal-blue; visually distinct from standard BRICK fallback
+    /** Outline colour used by every platform type in fallback (no-sprite) rendering. */
+    private static final Color FALLBACK_BORDER = new Color(0x4a, 0x4a, 0x58); // Slightly lighter than fill; provides subtle but visible edge
 
     // -------------------------------------------------------------------------
     // Core fields
@@ -339,9 +356,9 @@ public class Platform extends GameElement { // Extends GameElement for position,
      *   <li>CRUMBLE: applies shake offsets to the draw position; overlays crack lines at
      *       {@link #CRACK_STAGE_1} and {@link #CRACK_STAGE_2}; draws split halves during
      *       the fall. Returns immediately if {@link #fullyGone}.</li>
-     *   <li>BRICK, SLIDE, SPRING, WALL, MIMIC: attempt sprite load via
-     *       {@link SpriteLoader#getInstance()}; fall back to a rounded-rect fill and
-     *       outline if the sprite file is missing.</li>
+     *   <li>BRICK, SLIDE, SPRING, WALL, MIMIC: delegate to {@link #renderSprite} which
+     *       attempts a sprite load via {@link SpriteLoader#getInstance()} and falls back
+     *       to a rounded-rect fill when the sprite file is absent.</li>
      *   <li>INVISIBLE: draws a faint ghost rectangle when unlit (debug aid); draws a
      *       solid blue-tinted rectangle when lit (platform is now visible to the
      *       Wanderer).</li>
@@ -399,71 +416,11 @@ public class Platform extends GameElement { // Extends GameElement for position,
                 }
                 return; // CRUMBLE rendering complete; skip the default switch fall-through
             }
-            case BRICK: {                                                       // BRICK rendering: standard tile sprite or dark-blue rounded rect
-                BufferedImage sprite = SpriteLoader.getInstance().load("resources/sprites/tiles/tile_brick.png"); // Load the brick tile sprite
-                if (sprite != null) {                                           // Sprite found: draw it scaled to the platform AABB
-                    g.drawImage(sprite, x, y, width, height, null);            // Draw sprite at the platform's world position
-                } else {                                                        // No sprite: fallback rounded rect with BRICK colour scheme
-                    g.setColor(new Color(0x2a, 0x2a, 0x35));                  // Dark blue-grey fill; matches the game's dark dungeon palette
-                    g.fillRoundRect(x, y, width, height, 4, 4);               // Filled rounded rectangle to represent the tile body
-                    g.setColor(new Color(0x4a, 0x4a, 0x58));                  // Slightly lighter border for contrast
-                    g.setStroke(new BasicStroke(0.5f));                        // Thin 0.5 px border: subtle enough not to dominate
-                    g.drawRoundRect(x, y, width, height, 4, 4);               // Outline the tile
-                }
-                return; // BRICK rendering complete
-            }
-            case SLIDE: {                                                       // SLIDE rendering: uses tile_slide.png for the visual ramp indicator
-                BufferedImage sprite = SpriteLoader.getInstance().load("resources/sprites/tiles/tile_slide.png"); // Load the slide tile sprite
-                if (sprite != null) {                                           // Sprite available: render it
-                    g.drawImage(sprite, x, y, width, height, null);            // Draw the slide tile sprite at its position
-                } else {                                                        // Fallback: same visual style as BRICK (to be distinguished by size)
-                    g.setColor(new Color(0x2a, 0x2a, 0x35));                  // Same dark fill as BRICK; sprite differentiates the types visually
-                    g.fillRoundRect(x, y, width, height, 4, 4);               // Draw the fallback rounded rect
-                    g.setColor(new Color(0x4a, 0x4a, 0x58));                  // Consistent border colour across all fallback tiles
-                    g.setStroke(new BasicStroke(0.5f));                        // Thin border to not overwhelm the tile body
-                    g.drawRoundRect(x, y, width, height, 4, 4);               // Outline the fallback tile
-                }
-                return; // SLIDE rendering complete
-            }
-            case SPRING: {                                                      // SPRING rendering: uses tile_spring.png with a teal-blue colour scheme
-                BufferedImage sprite = SpriteLoader.getInstance().load("resources/sprites/tiles/tile_spring.png"); // Load the spring tile sprite
-                if (sprite != null) {                                           // Sprite available: draw it
-                    g.drawImage(sprite, x, y, width, height, null);            // Draw the spring sprite at the platform position
-                } else {                                                        // Fallback: teal-blue to visually distinguish springs from standard brick
-                    g.setColor(new Color(0x3a, 0x4a, 0x5a));                  // Teal-blue fill; subtly different from the dark BRICK fill
-                    g.fillRoundRect(x, y, width, height, 4, 4);               // Draw the teal rounded rect
-                    g.setColor(new Color(0x4a, 0x4a, 0x58));                  // Standard border shared across all fallback platform types
-                    g.setStroke(new BasicStroke(0.5f));                        // Thin consistent border
-                    g.drawRoundRect(x, y, width, height, 4, 4);               // Outline
-                }
-                return; // SPRING rendering complete
-            }
-            case WALL: {                                                        // WALL rendering: uses tile_wall.png; same fallback style as BRICK
-                BufferedImage sprite = SpriteLoader.getInstance().load("resources/sprites/tiles/tile_wall.png"); // Load the wall tile sprite
-                if (sprite != null) {                                           // Sprite available: draw it
-                    g.drawImage(sprite, x, y, width, height, null);            // Draw wall sprite at its position
-                } else {                                                        // Fallback: identical to BRICK fallback; sprite sheet distinguishes them
-                    g.setColor(new Color(0x2a, 0x2a, 0x35));                  // Dark fill shared with BRICK fallback
-                    g.fillRoundRect(x, y, width, height, 4, 4);               // Rounded rect body
-                    g.setColor(new Color(0x4a, 0x4a, 0x58));                  // Consistent border
-                    g.setStroke(new BasicStroke(0.5f));                        // Thin stroke
-                    g.drawRoundRect(x, y, width, height, 4, 4);               // Outline
-                }
-                return; // WALL rendering complete
-            }
-            case MIMIC: {                                                       // MIMIC rendering: uses tile_mimic.png; appears identical to normal platform
-                BufferedImage sprite = SpriteLoader.getInstance().load("resources/sprites/tiles/tile_mimic.png"); // Load the mimic tile sprite
-                if (sprite != null) {                                           // Sprite available; drawn identically to regular BRICK to deceive the Wanderer
-                    g.drawImage(sprite, x, y, width, height, null);            // Draw the mimic tile — indistinguishable from normal tile in appearance
-                } else {                                                        // Fallback: same dark fill to maintain the deceptive appearance
-                    g.setColor(new Color(0x2a, 0x2a, 0x35));                  // Same dark fill as BRICK; mimic must look identical to deceive the player
-                    g.fillRoundRect(x, y, width, height, 4, 4);               // Draw the deceptive rounded rect
-                    g.setColor(new Color(0x4a, 0x4a, 0x58));                  // Same border colour as normal platforms; part of the deception
-                    g.setStroke(new BasicStroke(0.5f));                        // Thin border matches normal tile
-                    g.drawRoundRect(x, y, width, height, 4, 4);               // Outline matching normal tiles exactly
-                }
-                return; // MIMIC rendering complete
-            }
+            case BRICK:  renderSprite(g, "resources/sprites/tiles/tile_brick.png",  FALLBACK_FILL); return; // Dark blue-grey; standard dungeon tile
+            case SLIDE:  renderSprite(g, "resources/sprites/tiles/tile_slide.png",  FALLBACK_FILL); return; // Same fallback as BRICK; sprite differentiates visually
+            case SPRING: renderSprite(g, "resources/sprites/tiles/tile_spring.png", SPRING_FILL);  return; // Teal-blue fallback distinguishes spring from standard tile
+            case WALL:   renderSprite(g, "resources/sprites/tiles/tile_wall.png",   FALLBACK_FILL); return; // Same dark fallback as BRICK
+            case MIMIC:  renderSprite(g, "resources/sprites/tiles/tile_mimic.png",  FALLBACK_FILL); return; // Identical fallback to BRICK — part of the deception
             case INVISIBLE:                                                     // INVISIBLE rendering: only visible when lit; ghost outline when unlit
                 if (!lit) {                                                     // Unlit INVISIBLE platform: draw a very faint ghost outline for debug/QA
                     g.setColor(new Color(0x2a, 0x2a, 0x55, 40));             // Near-transparent blue-purple: alpha=40, barely perceptible during play
@@ -483,6 +440,33 @@ public class Platform extends GameElement { // Extends GameElement for position,
                 g.setColor(new Color(0x4a, 0x4a, 0x58));                      // Generic border
                 g.setStroke(new BasicStroke(0.5f));                            // Thin stroke
                 g.drawRoundRect(x, y, width, height, 4, 4);                   // Outline
+        }
+    }
+
+    /**
+     * Loads the tile sprite at {@code spritePath} and draws it at this platform's
+     * world position. If the sprite is absent (e.g. during development before assets
+     * are authored), draws a rounded-rectangle fallback using {@code fallbackFill} for
+     * the body and {@link #FALLBACK_BORDER} for the outline.
+     *
+     * <p>Architecture role: Shared by the BRICK, SLIDE, SPRING, WALL, and MIMIC cases in
+     * {@link #render(Graphics2D)} — all five follow the same load-or-fallback pattern and
+     * differ only in the sprite path and fallback body colour.</p>
+     *
+     * @param g            the {@link Graphics2D} context to draw on
+     * @param spritePath   relative path to the tile PNG (e.g. {@code "resources/sprites/tiles/tile_brick.png"})
+     * @param fallbackFill the {@link Color} to fill the rounded rect when the sprite is missing
+     */
+    private void renderSprite(Graphics2D g, String spritePath, Color fallbackFill) {
+        BufferedImage sprite = SpriteLoader.getInstance().load(spritePath); // Cached load — SpriteLoader returns null on miss, never throws
+        if (sprite != null) {
+            g.drawImage(sprite, x, y, width, height, null);                // Draw sprite scaled to this platform's AABB
+        } else {
+            g.setColor(fallbackFill);                                       // Fill with the type-appropriate fallback colour
+            g.fillRoundRect(x, y, width, height, 4, 4);                   // Rounded rect body; 4 px arc radius matches all other tile rendering
+            g.setColor(FALLBACK_BORDER);                                    // Consistent border across all platform types
+            g.setStroke(new BasicStroke(0.5f));                            // Thin 0.5 px border — subtle but present
+            g.drawRoundRect(x, y, width, height, 4, 4);                   // Outline
         }
     }
 

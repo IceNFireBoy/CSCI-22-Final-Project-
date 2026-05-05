@@ -650,13 +650,15 @@ public class GameServer {
      * Maps a one-based level index to its corresponding act string for snapshot
      * metadata. Must exactly mirror the mapping used by
      * {@link GameStarter#loadLevel(int, boolean)} on the client:
-     * levels 1–3 → ACT1, 4–6 → ACT2, 7–9 → ACT3.
+     * level 1 → ACT1, level 2 → ACT2, level 3 → ACT3.
+     * Level 4 is the boss arena (phase BOSS); this method returns "ACT3"
+     * as a logging fallback — the BOSS phase is set by the client directly.
      */
     private static String actFromLevel(int lvl) {
-        if (lvl <= 3) return "ACT1";
-        if (lvl <= 6) return "ACT2";
-        if (lvl <= 9) return "ACT3";
-        return "ACT3"; // fallback — no level beyond 9 in the current build
+        if (lvl == 1) return "ACT1";
+        if (lvl == 2) return "ACT2";
+        if (lvl == 3) return "ACT3";
+        return "ACT3"; // fallback — boss arena (level 4) or any out-of-range value
     }
 
     /**

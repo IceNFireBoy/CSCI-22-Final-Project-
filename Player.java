@@ -234,9 +234,6 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     /** Animation state key for the current sprite clip. */
     private String animState; // Legacy state string (e.g. "wanderer_idle"); kept in sync with currentAnimState by update()
 
-    /** Reference to the audio manager for SFX playback. */
-    private AudioManager audioManager; // Injected via setAudioManager(); used in executeMelee(), executeShadowDash(), releaseProjectile()
-
     /** Cooldown remaining for melee attack in milliseconds. */
     private long meleeCooldown; // Decremented each tick in updateCooldowns(); executeMelee() blocked while > 0
 
@@ -309,10 +306,16 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     // -------------------------------------------------------------------------
 
     /** Rendered sprite width in pixels (matches full bounding box). */
-    private static final int SPRITE_WIDTH  = 64; // Wanderer sprite is 64 px wide; bounds offset by 20 for the collision AABB
+    public static final int SPRITE_WIDTH  = 64; // Wanderer sprite is 64 px wide; bounds offset by 20 for the collision AABB
 
     /** Rendered sprite height in pixels (matches full bounding box). */
-    private static final int SPRITE_HEIGHT = 96; // Wanderer sprite is 96 px tall; bounds offset by 8 for the collision AABB
+    public static final int SPRITE_HEIGHT = 96; // Wanderer sprite is 96 px tall; bounds offset by 8 for the collision AABB
+
+    /** Maximum Y-coordinate used when snapshotting the death position in {@link #loseLife()}. */
+    private static final int DEATH_ANIM_MAX_Y = 800; // Clamps the death animation below the canvas floor (768 px) so the sprite stays visible
+
+    /** Duration of the death animation in milliseconds before the Wanderer respawns. */
+    private static final long DEATH_ANIM_MS = 1200L; // 1.2 s window: long enough for the death effect to read, short enough not to stall play
 
     /** Ticks between animation frame advances. */
     private static final int FRAME_DELAY = 6; // 6 ticks per frame at 60 fps ≈ 10 fps animation; snappy but not jittery
@@ -404,7 +407,6 @@ public class Player implements Damageable, Renderable { // Implements Damageable
 
         // Combat and ability state
         this.animState = "wanderer_idle";  // Initial animation state key
-        this.audioManager = null;          // No audio manager yet; injected via setAudioManager()
         this.meleeCooldown = 0L;           // No melee cooldown at spawn
         this.chargeHeld = false;           // Charge key not held at spawn
         this.chargeStartTime = 0L;         // No charge in progress
@@ -1184,19 +1186,6 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     // -------------------------------------------------------------------------
 
     /**
-     * Injects the audio manager dependency for SFX playback.
-     *
-     * <p>Architecture role: Called by {@link GameStarter} after the
-     * {@link AudioManager} singleton is available. Without this reference,
-     * ability SFX are silently skipped.</p>
-     *
-     * @param audioManager the audio manager instance; must not be {@code null}
-     */
-    public void setAudioManager(AudioManager audioManager) {
-        this.audioManager = audioManager; // Store audio manager reference; used in executeMelee, executeShadowDash, releaseProjectile
-    }
-
-    /**
      * Sets the list of active game entities used for melee hit detection.
      *
      * <p>Architecture role: Called by {@link GameStarter} each tick (or on entity
@@ -1258,9 +1247,6 @@ public class Player implements Damageable, Renderable { // Implements Damageable
         meleeCooldown = 400L;        // Set 400 ms cooldown before the next swing can fire
         animState = "wanderer_melee"; // Switch to melee animation clip
 
-        if (audioManager != null) {
-            audioManager.playSFX("sfx_melee_strike"); // Play the melee swing sound effect
-        }
     }
 
     /**
@@ -1309,10 +1295,6 @@ public class Player implements Damageable, Renderable { // Implements Damageable
         int   projY    = y + 16 - 4;         // Mid-body Y of the 96 px sprite minus half projectile height
         float projVelX = facingDirection * 6f; // 6 px/tick in the facing direction
         Projectile proj = new Projectile(projX, projY, projVelX, 0f, 2, 600); // 2 hp damage, 600 px max range
-
-        if (audioManager != null) {
-            audioManager.playSFX("sfx_projectile_fire"); // Play the projectile launch sound effect
-        }
 
         animState = "wanderer_idle"; // Return to idle animation after firing
         return proj;                 // Return the projectile for the caller to add to the active entity list
@@ -1382,9 +1364,6 @@ public class Player implements Damageable, Renderable { // Implements Damageable
         dashCooldownRemaining = 5000L; // 5-second cooldown before the next dash
         animState = "wanderer_dodge";  // Reuse the dodge animation for visual feedback during the dash
 
-        if (audioManager != null) {
-            audioManager.playSFX("sfx_projectile_charge"); // Play the dash sound (reuses charge SFX for the phase-through whoosh)
-        }
     }
 
     /**
@@ -1527,7 +1506,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
         deathTimer = 0;                  // Reset death countdown
         addFaithful(-2);                 // Penalise faithful meter by 2 for dying
         deathX = x;                      // Snapshot X for death animation position
-        deathY = Math.min(y, 800);       // Clamp Y to 800 so the animation is always visible on screen
+        deathY = Math.min(y, DEATH_ANIM_MAX_Y); // Clamp so the death animation is always visible on screen
         if (lives <= 0) {               // All lives exhausted: consume one attempt
             totalAttempts--;
             if (totalAttempts <= 0) {
@@ -1553,7 +1532,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     public void updateRespawn(long deltaMs) {
         if (isDead) {
             deathTimer += deltaMs;      // Accumulate elapsed time since death
-            if (deathTimer >= 1200) {   // 1.2 second death animation window complete
+            if (deathTimer >= DEATH_ANIM_MS) { // Death animation window complete
                 x        = respawnX;   // Teleport to respawn point
                 y        = respawnY;
                 velX     = 0;          // Clear velocity so the Wanderer doesn't carry momentum into the respawn

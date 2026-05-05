@@ -169,7 +169,7 @@ public class PulseEffect extends GameElement { // Extends GameElement for automa
      *
      * <p>Interaction: May be read by {@link GameStarter}'s pulse-hit-detection
      * logic to determine which game entities fall within the ring's current reach.
-     * For example, DarkCrawlers within radius of the Wanderer could be stunned when
+     * For example, hazards within the ring radius could be affected when
      * the pulse reaches them.</p>
      *
      * @return the current ring radius; starts at 0 and increases by 8 px per tick

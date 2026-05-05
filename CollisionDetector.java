@@ -105,9 +105,8 @@ public class CollisionDetector { // Stateless AABB resolver; all collision conte
                 p.setY(plb.y - 88);                                // Push player above the platform: y = platformTop - playerHeight (88 px total hitbox)
                 p.setGrounded(true);                               // Set grounded: gravity is suppressed and jump counter resets on landing
 
-                if (pl instanceof SpringPlatform) {                // SpringPlatform special case: launch the player upward instead of stopping velY
-                    // Spring: launch the player upward instead of stopping velY
-                    p.setVelY(-SpringPlatform.BOUNCE_FORCE);       // Apply upward bounce force (constant from SpringPlatform); stronger than a normal jump
+                if (pl.getType() == Platform.PlatformType.SPRING) { // SPRING: launch the player upward instead of stopping velY
+                    p.setVelY(-Platform.SPRING_BOUNCE_FORCE);      // Apply upward bounce force; stronger than a normal jump
                     p.setGrounded(false);                          // Immediately unground: the spring launches the player airborne again
                 } else {                                           // Normal platform landing: cancel downward velocity
                     p.setVelY(0f);                                 // Zero velY to prevent the player from accelerating through the platform

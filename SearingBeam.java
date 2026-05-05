@@ -64,12 +64,6 @@ public class SearingBeam extends BossAttack { // Extends BossAttack but uses Lon
     private Player player; // Wanderer reference for distance-based damage checks in update()
 
     /**
-     * Reference to the audio manager for playing the beam-burn sound effect
-     * when damage is successfully dealt. May be {@code null} if audio is disabled.
-     */
-    private AudioManager audioManager; // Used to play "sfx_beam_burn" on damage ticks; null-safe in update()
-
-    /**
      * Per-tick counter used to throttle damage to once every 30 ticks (approximately
      * twice per second at 60 fps). Incremented every tick; damage is applied when
      * {@code damageTick % 30 == 0}.
@@ -101,14 +95,12 @@ public class SearingBeam extends BossAttack { // Extends BossAttack but uses Lon
      *                     {@link #setBeamTarget(Point)} each subsequent tick
      * @param player       the Wanderer entity for proximity-damage checks; may be
      *                     {@code null} (null-guarded in update())
-     * @param audioManager the audio manager for SFX; may be {@code null}
      */
-    public SearingBeam(Point beamTarget, Player player, AudioManager audioManager) { // Three-argument constructor: target, player, audio; Long.MAX_VALUE = indefinite duration
+    public SearingBeam(Point beamTarget, Player player) {                              // Two-argument constructor: target, player; Long.MAX_VALUE = indefinite duration
         super(BEAM_ORIGIN_X, BEAM_ORIGIN_Y, 0, 0, Long.MAX_VALUE);                  // Delegate: origin at (717,384); zero AABB; effectively infinite duration
         this.beamTarget = beamTarget;                                                  // Store initial target; updated by Apprentice gesture each tick
         this.damageActive = true;                                                      // Damage enabled by default; toggled off during brief invulnerability windows
         this.player = player;                                                          // Store Wanderer reference for per-tick proximity distance calculation
-        this.audioManager = audioManager;                                              // Store audio manager; null-safe in update() for SFX on damage ticks
         this.damageTick = 0;                                                           // Start counter at 0; first potential damage hit at tick 30 (0.5 s after spawn)
     }
 
@@ -153,9 +145,6 @@ public class SearingBeam extends BossAttack { // Extends BossAttack but uses Lon
 
             if (dist < 25 && damageTick % 30 == 0) {                              // Beam is "on target" (within 25 px) AND 30-tick damage window has elapsed
                 player.takeDamage(1);                                               // Deal 1 damage to the Wanderer; ~2 damage/second at 60 fps when sustained
-                if (audioManager != null) {                                         // Null guard: audio manager may be absent in test or headless mode
-                    audioManager.playSFX("sfx_beam_burn");                         // Play the beam-burn hit sound; provides audio feedback for both players
-                }
             }
         }
     }

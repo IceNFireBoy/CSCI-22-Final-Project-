@@ -1,6 +1,6 @@
 /**
  Abstract base for all drawable, updatable entities (platforms, portals, fragments,
- hazards, crawlers, cores, triggers). Concrete subclasses implement update() and
+ hazards, cores, triggers). Concrete subclasses implement update() and
  render() logic while inheriting positional and active-state fields.
 
  GameStarter maintains single List<GameElement> for all active world objects. Game
@@ -47,7 +47,7 @@ public abstract class GameElement implements Renderable { // Abstract — cannot
      *
      * <p>Architecture role: Subclasses implement their own time-driven behaviour here —
      * e.g. {@link Platform#update(long)} drives the crumble animation timer;
-     * {@link DarkCrawler#update(long)} steps the crawler AI state machine;
+     * {@link CorruptedWall#update(long)} advances the wall-fall FSM;
      * {@link LoreFragment#update(long)} advances the pulse glow animation.
      * The {@code deltaMs} parameter allows time-based (rather than frame-based)
      * calculations, making behaviour independent of actual frame rate within a

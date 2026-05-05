@@ -212,6 +212,17 @@ public class CorruptedWall extends Hazard implements SpriteOverridable { // Fall
         if (spritePath != null
             && SpriteOverridable.tryDrawSprite(g, this, rx, ry, width, height)) return;
 
+        // P9.6' convention path — try resources/sprites/hazards/wall.png when
+        // no explicit override is set.
+        if (spritePath == null) {
+            java.awt.image.BufferedImage img = SpriteLoader.getInstance()
+                .tryLoad("resources/sprites/hazards/wall.png");
+            if (img != null) {
+                g.drawImage(img, rx, ry, width, height, null);
+                return;
+            }
+        }
+
         // Procedural fallback. Colour shifts during WARNING and FALLING to red.
         Color fill;
         switch (phase) {

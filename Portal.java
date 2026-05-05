@@ -3,12 +3,12 @@
  * pulsing gold archway and triggers level completion when the Wanderer enters
  * its inner opening.
  *
- * <p>Architecture role: Each level JSON file (loaded by {@link LevelLoader}) contains
- * exactly one portal entity. Once the Wanderer's bounding rectangle overlaps the portal's
- * inner opening (returned by the overridden {@link #getBounds()}), the level-completion
- * path inside {@link GameStarter#checkPortalCollision()} fires: on level ≤ 9 it calls
- * {@link GameStarter#loadLevel(int)} to advance to the next level; on level 10 it sends
- * {@link Protocol#BOSS_ENTER} to the server to begin the boss sequence.</p>
+ * <p>Architecture role: Each level adds exactly one portal via
+ * {@link LevelGenerator#portal(int, int)}. Once the Wanderer's bounding rectangle
+ * overlaps the portal's inner opening (returned by the overridden {@link #getBounds()}),
+ * the level-completion path inside {@link GameStarter#checkPortalCollision()} fires:
+ * on level ≤ 3 it calls {@link GameStarter#loadLevel(int, boolean)} to advance to the
+ * next level; on level 3 it sends {@link Protocol#BOSS_ENTER} to begin the boss sequence.</p>
  *
  * <p>The visual is intentionally wider/taller than the {@link #getBounds()} hitbox so the
  * player has to step inside the archway rather than merely touch its edge before the
@@ -130,6 +130,17 @@ public class Portal extends GameElement implements SpriteOverridable { // Extend
 
         // Sprite override: if a PNG path is set and loadable, draw it and return — skipping the procedural archway below.
         if (SpriteOverridable.tryDrawSprite(g, this, x, y, width, height)) return;
+
+        // P9.6' convention path — try resources/sprites/portals/portal.png when
+        // no explicit override is set.
+        if (spritePath == null) {
+            java.awt.image.BufferedImage img = SpriteLoader.getInstance()
+                .tryLoad("resources/sprites/portals/portal.png");
+            if (img != null) {
+                g.drawImage(img, x, y, width, height, null);
+                return;
+            }
+        }
 
         // Compute pulse factor in [0.4, 1.0] for sinusoidal glow modulation
         float pulse = (float)(Math.sin(pulseTimer * 0.003) * 0.3 + 0.7); // sin oscillates in [-1,1]; scale to [0.4,1.0] so the portal never fully dims

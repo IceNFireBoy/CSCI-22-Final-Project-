@@ -21,6 +21,9 @@ public class PhysicsEngine { // Stateless physics engine; all simulation state l
 
     private static final float TERMINAL_VELOCITY = 18f; // Max fall speed (px/tick)
 
+    /** Y-coordinate threshold below which the Wanderer is considered to have fallen off the world. */
+    private static final int FALL_DEATH_Y = 900; // 132 px below the 768 px canvas; guarantees the player is off-screen before loseLife() fires
+
     // -------------------------------------------------------------------------
     // Constants — movement
     // -------------------------------------------------------------------------
@@ -117,7 +120,7 @@ public class PhysicsEngine { // Stateless physics engine; all simulation state l
         }
 
         // 8. Fall death — if player falls below the screen, deduct a life.
-        if (player.getY() > 900) {                                               // 900 px is below the visible canvas height (768 px); implies fell off the bottom
+        if (player.getY() > FALL_DEATH_Y) {                                      // Below the visible canvas height (768 px); implies fell off the bottom
             player.loseLife();                                                    // Deduct one life and respawn the player at the level start position
         }
     }

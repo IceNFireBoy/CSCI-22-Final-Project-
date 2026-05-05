@@ -37,7 +37,7 @@
 public class Act1Level extends LevelGenerator { // Concrete Act 1 generator
 
     @Override
-    public LevelLoader.LoadResult build() { // Subclass entry point — populate elements + state and return finish()
+    public LevelRegistry.LoadResult build() { // Subclass entry point — populate elements + state and return finish()
 
         // ---- State ----
         setPhase(LevelState.GamePhase.ACT1); // Act 1 phase: full light, no special darkness mechanics

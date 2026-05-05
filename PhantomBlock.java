@@ -166,8 +166,22 @@ public class PhantomBlock extends Platform implements SpriteOverridable { // Lig
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
 
         // Sprite override wins; tryDrawSprite respects the alpha composite.
-        if (spritePath == null
-            || !SpriteOverridable.tryDrawSprite(g, this, x, y, width, height)) {
+        boolean drewSprite = false;
+        if (spritePath != null) {
+            drewSprite = SpriteOverridable.tryDrawSprite(g, this, x, y, width, height);
+        } else {
+            // P9.6' convention path — try resources/sprites/hazards/phantom.png
+            // when no explicit override is set. The alpha composite is already
+            // configured above (proportional to charge), so the sprite fades in
+            // and out the same way the procedural draw does.
+            java.awt.image.BufferedImage img = SpriteLoader.getInstance()
+                .tryLoad("resources/sprites/hazards/phantom.png");
+            if (img != null) {
+                g.drawImage(img, x, y, width, height, null);
+                drewSprite = true;
+            }
+        }
+        if (!drewSprite) {
             // Procedural fallback — cool blue block with a top highlight.
             g.setColor(BLOCK_FILL);
             g.fillRect(x, y, width, height);

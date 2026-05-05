@@ -107,6 +107,17 @@ public class CorruptedSpike extends Hazard implements SpriteOverridable { // Sta
         if (!active) return;
         if (SpriteOverridable.tryDrawSprite(g, this, x, y, width, height)) return; // Sprite override wins
 
+        // P9.6' convention path — try resources/sprites/hazards/spike.png when
+        // no explicit override is set.
+        if (spritePath == null) {
+            java.awt.image.BufferedImage img = SpriteLoader.getInstance()
+                .tryLoad("resources/sprites/hazards/spike.png");
+            if (img != null) {
+                g.drawImage(img, x, y, width, height, null);
+                return;
+            }
+        }
+
         // Procedural fallback — dark base strip with triangular teeth on top.
         g.setColor(BASE_COLOUR);
         g.fillRect(x, y + height * 2 / 3, width, height / 3);

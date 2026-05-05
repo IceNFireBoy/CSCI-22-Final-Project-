@@ -23,7 +23,7 @@
  * file is missing, {@link SpriteLoader#tryLoad(String)} returns {@code null}
  * and the entity falls back to its procedural draw — no magenta placeholder.</p>
  *
- * <p>Subclasses produce a {@link LevelLoader.LoadResult} from {@link #build()};
+ * <p>Subclasses produce a {@link LevelRegistry.LoadResult} from {@link #build()};
  * the result is consumed by {@link LevelRegistry#load(int, long)} which is in
  * turn invoked by {@link GameStarter#loadLevel(int)}.</p>
  *
@@ -74,10 +74,10 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
      * Builds and returns the level. Subclasses populate {@link #state} and
      * {@link #elements} via the helper methods, then return {@link #finish()}.
      *
-     * @return a {@link LevelLoader.LoadResult} bundling the elements list and
+     * @return a {@link LevelRegistry.LoadResult} bundling the elements list and
      *         the configured state; never {@code null}
      */
-    public abstract LevelLoader.LoadResult build(); // Subclass entry point
+    public abstract LevelRegistry.LoadResult build(); // Subclass entry point
 
     // -------------------------------------------------------------------------
     // State helpers
@@ -125,7 +125,7 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
      * {@link GameStarter#loadLevel(int)} (currently 60, 652). To support
      * per-level spawns programmatically, expose {@link #getSpawnX()} and
      * {@link #getSpawnY()} for {@link LevelRegistry} to surface to the caller.
-     * Until {@code LevelLoader.LoadResult} grows a spawn field, this helper
+     * Until {@code LevelRegistry.LoadResult} grows a spawn field, this helper
      * stores the spawn locally and the caller can read it via the accessors.</p>
      *
      * @param x the world-space spawn x in pixels
@@ -469,13 +469,13 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
     // -------------------------------------------------------------------------
 
     /**
-     * Bundles the accumulated elements and state into a {@link LevelLoader.LoadResult}.
+     * Bundles the accumulated elements and state into a {@link LevelRegistry.LoadResult}.
      * Subclasses end {@link #build()} with {@code return finish();}.
      *
-     * @return a fresh {@link LevelLoader.LoadResult} carrying the elements list
+     * @return a fresh {@link LevelRegistry.LoadResult} carrying the elements list
      *         and configured state; never {@code null}
      */
-    protected LevelLoader.LoadResult finish() { // Terminal call for subclasses
-        return new LevelLoader.LoadResult(elements, state); // Reuse the existing bundle type
+    protected LevelRegistry.LoadResult finish() { // Terminal call for subclasses
+        return new LevelRegistry.LoadResult(elements, state); // Reuse the existing bundle type
     }
 }

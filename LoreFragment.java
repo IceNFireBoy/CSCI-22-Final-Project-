@@ -40,8 +40,8 @@ public class LoreFragment extends GameElement implements SpriteOverridable { // 
      * <p>Architecture role: The unlock constant is read by {@link GameSession} after
      * {@link CollisionDetector} calls {@link LoreFragment#collect()}. The session then
      * calls the appropriate unlock method (e.g. enabling the melee attack, the dodge
-     * roll, or flagging Radiant Collapse availability). The constants are also used by
-     * {@link LevelLoader#parseAbilityUnlock(String)} to deserialise JSON level data.</p>
+     * roll, or flagging Radiant Collapse availability). The constants are set
+     * programmatically by {@link LevelGenerator} subclasses during level construction.</p>
      */
     public enum AbilityUnlock {
 
@@ -140,8 +140,8 @@ public class LoreFragment extends GameElement implements SpriteOverridable { // 
 
     /**
      * A unique string identifier for this fragment used for save-state tracking and
-     * lore-log lookup (e.g., {@code "FRAG_001"}). Matches the {@code id} field in the
-     * level JSON and in {@link NetworkProtocol.FragmentCollectedPacket#fragmentID}.
+     * lore-log lookup (e.g., {@code "A1-INTRO"}). Matches the field in
+     * {@link NetworkProtocol.FragmentCollectedPacket#fragmentID}.
      */
     private String fragmentID; // Unique ID; used by GameSession and FragmentLibrary to look up this fragment
 
@@ -149,7 +149,7 @@ public class LoreFragment extends GameElement implements SpriteOverridable { // 
      * The narrative body text displayed in the lore log when this fragment is collected.
      * May contain line breaks ({@code \n}) for multi-paragraph lore entries.
      */
-    private String bodyText; // Shown in the lore-log overlay on collection; sourced from level JSON or FragmentLibrary
+    private String bodyText; // Shown in the lore-log overlay on collection; sourced from LoreFragment constructor or FragmentLibrary
 
     /**
      * The ability granted to the Wanderer upon collecting this fragment. Defaults to
@@ -188,9 +188,9 @@ public class LoreFragment extends GameElement implements SpriteOverridable { // 
      * Constructs a new {@code LoreFragment} with the given identifier, body text, and
      * ability unlock, placed at the specified world coordinates with a 20×20 AABB.
      *
-     * <p>Architecture role: Called by {@link LevelLoader#loadLevel(int)} when
-     * deserialising the {@code fragments} array in a level JSON file, and by
-     * {@link FragmentLibrary} when pre-populating the global fragment index.
+     * <p>Architecture role: Instantiated by {@link LevelGenerator} subclasses during
+     * level construction, and by {@link FragmentLibrary} when pre-populating the
+     * global fragment index.
      * The fragment starts active and uncollected so the collision and render
      * systems immediately include it in their processing passes.</p>
      *
@@ -261,8 +261,25 @@ public class LoreFragment extends GameElement implements SpriteOverridable { // 
     public void render(Graphics2D g) {
         if (collected) return; // Skip rendering for already-collected fragments; should never reach here if active=false, but guards anyway
 
-        // Sprite override: if a PNG path is set and loadable, draw it and return — skipping the procedural fallback below.
+        // (1) Sprite override: if an explicit PNG path is set and loadable, draw it and return.
         if (SpriteOverridable.tryDrawSprite(g, this, x, y, width, height)) return;
+
+        // (2) P9.6' auto-sprite-resolution: when no explicit override is set,
+        // try the convention path for this fragment's AbilityUnlock. This lets
+        // a level author drop new art at e.g.
+        // {@code resources/sprites/fragments/dodge.png} and have every DODGE
+        // fragment in the game pick it up automatically — no per-call sprite
+        // path needed in the level Java files.
+        if (spritePath == null) {
+            String conv = defaultSpritePath(unlock);
+            if (conv != null) {
+                java.awt.image.BufferedImage img = SpriteLoader.getInstance().tryLoad(conv);
+                if (img != null) {
+                    g.drawImage(img, x, y, width, height, null);
+                    return; // Bitmap drawn; skip procedural fallback
+                }
+            }
+        }
 
         boolean isCombat = (unlock != AbilityUnlock.NONE); // True for any fragment that grants a gameplay ability; drives the colour choice
 
@@ -427,5 +444,54 @@ public class LoreFragment extends GameElement implements SpriteOverridable { // 
     @Override
     public String getSpritePath() { // SpriteOverridable contract
         return spritePath;          // Null when no override is configured
+    }
+
+    // -------------------------------------------------------------------------
+    // P9.6' — Convention-based sprite resolution
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns the conventional PNG path for a given ability unlock. When a
+     * level author places a fragment without an explicit sprite path, the
+     * renderer queries this method and tries the conventional file via
+     * {@link SpriteLoader#tryLoad(String)}. If the PNG exists, it is used;
+     * otherwise the procedural shard renders as before.
+     *
+     * <p>The convention is {@code resources/sprites/fragments/<key>.png} where
+     * {@code <key>} is the lowercase enum name. To add custom art for, say, the
+     * DODGE fragment, drop {@code dodge.png} into that folder. To restore the
+     * procedural look, delete the file. No code changes either way.</p>
+     *
+     * <p>To extend this map — for example, adding a new {@code SOMETHING}
+     * enum constant — add a {@code case} below pointing at the desired path.
+     * Constants without an explicit case fall through to the {@code default},
+     * which returns the lowercase enum name under {@code fragments/}.</p>
+     *
+     * @param unlock the ability unlock; may be {@code null}
+     * @return the conventional PNG path, or {@code null} for {@code null} input
+     */
+    public static String defaultSpritePath(AbilityUnlock unlock) {
+        if (unlock == null) return null; // Defensive — null in, null out
+        switch (unlock) {
+            // Each case maps to a single conventional path. Lowercase the
+            // enum name so file paths stay consistent across all entries.
+            case NONE:             return "resources/sprites/fragments/lore.png";
+            case MELEE:            return "resources/sprites/fragments/melee.png";
+            case PROJECTILE:       return "resources/sprites/fragments/projectile.png";
+            case DODGE:            return "resources/sprites/fragments/dodge.png";
+            case WALL_CLING:       return "resources/sprites/fragments/wall_cling.png";
+            case SHADOW_DASH:      return "resources/sprites/fragments/shadow_dash.png";
+            case EMBER:            return "resources/sprites/fragments/ember.png";
+            case IRON:             return "resources/sprites/fragments/iron.png";
+            case RADIANT_COLLAPSE: return "resources/sprites/fragments/radiant.png";
+            case VEIL:             return "resources/sprites/fragments/veil.png";
+            case ECHO:             return "resources/sprites/fragments/echo.png";
+            case TETHER:           return "resources/sprites/fragments/tether.png";
+            case SHADOW_STEP:      return "resources/sprites/fragments/shadow_step.png";
+            // Defensive fall-through: future enum values get a path derived
+            // from the constant name so SpriteLoader still has somewhere to
+            // look — caller can always set an explicit override if desired.
+            default: return "resources/sprites/fragments/" + unlock.name().toLowerCase() + ".png";
+        }
     }
 }

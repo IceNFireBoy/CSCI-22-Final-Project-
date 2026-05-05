@@ -40,14 +40,27 @@ public class GameStarter {
      */
     private static final int NET_RECV_TIMEOUT_MS = 15;
 
-    /** Milliseconds the network thread waits before attempting a single reconnect. */
+    /** Initial milliseconds the network thread waits before the first reconnect attempt. */
     private static final long RECONNECT_DELAY_MS = 3000L;
+
+    /**
+     * P9.5 — exponential-backoff reconnect tuning. After each failed attempt
+     * the delay doubles, up to {@link #RECONNECT_MAX_DELAY_MS}, before the
+     * next try. {@link #RECONNECT_MAX_ATTEMPTS} bounds the total retry budget
+     * so a permanently-down server eventually surfaces a "give up" overlay
+     * instead of looping forever.
+     */
+    private static final int  RECONNECT_MAX_ATTEMPTS  = 5;
+    private static final long RECONNECT_MAX_DELAY_MS  = 30_000L; // Cap doubling at 30 s
 
     /** Horizontal spawn position of the Wanderer in world space. */
     private static final int PLAYER_SPAWN_X = 100;
 
     /** Vertical spawn position of the Wanderer in world space. */
     private static final int PLAYER_SPAWN_Y = 400;
+
+    /** Delay in milliseconds before the UI is restored after a game-over sequence. */
+    private static final long MENU_RETURN_DELAY_MS = 2000L; // 2 s: gives the game-over notification time to read before the connect UI reappears
 
     // =========================================================================
     // Network fields
@@ -801,49 +814,77 @@ public class GameStarter {
             canvas.setConnectionOverlay("Connection lost. Waiting...");
         }
 
-        try {
-            Thread.sleep(RECONNECT_DELAY_MS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
+        // P9.5 — exponential backoff. The first wait is RECONNECT_DELAY_MS (3 s);
+        // each subsequent failure doubles the wait, capped at
+        // RECONNECT_MAX_DELAY_MS (30 s). Total attempts capped at
+        // RECONNECT_MAX_ATTEMPTS so a permanently-down server eventually gives
+        // up instead of busy-looping. The loop exits early on the first
+        // success and returns true to the caller.
+        long delay = RECONNECT_DELAY_MS;
+        for (int attempt = 1; attempt <= RECONNECT_MAX_ATTEMPTS; attempt++) {
+            // Surface the current attempt + remaining-attempt count to the
+            // canvas overlay so the user knows the client is still trying.
+            if (canvas != null) {
+                canvas.setConnectionOverlay(
+                    "Connection lost. Retrying " + attempt
+                    + "/" + RECONNECT_MAX_ATTEMPTS
+                    + " (next in " + (delay / 1000) + "s)...");
+            }
+
+            try {
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false; // Interrupt = caller wants us to abort, not retry
+            }
+
+            // ---- Try one reconnect ----
+            try {
+                socket     = new Socket(lastHost, lastPort);
+                networkOut = new ObjectOutputStream(socket.getOutputStream());
+                networkOut.flush();
+
+                // Announce ourselves as a RECONNECTING client with our prior role.
+                // The server's reconnect acceptor validates this hello and only
+                // accepts the socket if the role matches the vacantRole — this
+                // prevents the accept-any-socket ghost-reconnect path.
+                String priorRole = GameSession.getInstance().role;
+                if (priorRole == null || "LOBBY".equals(priorRole)) {
+                    priorRole = "UNKNOWN";
+                }
+                networkOut.writeObject(new NetworkProtocol.StringPacket(
+                        Protocol.RECONNECT_HELLO + "|RECONNECT|" + priorRole));
+                networkOut.flush();
+                networkOut.reset();
+
+                networkIn  = new ObjectInputStream(socket.getInputStream());
+                socket.setSoTimeout(NET_RECV_TIMEOUT_MS);
+
+                connectionLost = false;
+                if (canvas != null) {
+                    canvas.setConnectionOverlay(null);
+                }
+                System.out.println("[Reconnect] Succeeded on attempt " + attempt);
+                return true;
+
+            } catch (IOException e) {
+                System.out.println("[Reconnect] Attempt " + attempt
+                        + " failed: " + e.getMessage());
+                // Exponentially increase the next wait, capped at the maximum.
+                delay = Math.min(delay * 2, RECONNECT_MAX_DELAY_MS);
+                // Loop continues — try again after the new (longer) delay.
+            }
         }
 
-        // Single reconnect attempt
-        try {
-            socket     = new Socket(lastHost, lastPort);
-            networkOut = new ObjectOutputStream(socket.getOutputStream());
-            networkOut.flush();
-
-            // Announce ourselves as a RECONNECTING client with our prior role.
-            // The server's reconnect acceptor validates this hello and only
-            // accepts the socket if the role matches the vacantRole — this
-            // prevents the accept-any-socket ghost-reconnect path.
-            String priorRole = GameSession.getInstance().role;
-            if (priorRole == null || "LOBBY".equals(priorRole)) {
-                priorRole = "UNKNOWN";
-            }
-            networkOut.writeObject(new NetworkProtocol.StringPacket(
-                    Protocol.RECONNECT_HELLO + "|RECONNECT|" + priorRole));
-            networkOut.flush();
-            networkOut.reset();
-
-            networkIn  = new ObjectInputStream(socket.getInputStream());
-            socket.setSoTimeout(NET_RECV_TIMEOUT_MS);
-
-            connectionLost = false;
-            if (canvas != null) {
-                canvas.setConnectionOverlay(null);
-            }
-            return true;
-
-        } catch (IOException e) {
-            connectionFailed = true;
-            if (canvas != null) {
-                canvas.setConnectionOverlay("Connection failed. Please restart.");
-            }
-            running = false; // pause the game loop
-            return false;
+        // Exhausted all attempts — surface the final failure and stop the loop.
+        connectionFailed = true;
+        if (canvas != null) {
+            canvas.setConnectionOverlay(
+                "Connection failed after " + RECONNECT_MAX_ATTEMPTS
+                + " attempts. Please restart.");
         }
+        running = false; // pause the game loop
+        return false;
     }
 
     // =========================================================================
@@ -1085,7 +1126,7 @@ public class GameStarter {
                         GameStarter.getInstance().resetToMenu();
                         canvas.showNotification("No attempts remaining — run ended");
                         new Thread(() -> {
-                            try { Thread.sleep(2000); } catch (InterruptedException ex) {}
+                            try { Thread.sleep(MENU_RETURN_DELAY_MS); } catch (InterruptedException ex) {}
                             javax.swing.SwingUtilities.invokeLater(() -> {
                                 GameFrame frame = GameStarter.getInstance().getGameFrame();
                                 if (frame != null) {
@@ -1795,9 +1836,7 @@ public class GameStarter {
         BossAttack attack = null;
         switch (type) {
             case "SEARING_BEAM":
-                attack = new SearingBeam(new Point(x, y),
-                        authoritativePlayer,
-                        AudioManager.getInstance());
+                attack = new SearingBeam(new Point(x, y), authoritativePlayer);
                 break;
             case "BLOCK_RAIN": {
                 // Collect the level's current Platforms so falling bricks can
@@ -1844,10 +1883,10 @@ public class GameStarter {
      * when they've dropped into the lower half.
      */
     private int inferBossGroundY() {
-        int defaultGround = Camera.ARENA_H - 32; // arena boundary wall thickness
+        int defaultGround = Camera.ARENA_H - Platform.TILE_SIZE; // one tile above the arena floor
         if (player != null && player.getY() > Camera.ARENA_H / 2) {
-            // Foot line is y + 32 (player sprite is 32 tall); clamp inside arena.
-            return Math.min(defaultGround, player.getY() + 32);
+            // Foot line estimate: player top-left Y + one tile; clamp inside arena.
+            return Math.min(defaultGround, player.getY() + Platform.TILE_SIZE);
         }
         return defaultGround;
     }
@@ -1862,9 +1901,9 @@ public class GameStarter {
         String t = (type != null) ? type.toUpperCase() : "BRICK";
         Platform block;
         switch (t) {
-            case "SLIDE":   block = new SlidePlatform(x, y);   break;
-            case "SPRING":  block = new SpringPlatform(x, y);  break;
-            case "WALL":    block = new WallPlatform(x, y);    break;
+            case "SLIDE":   block = new Platform(Platform.PlatformType.SLIDE,  x, y); break;
+            case "SPRING":  block = new Platform(Platform.PlatformType.SPRING, x, y); break;
+            case "WALL":    block = new Platform(Platform.PlatformType.WALL,   x, y); break;
             case "CRUMBLE": block = new Platform(Platform.PlatformType.CRUMBLE, x, y); break;
             default:        block = new Platform(Platform.PlatformType.BRICK, x, y);   break;
         }
@@ -2039,7 +2078,7 @@ public class GameStarter {
         // programmatic (Act1Level / Act2Level / Act3Level); level 4 is the boss
         // arena (handled by the separate enterBossArena path). The seed param
         // is irrelevant for levels 1-3 — pass 0L.
-        LevelLoader.LoadResult result = LevelRegistry.load(levelNum, 0L);
+        LevelRegistry.LoadResult result = LevelRegistry.load(levelNum, 0L);
         elements.addAll(result.elements);
         levelState.currentLevel = levelNum;
 
@@ -2079,13 +2118,10 @@ public class GameStarter {
 
         // D1 — Initialize light source position for Act 2/3 (now levels 2-3).
         if (levelNum >= 2 && canvas != null) {
-            canvas.setLightSourcePosition(new java.awt.Point(player.getX() + 32, player.getY() + 48));
+            canvas.setLightSourcePosition(new java.awt.Point(
+                    player.getX() + Player.SPRITE_WIDTH  / 2,   // horizontal centre of the Wanderer sprite
+                    player.getY() + Player.SPRITE_HEIGHT / 2)); // vertical centre of the Wanderer sprite
         }
-
-        // Update BGM based on act (one BGM per act now that each act is one level).
-        if (levelNum == 1) AudioManager.getInstance().playBGM("bgm_act1.wav");
-        else if (levelNum == 2) AudioManager.getInstance().playBGM("bgm_act2.wav");
-        else if (levelNum == 3) AudioManager.getInstance().playBGM("bgm_act3.wav");
 
         System.out.println("Loaded level " + levelNum + " with " + elements.size() + " entities");
     }
@@ -2129,7 +2165,7 @@ public class GameStarter {
         // dispatch point for level construction.
         elements.clear();
         placedBlocks.clear();
-        LevelLoader.LoadResult bossResult = LevelRegistry.load(4, seed);
+        LevelRegistry.LoadResult bossResult = LevelRegistry.load(4, seed);
         elements.addAll(bossResult.elements);
 
         // Reset the portal-ready guard so any residual portal collision state
@@ -2145,7 +2181,7 @@ public class GameStarter {
             // Boss arena spawn: bottom-centre of the arena so the Wanderer
             // starts facing the throne.
             final int spawnX = BossArenaGenerator.CENTER_X;
-            final int spawnY = BossArenaGenerator.ARENA_H - 256;
+            final int spawnY = BossArenaGenerator.ARENA_H - BossArenaGenerator.BOSS_SPAWN_Y_OFFSET;
             player.setX(spawnX);
             player.setY(spawnY);
             player.setVelX(0);
@@ -2166,9 +2202,7 @@ public class GameStarter {
             Camera.getInstance().reset();
         }
 
-        // Boss-phase BGM stub: reuse act3 track until the dedicated boss BGM
-        // ships in a later phase.
-        AudioManager.getInstance().playBGM("bgm_act3.wav");
+        // Boss-phase BGM: audio not yet implemented.
 
         System.out.println("[BossArena] Arena built with " + elements.size()
                 + " entities; phase=BOSS");
@@ -2190,10 +2224,9 @@ public class GameStarter {
         }
     }
 
-    // E2 — stopGame: stops game loop and BGM
+    // E2 — stopGame: stops game loop
     public void stopGame() {
         running = false;
-        AudioManager.getInstance().stopBGM();
         System.out.println("Game stopped.");
     }
 

@@ -43,7 +43,7 @@ public class FragmentLibrary {
     private static final Color DIM_GRAY_COLOR = new Color(0x55, 0x55, 0x55); // Dim gray for "[FRAGMENT LOCKED]" text; visually subordinate to collected entries
 
     private static final Font TITLE_FONT     = new Font("Serif", Font.BOLD,   28); // Large bold serif for "FRAGMENT ARCHIVE" heading
-    private static final Font ID_LABEL_FONT  = new Font("Serif", Font.BOLD,   16); // Medium bold serif for "[ 01-A ]" labels; stands out from body text
+    private static final Font ID_LABEL_FONT  = new Font("Serif", Font.BOLD,   16); // Medium bold serif for "[ A1-INTRO ]" labels; stands out from body text
     private static final Font BODY_TEXT_FONT = new Font("Serif", Font.ITALIC, 14); // Small italic serif for lore body text; matches the literary tone
     private static final Font LOCKED_FONT    = new Font("Serif", Font.ITALIC, 14); // Same size as body text; italic dim for "[FRAGMENT LOCKED]" placeholder
     private static final Font BADGE_FONT     = new Font("Serif", Font.BOLD,   11); // Compact bold for combat-unlock badge text; fits beside the ID label
@@ -54,25 +54,16 @@ public class FragmentLibrary {
     private static final int RIGHT_MARGIN = 60;  // Horizontal padding from the right edge; determines the text wrap width
     private static final int ENTRY_SPACING = 12; // Vertical gap (px) added between the body text and the separator line, and between the separator and the next entry
 
-    private static final String SFX_FRAGMENT_COLLECT = "sfx_fragment_collect.wav"; // Sound played when a narrative-only fragment is collected
-    private static final String SFX_COMBAT_UNLOCK    = "sfx_combat_unlock.wav";    // Sound played when a combat/traversal ability unlock is collected
-
     /**
      * The canonical ordered list of all known fragment IDs that can appear in the
      * archive. Fragments not in this list are still tracked if collected, but this
      * list drives the archive display order.
      */
     private static final String[] ALL_KNOWN_IDS = {
-        "01-A", "01-B",      // Act 1 narrative fragments; "01-A" is typically the first fragment the Wanderer encounters
-        "02-A", "02-B",      // Act 2 narrative pair; often gated behind early exploration
-        "03-A", "03-B",      // Act 3 pair
-        "04-A", "04-B",      // Act 4 pair
-        "05-A", "05-B",      // Act 5 pair
-        "06-A",              // Mid-game solo fragment; may unlock DODGE or other ability
-        "07-A", "07-B",      // Act 7 pair; near the WALL_CLING unlock region
-        "08-A", "08-B",      // Act 8 pair; approaching the boss area
-        "09-A", "09-B",      // Final corridor fragments; hint at the Radiant Collapse secret
-        "BOSS-A", "BOSS-B"   // Boss-area fragments; BOSS-B is the hidden RADIANT_COLLAPSE shard
+        "A1-INTRO",       // Act 1 — narrative-only (NONE unlock); first fragment the Wanderer encounters
+        "A2-WALL_CLING",  // Act 2 — grants WALL_CLING ability unlock
+        "A3-SHADOW_DASH", // Act 3 — grants SHADOW_DASH ability unlock (requires WALL_CLING prerequisite)
+        "A3-IRON"         // Act 3 — grants IRON ability unlock
     };
 
     // -------------------------------------------------------------------------
@@ -102,9 +93,6 @@ public class FragmentLibrary {
 
     /** Reference to the Wanderer; set via {@link #setPlayer(Player)}. */
     private Player player; // Injected by GameStarter; used in collect() to call player.unlockAbility() on combat fragments
-
-    /** Reference to the audio manager; set via {@link #setAudioManager(AudioManager)}. */
-    private AudioManager audioManager; // Injected by GameStarter; used in collect() to play the appropriate SFX on collection
 
     /**
      * Reference to the cutscene renderer. Kept as an explicit field (rather than
@@ -148,19 +136,6 @@ public class FragmentLibrary {
      */
     public void setPlayer(Player player) {
         this.player = player; // Store Wanderer reference; called by collect() to invoke player.unlockAbility()
-    }
-
-    /**
-     * Sets the {@link AudioManager} reference used to play collection sound effects.
-     *
-     * <p>Architecture role: Called by {@link GameStarter} after the AudioManager
-     * singleton is available. Without this reference, no SFX plays on collection
-     * but the collection logic still completes.</p>
-     *
-     * @param audioManager the audio manager instance; must not be {@code null}
-     */
-    public void setAudioManager(AudioManager audioManager) {
-        this.audioManager = audioManager; // Store audio manager reference; used in collect() for narrative vs combat SFX
     }
 
     /**
@@ -269,15 +244,6 @@ public class FragmentLibrary {
         // Apply ability unlock to the Wanderer
         if (unlock != LoreFragment.AbilityUnlock.NONE && player != null) { // Only unlock if this fragment grants an ability and the player is injected
             player.unlockAbility(unlock);                                    // Activate the ability in the Player's ability set (melee, dodge, etc.)
-        }
-
-        // Play sound effect
-        if (audioManager != null) {                          // Only play SFX if the audio manager has been injected
-            if (unlock != LoreFragment.AbilityUnlock.NONE) {
-                audioManager.playSFX(SFX_COMBAT_UNLOCK);    // Distinctive unlock fanfare for ability-granting fragments
-            } else {
-                audioManager.playSFX(SFX_FRAGMENT_COLLECT); // Subtle chime for narrative-only fragments
-            }
         }
 
         // Trigger the ability-unlock cutscene if this fragment unlocked a combat ability.
@@ -416,7 +382,7 @@ public class FragmentLibrary {
             g.setFont(ID_LABEL_FONT);                            // Bold 16pt serif for the ID label
             FontMetrics idFm = g.getFontMetrics();               // Measure ID label for badge positioning
             g.setColor(GOLD_COLOR);                              // Gold colour for the ID label
-            String idLabel = "[ " + fragID + " ]";              // Format: "[ 01-A ]"
+            String idLabel = "[ " + fragID + " ]";              // Format: "[ A1-INTRO ]", "[ A2-WALL_CLING ]", etc.
             g.drawString(idLabel, LEFT_MARGIN, curY + idFm.getAscent()); // Draw at left margin with ascent offset so baseline is at curY
 
             // Combat unlock badge beside the ID

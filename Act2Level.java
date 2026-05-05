@@ -18,7 +18,7 @@
 public class Act2Level extends LevelGenerator { // Concrete Act 2 generator
 
     @Override
-    public LevelLoader.LoadResult build() { // Populate elements + state and return finish()
+    public LevelRegistry.LoadResult build() { // Populate elements + state and return finish()
 
         // ---- State ----
         setPhase(LevelState.GamePhase.ACT2); // Act 2 phase: hazard suite + faithful meter

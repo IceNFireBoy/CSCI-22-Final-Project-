@@ -129,6 +129,18 @@ public class Altar extends GameElement implements SpriteOverridable { // Visible
         // (1) Sprite override wins when a path is set and the PNG loads.
         if (SpriteOverridable.tryDrawSprite(g, this, x, y, width, height)) return;
 
+        // (1.5) P9.6' convention path — try resources/sprites/altars/stone.png
+        // when no explicit override is set. Drop a PNG there to skin every
+        // un-overridden altar in the game without touching code.
+        if (spritePath == null) {
+            java.awt.image.BufferedImage img = SpriteLoader.getInstance()
+                .tryLoad("resources/sprites/altars/stone.png");
+            if (img != null) {
+                g.drawImage(img, x, y, width, height, null);
+                return;
+            }
+        }
+
         // (2) Concealed altars paint nothing until revealed.
         // Note: when called from GameCanvas there is no LevelState/GameStarter
         // context here; concealments that need them are honoured by the

@@ -1,8 +1,7 @@
 /**
  * Static factory that maps level numbers to programmatic level generators.
- * Replaces {@link LevelLoader#loadLevel(int)} as the single dispatch point for
- * level construction. Returns the same {@link LevelLoader.LoadResult} bundle
- * type so {@link GameStarter#loadLevel(int)} is a one-line swap.
+ * Single dispatch point for level construction; returns a {@link LoadResult}
+ * bundle consumed by {@link GameStarter#loadLevel(int, boolean)}.
  *
  * <p>Mapping:
  * <ul>
@@ -10,8 +9,7 @@
  *   <li>2 → {@link Act2Level}</li>
  *   <li>3 → {@link Act3Level}</li>
  *   <li>4 → boss arena (wraps {@link BossArenaGenerator#generate(long)})</li>
- *   <li>any other → empty result (matches {@link LevelLoader}'s safe-degradation
- *       behaviour for missing files)</li>
+ *   <li>any other → empty result (safe-degradation fallback)</li>
  * </ul>
  *
  * <p>The {@code seed} parameter is meaningful only for level 4 (the boss
@@ -27,6 +25,7 @@
  */
 
 import java.util.ArrayList; // Used for the empty-default fallback list
+import java.util.List;      // Used by LoadResult.elements
 
 public class LevelRegistry { // Stateless factory; no instance methods
 
@@ -49,18 +48,18 @@ public class LevelRegistry { // Stateless factory; no instance methods
      *                 4 is the boss arena
      * @param seed     deterministic seed for level 4's procedural arena;
      *                 ignored for levels 1-3
-     * @return a {@link LevelLoader.LoadResult} bundle; never {@code null};
+     * @return a {@link LoadResult} bundle; never {@code null};
      *         empty (no elements, default state) for unknown {@code levelNum}
      */
-    public static LevelLoader.LoadResult load(int levelNum, long seed) { // Single dispatch entry point
-        switch (levelNum) {                                                // Map level number to the generator
-            case 1: return new Act1Level().build();                        // Act 1 — platforming intro
-            case 2: return new Act2Level().build();                        // Act 2 — mid-campaign
-            case 3: return new Act3Level().build();                        // Act 3 — final platforming before boss
-            case 4: return buildBossArena(seed);                           // Boss arena via existing BossArenaGenerator
-            default:                                                        // Unknown level: safe-degradation
+    public static LoadResult load(int levelNum, long seed) { // Single dispatch entry point
+        switch (levelNum) {                                   // Map level number to the generator
+            case 1: return new Act1Level().build();           // Act 1 — platforming intro
+            case 2: return new Act2Level().build();           // Act 2 — mid-campaign
+            case 3: return new Act3Level().build();           // Act 3 — final platforming before boss
+            case 4: return buildBossArena(seed);              // Boss arena via existing BossArenaGenerator
+            default:                                           // Unknown level: safe-degradation
                 System.err.println("LevelRegistry: unknown level " + levelNum + "; returning empty result");
-                return new LevelLoader.LoadResult(new ArrayList<>(), new LevelState()); // Empty fallback
+                return new LoadResult(new ArrayList<>(), new LevelState()); // Empty fallback
         }
     }
 
@@ -70,22 +69,51 @@ public class LevelRegistry { // Stateless factory; no instance methods
 
     /**
      * Wraps {@link BossArenaGenerator#generate(long)} into the unified
-     * {@link LevelLoader.LoadResult} contract. The boss arena's deterministic
-     * symmetry comes from the seed; the same seed produces the same layout on
-     * both clients.
+     * {@link LoadResult} contract. The boss arena's deterministic symmetry comes
+     * from the seed; the same seed produces the same layout on both clients.
      *
      * @param seed the deterministic seed broadcast by the server
      * @return a LoadResult containing the arena entities and a LevelState set
      *         to {@link LevelState.GamePhase#BOSS}
      */
-    private static LevelLoader.LoadResult buildBossArena(long seed) { // Glue between the new registry and the existing arena gen
-        BossArenaGenerator gen = new BossArenaGenerator();              // Stateless; same instance pattern as before
-        java.util.List<GameElement> arena = gen.generate(seed);          // Reuse the existing procedural arena
-        LevelState state = new LevelState();                             // Fresh state object
-        state.currentLevel = 4;                                          // Player-facing level 4 (the boss)
-        state.currentPhase = LevelState.GamePhase.BOSS;                  // Renderer flips into the boss arena view
-        state.timeRemainingMs = 0L;                                      // Boss has no time limit
-        state.timerActive = false;                                        // Timer disabled during boss
-        return new LevelLoader.LoadResult(arena, state);                 // Bundle and return
+    private static LoadResult buildBossArena(long seed) {       // Glue between the registry and the existing arena generator
+        BossArenaGenerator gen = new BossArenaGenerator();       // Stateless; same instance pattern as before
+        List<GameElement> arena = gen.generate(seed);            // Reuse the existing procedural arena
+        LevelState state = new LevelState();                     // Fresh state object
+        state.currentLevel = 4;                                  // Player-facing level 4 (the boss)
+        state.currentPhase = LevelState.GamePhase.BOSS;          // Renderer flips into the boss arena view
+        state.timeRemainingMs = 0L;                              // Boss has no time limit
+        state.timerActive = false;                               // Timer disabled during boss
+        return new LoadResult(arena, state);                     // Bundle and return
+    }
+
+    // -------------------------------------------------------------------------
+    // Nested bundle type
+    // -------------------------------------------------------------------------
+
+    /**
+     * Bundle pairing the list of instantiated {@link GameElement}s with the
+     * pre-configured {@link LevelState} for a loaded level. Produced by
+     * {@link #load(int, long)} and consumed by
+     * {@code GameStarter.loadLevel(int, boolean)}.
+     */
+    public static class LoadResult {
+
+        /** All entities (platforms, portals, fragments, altars, hazards, triggers) for this level. */
+        public final List<GameElement> elements;
+
+        /** Pre-configured level state (phase, time limit, block budget, spawn point). */
+        public final LevelState state;
+
+        /**
+         * Constructs a {@code LoadResult} bundling the given elements and state.
+         *
+         * @param elements the list of game entities; must not be {@code null}
+         * @param state    the pre-configured level state; must not be {@code null}
+         */
+        public LoadResult(List<GameElement> elements, LevelState state) {
+            this.elements = elements;
+            this.state    = state;
+        }
     }
 }

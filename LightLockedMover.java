@@ -180,6 +180,21 @@ public class LightLockedMover extends Platform implements SpriteOverridable { //
             return;
         }
 
+        // P9.6' convention path — try resources/sprites/hazards/mover.png
+        // when no explicit override is set. Frozen tint applies the same way.
+        if (spritePath == null) {
+            java.awt.image.BufferedImage img = SpriteLoader.getInstance()
+                .tryLoad("resources/sprites/hazards/mover.png");
+            if (img != null) {
+                g.drawImage(img, x, y, width, height, null);
+                if (!motionEnabled) {
+                    g.setColor(FROZEN_TINT);
+                    g.fillRect(x, y, width, height);
+                }
+                return;
+            }
+        }
+
         // Procedural fallback — engineered gold block with frozen tint when applicable.
         g.setColor(BLOCK_FILL);
         g.fillRect(x, y, width, height);

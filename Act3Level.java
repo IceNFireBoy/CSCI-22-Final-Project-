@@ -19,7 +19,7 @@
 public class Act3Level extends LevelGenerator { // Concrete Act 3 generator
 
     @Override
-    public LevelLoader.LoadResult build() { // Populate elements + state and return finish()
+    public LevelRegistry.LoadResult build() { // Populate elements + state and return finish()
 
         // ---- State ----
         setPhase(LevelState.GamePhase.ACT3); // Act 3 phase: INVISIBLE platforms + full hazard suite

@@ -5,8 +5,8 @@
  * parameter map that downstream handlers can inspect to configure the triggered action.
  *
  * <p>Architecture role: {@code Trigger} objects are invisible {@link GameElement}
- * subclasses placed by {@link LevelLoader} when it reads a {@code "trigger"} entity
- * from the level JSON file. They sit in {@link GameStarter#elements} alongside
+ * subclasses placed by {@link LevelGenerator} subclasses via the {@code trigger()}
+ * helper. They sit in {@link GameStarter#elements} alongside
  * visible entities but are never rendered. Each tick, {@link GameStarter} iterates
  * all active elements; when it finds a {@code Trigger} whose bounding box intersects
  * {@link Player#getBounds()}, it calls {@link #fire()} to latch the trigger and then
