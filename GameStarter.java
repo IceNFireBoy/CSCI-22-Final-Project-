@@ -1024,7 +1024,7 @@ public class GameStarter {
                 }
             } else {
                 levelState.currentPhase = LevelState.GamePhase.LOBBY;
-                System.out.println("[GameLoop] Lobby phase entered — waiting for role selection.");
+                System.out.println("[GameLoop] Lobby phase entered - waiting for role selection.");
             }
 
             // -----------------------------------------------------------------
