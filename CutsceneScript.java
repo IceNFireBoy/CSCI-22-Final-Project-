@@ -41,18 +41,18 @@ public class CutsceneScript { // Data-only class; no mutable state; all script c
 
     static { // Static initialiser: populates SCRIPTS once when the class is loaded; runs before any constructor or getLines() call
         SCRIPTS[CutsceneID.SIGNAL.ordinal()] = new String[]{ // SIGNAL: game-opening cutscene; sets the mystery tone before any gameplay
-            "A single point of light, somewhere in the dark.",   // First panel: establishes the isolation motif
-            "Someone is sending a signal."                        // Second panel: hints at the cooperative relationship before the players know each other's roles
+            "He said, \"Let there be light\", and there was light... Only light.",   // First panel: establishes the isolation motif
+            "Be not afraid. For I am your friend, in this broken place."                        // Second panel: hints at the cooperative relationship before the players know each other's roles
         };
         SCRIPTS[CutsceneID.FIRST_LIGHT.ordinal()] = new String[]{ // FIRST_LIGHT: plays when the Apprentice activates the lantern for the first time in Act 1
-            "The Apprentice lifts the lantern for the first time.",  // First panel: role-confirmation moment for the Apprentice player
-            "The world responds."                                     // Second panel: short, punchy line — the world reacts to light, establishing the game's core mechanic
+            "I lift the lantern. Old relic. First Light ignites.",  // First panel: role-confirmation moment for the Apprentice player
+            "The world responds. He knows."                                     // Second panel: short, punchy line — the world reacts to light, establishing the game's core mechanic
         };
         SCRIPTS[CutsceneID.EDGE_OF_LIGHT.ordinal()] = new String[]{ // EDGE_OF_LIGHT: plays when the Wanderer first ventures to the boundary of the light radius
-            "Beyond the lantern's reach, the dark crawls."           // Single panel: atmospheric warning that enemies exist in the dark
+            "Beyond the lantern's reach, the dark crawls. Death can reach you there."           // Single panel: atmospheric warning that enemies exist in the dark
         };
         SCRIPTS[CutsceneID.RETURNED.ordinal()] = new String[]{ // RETURNED: plays when the Wanderer re-enters the light after surviving a dark zone
-            "The Wanderer steps back into the circle of light — alive." // Single panel: relief beat; acknowledges the cooperative success
+            "You are back in the light. You are fortunate to be alive" // Single panel: relief beat; acknowledges the cooperative success
         };
         SCRIPTS[CutsceneID.LAST_COOPERATIVE_ACT.ordinal()] = new String[]{ // LAST_COOPERATIVE_ACT: plays at end of Act 3, just before the boss — the last moment of pure cooperation
             "One last bridge, built together.",                       // First panel: references the Apprentice's block-placement role
@@ -60,30 +60,30 @@ public class CutsceneScript { // Data-only class; no mutable state; all script c
         };
         SCRIPTS[CutsceneID.ARCHITECT_SPEAKS.ordinal()] = new String[]{ // ARCHITECT_SPEAKS: boss intro cutscene; the antagonist reveals their worldview
             "The Architect finally speaks:",                         // First panel: dramatic pause before the villain's dialogue
-            "\"You were never the hero. You were the variable.\""   // Second panel: the villain's line; in quotes to distinguish spoken dialogue from narration
+            "\"Why can't I make it perfect? Why do you all reject my creation?\""   // Second panel: the villain's line; in quotes to distinguish spoken dialogue from narration
         };
         SCRIPTS[CutsceneID.CORE_1_DESTROYED.ordinal()] = new String[]{ // CORE_1_DESTROYED: plays after the first boss Core is destroyed; mid-boss narrative beat
-            "A Core shatters. The Architect feels it."              // Single panel: brief; does not interrupt boss action for long
+            "A Core shatters. He feels it."              // Single panel: brief; does not interrupt boss action for long
         };
         SCRIPTS[CutsceneID.CORE_2_DESTROYED.ordinal()] = new String[]{ // CORE_2_DESTROYED: plays after the second Core; escalating tension
-            "Another Core gone. The override tightens."             // Single panel: "override" references the architectOverride mechanic that escalates difficulty
+            "Another Core gone. The time is coming."             // Single panel: "override" references the architectOverride mechanic that escalates difficulty
         };
         SCRIPTS[CutsceneID.CORE_3_DESTROYED.ordinal()] = new String[]{ // CORE_3_DESTROYED: plays after the third Core; near-victory mood
-            "Three down. The dark is loud now."                     // Single panel: "the dark is loud" — synesthetic language reflecting the boss's increasing attack intensity
+            "Three down. The darkness screams louder."                     // Single panel: "the dark is loud" — synesthetic language reflecting the boss's increasing attack intensity
         };
         SCRIPTS[CutsceneID.CORE_4_DESTROYED.ordinal()] = new String[]{ // CORE_4_DESTROYED: plays after the final Core; boss-defeated beat
             "The last Core falls.",                                  // First panel: simple statement of fact — the boss objective is complete
-            "The Wanderer stands in silence."                       // Second panel: quiet aftermath; no triumphant fanfare, only silence
+            "..."                       // Second panel: quiet aftermath; no triumphant fanfare, only silence
         };
         SCRIPTS[CutsceneID.WANDERER_VICTORY.ordinal()] = new String[]{ // WANDERER_VICTORY: shown on the Wanderer win ending; philosophical resolution
-            "The dark does not end. It just lets you walk through it." // Single panel: the victory condition is not defeating darkness but learning to coexist with it
+            "The darkness breaks through. Yet here you remain. I thought we could both live to see it. Goodbye." // Single panel: the victory condition is not defeating darkness but learning to coexist with it
         };
         SCRIPTS[CutsceneID.HOME.ordinal()] = new String[]{ // HOME: cooperative victory epilogue; both players win together
-            "A door. A light. Home."                                // Single panel: three short nouns — the simplest possible statement of arrival and safety
+            "The lattice is broken. A gate opens. To other slices of reality. It's time for new beginnings."                                // Single panel: three short nouns — the simplest possible statement of arrival and safety
         };
         SCRIPTS[CutsceneID.ARCHITECT_VICTORY.ordinal()] = new String[]{ // ARCHITECT_VICTORY: Apprentice win ending; the Architect's perspective prevails
-            "The Apprentice puts down the lantern.",                 // First panel: the Apprentice relinquishes the tool of their role
-            "The world becomes what it was meant to be."           // Second panel: the Architect's victory condition — the world shaped by the Apprentice's design
+            "\"Your lantern is mine again.\"",                 // First panel: the Apprentice relinquishes the tool of their role
+            "\"This world is broken, but I will make it anew. Again. I will make it, make you, perfect this time.\""           // Second panel: the Architect's victory condition — the world shaped by the Apprentice's design
         };
     }
 

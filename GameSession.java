@@ -1,3 +1,5 @@
+import java.util.List;
+
 /**
  Process-wide singleton holding session-level state that survives level reloads. Stores the
  role assignment the server assigns at connection time (Wanderer or Apprentice) and exposes
@@ -348,7 +350,7 @@ public class GameSession { // Process-wide singleton; survives level reloads; ow
     private static final float MAX_BATTERY    = 100f; // Full battery; lightBattery is initialised to this value and recharged toward it
 
     /** Drain rate per tick when light radius exceeds 140 px: depletes in ~10 s @60 fps. */
-    private static final float DRAIN_HIGH     = 0.1667f; // ~10 s lifetime at 60fps; radius > 140 = widest, most expensive light setting
+    private static final float DRAIN_HIGH     =  0.1667f; // ~10 s lifetime at 60fps; radius > 140 = widest, most expensive light setting
 
     /** Drain rate per tick for radii 100–140 px: depletes in ~20 s. */
     private static final float DRAIN_MED      = 0.0833f; // ~20 s lifetime at 60fps; medium radius setting

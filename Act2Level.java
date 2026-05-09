@@ -37,18 +37,26 @@ public class Act2Level extends LevelGenerator { // Concrete Act 2 generator
 
         // ---- Example fragment ----
         // Combat unlock (WALL_CLING); sprite path optional.
-        fragment("A2-WALL_CLING", 460, 484, // id, x, y
+        fragment("A2-WALL_CLING", 800, 700, // id, x, y
                  LoreFragment.AbilityUnlock.WALL_CLING,
                  "Entry 014. The Apprentice has learned to brace. The walls remember the climb.",
                  null); // null sprite → procedural shard
 
         // ---- Example altar ----
         // Choice altar with the P8.6 power-surge / sight-restriction options.
-        altar(2, 700, 676, "POWER_SURGE", "SIGHT_RESTRICTION", null);
+        altar(2, 15, 95, "POWER_SURGE", "SIGHT_RESTRICTION", null);
+        platform(Platform.PlatformType.BRICK, 7, 145, 96, 16);
+        platform(Platform.PlatformType.BRICK, 137, 345, 30, 16);
 
         // ---- Example hazards (P9.3' replaces crawlers with light-driven hazards) ----
         // CorruptedSpike — straightforward contact-damage pickup deterrent.
-        spike(340, 724);
+        spike(340, 724, 84, 24, null);
+        spike(434, 724, 84, 24, null);
+        spike(508, 724, 84, 24, null);
+        spike(582, 724, 84, 24, null);
+        spike(656, 724, 84, 24, null);
+        spike(730, 7, 84, 24, null);
+        spike(804, 724, 84, 24, null);
 
         // CorruptedWall — background wall with a 1 s shake-warning before it falls.
         // The trigger zone is 4× the wall footprint so the player has room to react.

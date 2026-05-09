@@ -195,7 +195,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     public static final long RADIANT_CHARGE_MS   = 2_000L;  // 2 seconds of continuous SHIFT hold required to fire
 
     /** Duration of the full-arena illumination window. */
-    public static final long RADIANT_ACTIVE_MS   = 3_000L;  // 3-second arena reveal window; suppresses darkness overlay
+    public static final long RADIANT_ACTIVE_MS   = 5000000_000L;  // 3-second arena reveal window; suppresses darkness overlay
 
     /** Lockout duration after the active window ends before SHIFT is accepted again. */
     public static final long RADIANT_COOLDOWN_MS = 60_000L; // 60-second cooldown; ability is rare and powerful

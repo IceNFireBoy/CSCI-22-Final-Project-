@@ -51,15 +51,19 @@ public class Act1Level extends LevelGenerator { // Concrete Act 1 generator
 
         // ---- Example platforms ----
         // Mid-air ledge with a CRUMBLE trap on top.
+        platform(Platform.PlatformType.CRUMBLE, 480, 660);
         platform(Platform.PlatformType.BRICK, 560, 660, 96, 16);
         platform(Platform.PlatformType.CRUMBLE, 580, 660);
+        platform(Platform.PlatformType.CRUMBLE, 660, 560, 96, 16);
+
 
         // Vertical wall — uses the explicit-size variant.
-        platform(Platform.PlatformType.WALL, 450, 596, 16, 64);
+        platform(Platform.PlatformType.WALL, 410, 596, 16, 64);
+        platform(Platform.PlatformType.WALL, 820, 450, 16, 84);
 
         // High ledge near the portal.
-        platform(Platform.PlatformType.BRICK, 880, 480);
-        platform(Platform.PlatformType.BRICK, 912, 480);
+        platform(Platform.PlatformType.CRUMBLE, 880, 480);
+        platform(Platform.PlatformType.CRUMBLE, 912, 480);
 
         // ---- Example fragment ----
         // Narrative-only (NONE unlock); sprite path null → procedural shard render.

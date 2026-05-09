@@ -70,6 +70,10 @@ public class Act3Level extends LevelGenerator { // Concrete Act 3 generator
         spike(160, 724);
         spike(220, 724);
         spike(280, 724);
+        spike(335, 724);
+        spike(380, 724);
+        spike(740, 724);
+        spike(790, 724);
 
         // CorruptedWall guarding the portal approach — wider trigger so the
         // player gets the warning shake even from afar.
@@ -78,7 +82,7 @@ public class Act3Level extends LevelGenerator { // Concrete Act 3 generator
         // ---- Portal ----
         // Reaching this portal fires Protocol.BOSS_ENTER (handled by GameStarter
         // once the level cap is updated to >= 3 — see P10.4 GameStarter wiring).
-        portal(920, 400);
+        portal(920, 320);
 
         return finish();
     }
