@@ -7,6 +7,25 @@
  etc.) lives on Player. Called by GameStarter once per tick during platforming phases.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 4a "Threads"          - the FIXED_TIMESTEP_MS = 16 ms tick rate
+//                                cooperates with the GameStarter game-loop
+//                                thread; physics is purely deterministic
+//                                so the threading separation is safe.
+// Module 3c "Collision"        - GameElement.getBounds() rectangles fed
+//                                into AABB overlap tests for landing /
+//                                wall / spike collisions. (Push-out
+//                                response and one-way platforms go beyond
+//                                the module - flagged in the Cowork
+//                                research prompt.)
+// Module 1a "Modifiers"        - private static final GRAVITY,
+//                                TERMINAL_VELOCITY, FALL_DEATH_Y, and
+//                                MAX_CONSECUTIVE_JUMPS constants per
+//                                the constants pattern.
+// =========================================================================
+
 import java.util.List; // List interface for the elements parameter in update(); allows iteration over all active entities
 
 public class PhysicsEngine { // Stateless physics engine; all simulation state lives on Player; called once per 16 ms tick

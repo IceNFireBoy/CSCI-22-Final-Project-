@@ -9,6 +9,35 @@
  ConcurrentModificationException.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1c "Abstract Classes"   - this file is the canonical abstract-
+//                                  class example: declared with the
+//                                  abstract keyword, holds non-static
+//                                  state (x, y, width, height, active),
+//                                  and declares two abstract methods
+//                                  (update, render) that subclasses MUST
+//                                  implement. Concrete methods (getBounds,
+//                                  isActive, setActive) are inherited
+//                                  unchanged.
+// Module 1b "Interfaces"         - implements Renderable to fulfil the
+//                                  drawable / bounding-box contract.
+// Module 1d "Inner Classes"      - CollisionBox is a public static nested
+//                                  class - exactly the static-nested-class
+//                                  pattern described in the inner-classes
+//                                  module (no implicit reference to the
+//                                  outer instance).
+// Module 3c "Collision"          - CollisionBox.intersects() implements the
+//                                  textbook AABB overlap test from the
+//                                  collision module: four boundary
+//                                  comparisons (left/right/top/bottom).
+//                                  All four conditions true means overlap.
+// Module 1a "Modifiers"          - protected fields shared with subclasses
+//                                  and abstract methods illustrate the
+//                                  modifier hierarchy taught in 1a.
+// =========================================================================
+
 import java.awt.Graphics2D; // 2D rendering context passed to every render() implementation
 import java.awt.Rectangle;  // AWT rectangle used as the return type of getBounds() for AABB collision tests
 

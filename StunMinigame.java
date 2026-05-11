@@ -29,6 +29,20 @@
  *                any other source, in whole or in part.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 4b "Key Bindings"   - the stun mini-game registers keystroke
+//                               listeners during its active window via
+//                               the InputMap / ActionMap pattern from 4b.
+// Module 3a "Graphics"       - the gauge and target indicator are drawn
+//                               with Graphics2D fill / draw primitives.
+// Module 1a "Modifiers"      - private mutable state fields; public
+//                               accessors expose result and isActive.
+// Module 4a "Threads"        - timing uses System.currentTimeMillis()
+//                               compared in the game-loop thread.
+// =========================================================================
 import java.awt.AlphaComposite; // Used in render() to make the panel backdrop translucent (alpha=0.88)
 import java.awt.BasicStroke;    // Used in render() to set stroke widths for the track border and target zone outline
 import java.awt.Color;          // AWT colour for all panel elements: backdrop, track, zone, marker, pips, bar

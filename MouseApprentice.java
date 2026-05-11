@@ -23,6 +23,17 @@
  * @certification I certify that this code is my own work and has not been copied from
  *                any other source, in whole or in part.
  */
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 2a "Event Handling" - implements MouseListener / MouseMotionListener
+//                               / MouseWheelListener; addMouseListener et al
+//                               wiring is the canonical pattern from 2a.
+// Module 1b "Interfaces"     - implements three event-listener interfaces
+//                               simultaneously - direct example of
+//                               multi-interface inheritance from 1b.
+// =========================================================================
 public class MouseApprentice { // Singleton mouse-state bus for the Apprentice role; no physics or rendering logic
 
     private static MouseApprentice instance; // The single instance; lazily created and stored here

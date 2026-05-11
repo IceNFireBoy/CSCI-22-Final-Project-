@@ -9,6 +9,19 @@
  light sources.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1d "Inner Classes"  - GamePhase is a public nested enum used
+//                               by GameCanvas, GameStarter, and
+//                               LevelGenerator. Direct nested-enum
+//                               example from 1d.
+// Module 1a "Modifiers"      - public mutable fields used as a small
+//                               data carrier; static factory helpers.
+// Module 4c "Networking"     - implements Serializable / Networkable so
+//                               snapshots can cross the wire.
+// =========================================================================
 public class LevelState { // Plain mutable state bag; public fields allow direct read/write from all subsystems without verbose getters/setters
 
     // =========================================================================

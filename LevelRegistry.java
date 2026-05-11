@@ -24,6 +24,16 @@
  *                any other source, in whole or in part.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1d "Inner Classes"  - LoadResult is a public static nested
+//                               class - exact static-nested-class
+//                               shape from the inner-classes module.
+// Module 1a "Modifiers"      - public static factory method (load),
+//                               private constructor, no instance state.
+// =========================================================================
 import java.util.ArrayList; // Used for the empty-default fallback list
 import java.util.List;      // Used by LoadResult.elements
 

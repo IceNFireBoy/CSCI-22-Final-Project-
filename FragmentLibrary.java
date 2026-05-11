@@ -13,6 +13,20 @@
  */
 
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1d "Inner Classes"  - holds the AbilityUnlock enum reference and
+//                               maintains a Set<String> of collected IDs.
+// Module 1a "Modifiers"      - private static singleton instance accessed
+//                               via getInstance(); public methods for
+//                               queries.
+// Module 3a "Graphics"       - the library overlay renders via Graphics2D
+//                               primitives (fillRect for backdrop,
+//                               drawString for entries, drawImage for
+//                               fragment glyphs).
+// =========================================================================
 import java.awt.AlphaComposite;      // Provided for future translucent overlay effects; unused directly but retained for extension
 import java.awt.Color;               // AWT colour for background, gold title, body text, dim locked text, and badge fill
 import java.awt.Font;                // AWT font for title, ID labels, body text, locked placeholder, and combat badges

@@ -34,6 +34,25 @@
  *                any other source, in whole or in part.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1c "Abstract Classes" - canonical abstract-base-with-helpers
+//                                pattern: build() is abstract; protected
+//                                helper methods (platform, brickRow,
+//                                fragment, altar, portal, spike,
+//                                trigger, finish) provide reusable
+//                                building blocks that every level
+//                                subclass calls. Exactly the
+//                                "concrete-helpers-on-abstract-base"
+//                                idiom shown in the abstract-classes
+//                                module.
+// Module 1a "Modifiers"        - protected helpers visible only to
+//                                subclasses; private spawn fields with
+//                                public accessors; default-method
+//                                visibility for pure helpers.
+// =========================================================================
+
 import java.util.ArrayList;        // Backing list for accumulated elements
 import java.util.HashMap;           // Default empty params map for triggers
 import java.util.List;              // Interface type for the elements list

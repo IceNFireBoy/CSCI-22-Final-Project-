@@ -29,6 +29,19 @@
  *                from any other source, in whole or in part.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 3a "Graphics"       - paintComponent-style drawing within a
+//                               dedicated renderer class; uses fillRect,
+//                               drawString, FontMetrics, and RenderingHints
+//                               anti-aliasing per 3a.
+// Module 3b "More Graphics"  - AffineTransform translate for centring
+//                               text and panel layouts at runtime.
+// Module 1a "Modifiers"      - private fields with public accessors;
+//                               static final font / colour constants.
+// =========================================================================
 import java.awt.AlphaComposite;         // Used in render() for fade-in easing of the narration text
 import java.awt.Color;                   // AWT colour constants for background, text, and footer labels
 import java.awt.Font;                    // Fonts for the narration panel text and the footer prompt

@@ -26,6 +26,18 @@
  * @certification I certify that this code is my own work and has not been copied from
  *                any other source, in whole or in part.
  */
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 4c "Networking"     - serialisable snapshot of full session
+//                               state used during partial-disconnect
+//                               reconnect; transmitted via ObjectStream.
+// Module 1a "Modifiers"      - implements Serializable; public final
+//                               fields for immutable snapshot semantics.
+// (Snapshot/replay reconnect protocol goes beyond module 4c; flagged
+//  for Cowork research.)
+// =========================================================================
 public class SessionSnapshot { // Plain data-transfer object; no methods beyond field declarations; public fields for fast server/client access
 
     // -------------------------------------------------------------------------

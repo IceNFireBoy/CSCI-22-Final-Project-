@@ -23,6 +23,17 @@
  * @certification I certify that this code is my own work and has not been copied from
  *                any other source, in whole or in part.
  */
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 4c "Networking"     - serialisable lobby state synced via
+//                               ServerStatePacket; relays role selection
+//                               and ready flags between clients.
+// Module 1a "Modifiers"      - public mutable fields on a serialisable
+//                               data carrier; private serialVersionUID.
+// Module 1d "Inner Classes"  - inline accessor helpers; data-class shape.
+// =========================================================================
 public class LobbyState { // Plain data class — no logic beyond applyMessage parsing; public fields for direct read access by GameCanvas
 
     /**

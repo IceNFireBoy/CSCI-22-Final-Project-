@@ -24,6 +24,18 @@
  * @certification I certify that this code is my own work and has not been copied
  *                from any other source, in whole or in part.
  */
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1d "Inner Classes"  - this file is the canonical enum example
+//                               from the inner-classes module - a list
+//                               of named constants used as keys for
+//                               cutscene scripts.
+// Module 1a "Modifiers"      - public enum constants are implicitly
+//                               public static final, the constant
+//                               convention from 1a.
+// =========================================================================
 public class CutsceneScript { // Data-only class; no mutable state; all script content is in the static SCRIPTS array
 
     // -------------------------------------------------------------------------

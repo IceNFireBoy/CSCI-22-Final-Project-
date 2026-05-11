@@ -33,6 +33,23 @@
  *                any other source, in whole or in part.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1c "Abstract Classes" - extends Hazard (which extends GameElement);
+//                                 fits the layered-abstract-class pattern.
+// Module 1b "Interfaces"        - implements SpriteOverridable so the look
+//                                 can be replaced with a PNG without code
+//                                 changes - polymorphism via interface
+//                                 covered in 1b.
+// Module 3a "Graphics"          - render() draws procedurally with fill /
+//                                 draw / Graphics2D primitives from 3a; PNG
+//                                 fallback path uses drawImage.
+// Module 3c "Collision"         - getBounds() yields the AABB consumed by
+//                                 GameStarter.checkHazardContact() per the
+//                                 collision module's overlap test.
+// =========================================================================
 import java.awt.AlphaComposite; // Translucent fade based on charge level
 import java.awt.Color;           // Block palette
 import java.awt.Composite;       // Save/restore the graphics composite around the alpha draw

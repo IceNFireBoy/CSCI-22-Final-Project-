@@ -13,6 +13,46 @@
  *                any other source, in whole or in part.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 3a "Graphics"           - extends JComponent and overrides
+//                                  paintComponent(Graphics g), casts to
+//                                  Graphics2D, applies setRenderingHints
+//                                  for anti-aliasing, and uses fillRect
+//                                  / drawImage / drawString. Canvas size
+//                                  is locked to 1024x768 per the spec
+//                                  and per the Graphics module's
+//                                  setPreferredSize pattern.
+// Module 3b "More Graphics"      - AffineTransform for camera
+//                                  translation in renderBoss, custom
+//                                  RadialGradientPaint and AlphaComposite
+//                                  for the light radius and darkness
+//                                  mask, RescaleOp for sprite tinting.
+//                                  Builds directly on the
+//                                  transformations and composition ideas
+//                                  from 3b.
+// Module 1d "Inner Classes"      - inner GestureListener (MouseAdapter
+//                                  subclass) handles Apprentice mouse
+//                                  input; anonymous MouseAdapter for
+//                                  Wanderer mouse-motion tracking.
+// Module 4a "Threads"            - javax.swing.Timer drives the menu
+//                                  particle animation off the EDT; the
+//                                  game-loop thread (in GameStarter)
+//                                  calls canvas.repaint() each tick
+//                                  while the EDT actually paints.
+// Module 2a "Event Handling"     - GestureListener registers as a
+//                                  MouseListener / MouseMotionListener;
+//                                  embeds key bindings via KeyBindings.
+// YouTube zCiMlbu1-aQ            - "Java Graphics Programming Tutorial -
+//                                  Shapes, Paths, Curves, and
+//                                  Transformations" informed the scene
+//                                  rendering and transformation usage.
+// YouTube pdtEB3R4MZI            - "Animation Introduction (Java
+//                                  Graphics)" informed the menu
+//                                  particle animation loop.
+// =========================================================================
+
 import javax.swing.JComponent;
 import javax.swing.Timer;
 import java.awt.AlphaComposite;

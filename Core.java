@@ -22,6 +22,21 @@
  *                any other source, in whole or in part.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1c "Abstract Classes" - extends GameElement, the abstract base
+//                                 covered in the abstract-classes module.
+// Module 3a "Graphics"          - render(Graphics2D) override uses 3a's
+//                                 drawing primitives (fill, draw, drawImage)
+//                                 plus 3a's RenderingHints anti-aliasing.
+// Module 3c "Collision"         - getBounds() / getHitbox() returns a
+//                                 Rectangle for AABB tests per 3c.
+// Module 1a "Modifiers"         - private fields with public accessors;
+//                                 where present, static final constants
+//                                 follow the constants pattern from 1a.
+// =========================================================================
 import java.awt.Graphics2D; // 2D rendering context; passed to render() for drawing the Core's visual representation
 
 public class Core extends GameElement implements Damageable { // Extends GameElement for entity-list participation; implements Damageable for the takeDamage/health contract

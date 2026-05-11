@@ -9,6 +9,27 @@
  Player health. Player melee/projectile calls takeDamage() via server-authoritative path.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1c "Abstract Classes" - extends the abstract base GameElement
+//                                while remaining instantiable; concrete
+//                                subclasses (CorruptedSpike, CorruptedWall,
+//                                etc.) further specialise the rendering
+//                                and behaviour - the "concrete-class-
+//                                between-abstract-and-leaf" pattern.
+// Module 1b "Interfaces"       - implements Damageable to gain a
+//                                health/takeDamage contract on top of the
+//                                inherited Renderable contract from
+//                                GameElement. Demonstrates "extends one,
+//                                implements many" from the interfaces
+//                                module.
+// Module 1a "Modifiers"        - protected damage/health/maxHealth fields
+//                                are exposed to subclasses but not to
+//                                unrelated callers - the protected
+//                                visibility level taught in 1a.
+// =========================================================================
+
 import java.awt.Graphics2D; // 2D rendering context; required by the abstract render() contract inherited through GameElement
 
 public class Hazard extends GameElement implements Damageable { // Extends GameElement for entity-list participation; implements Damageable for takeDamage/health contract

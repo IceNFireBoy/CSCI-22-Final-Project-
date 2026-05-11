@@ -18,6 +18,18 @@
  *                any other source, in whole or in part.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1c "Abstract Classes" - extends AltarConcealment, supplying a
+//                                 concrete implementation of the abstract
+//                                 isRevealed predicate. Direct application
+//                                 of the abstract-method-implementation
+//                                 pattern from 1c.
+// Module 1a "Modifiers"         - private fields with public accessors and
+//                                 final constants where applicable.
+// =========================================================================
 public class BreakableWallConcealment extends AltarConcealment { // Reveals on MELEE
 
     /** Static factory for fluent use in level layouts. */
