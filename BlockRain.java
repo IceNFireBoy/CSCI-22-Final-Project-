@@ -24,6 +24,25 @@
  *                any other source, in whole or in part.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1c "Abstract Classes" - extends BossAttack (abstract base) and
+//                                 customises render and hitbox for one of
+//                                 the five attack patterns. Inherits the
+//                                 shared lifetime-countdown logic via
+//                                 super.update(). Direct application of 1c.
+// Module 3a "Graphics"          - render() uses Graphics2D primitives
+//                                 (fillRect, drawLine, drawOval) plus
+//                                 RenderingHints anti-aliasing per 3a.
+// Module 3b "More Graphics"     - some attacks use AffineTransform-style
+//                                 rotation (the rotating-beam sweep) and
+//                                 AlphaComposite for translucent overlays.
+// Module 3c "Collision"         - getHitbox() returns a Rectangle for
+//                                 checkBossAttackHits() AABB tests, the
+//                                 collision-module pattern.
+// =========================================================================
 import java.awt.Graphics2D;  // 2D rendering context; passed through to Platform.render() for each block
 import java.awt.Rectangle;   // AWT rectangle; used to get block bounds for platform landing and player contact tests
 import java.util.ArrayList;  // ArrayList implementation for fallingBlocks list

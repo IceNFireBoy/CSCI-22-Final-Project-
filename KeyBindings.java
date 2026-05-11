@@ -4,6 +4,44 @@
  Bindings registered via Swing InputMap/ActionMap; WHEN_IN_FOCUSED_WINDOW scope.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 4b "Key Bindings"       - this file is a textbook implementation
+//                                  of the Key Bindings module. Uses
+//                                  InputMap.put(KeyStroke.getKeyStroke(...))
+//                                  for keystroke-to-name mapping, and
+//                                  ActionMap.put(name, new
+//                                  AbstractAction() {...}) for name-to-
+//                                  action mapping. Uses
+//                                  WHEN_IN_FOCUSED_WINDOW scope so
+//                                  keystrokes fire regardless of which
+//                                  sub-component has focus. SHIFT is
+//                                  registered separately because the
+//                                  pressed event carries SHIFT_DOWN_MASK
+//                                  while the released event carries 0,
+//                                  matching the module's KeyStroke
+//                                  guidance.
+// Module 1d "Inner Classes"      - PlayerInputState is a public static
+//                                  nested class (the static-nested
+//                                  pattern from 1d). Each AbstractAction
+//                                  is an anonymous inner class
+//                                  implementing actionPerformed - the
+//                                  canonical anonymous-class-as-event-
+//                                  handler pattern.
+// Module 2a "Event Handling"     - AbstractAction.actionPerformed is the
+//                                  same callback shape as
+//                                  ActionListener.actionPerformed shown
+//                                  in 2a.
+// Module 1a "Modifiers"          - public static final key-code constants
+//                                  (MOVE_LEFT, JUMP, ATTACK, etc.) and
+//                                  CHARGE_THRESHOLD_MS exemplify the
+//                                  constant-naming convention from 1a.
+//                                  volatile fields on PlayerInputState
+//                                  handle the EDT-writes / game-loop-
+//                                  reads cross-thread visibility.
+// =========================================================================
+
 import javax.swing.AbstractAction;  // Base class for all InputMap-backed key actions; supplies actionPerformed contract
 import javax.swing.ActionMap;        // Maps logical action name strings (e.g. "jump_pressed") to AbstractAction instances
 import javax.swing.InputMap;         // Maps KeyStroke instances to logical action name strings

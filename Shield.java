@@ -24,6 +24,25 @@
  *                any other source, in whole or in part.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1c "Abstract Classes" - extends BossAttack (abstract base) and
+//                                 customises render and hitbox for one of
+//                                 the five attack patterns. Inherits the
+//                                 shared lifetime-countdown logic via
+//                                 super.update(). Direct application of 1c.
+// Module 3a "Graphics"          - render() uses Graphics2D primitives
+//                                 (fillRect, drawLine, drawOval) plus
+//                                 RenderingHints anti-aliasing per 3a.
+// Module 3b "More Graphics"     - some attacks use AffineTransform-style
+//                                 rotation (the rotating-beam sweep) and
+//                                 AlphaComposite for translucent overlays.
+// Module 3c "Collision"         - getHitbox() returns a Rectangle for
+//                                 checkBossAttackHits() AABB tests, the
+//                                 collision-module pattern.
+// =========================================================================
 import java.awt.AlphaComposite;  // Provides SRC_OVER compositing mode for drawing the semi-transparent fill and fully-opaque border
 import java.awt.BasicStroke;      // Configures the stroke width (1.5 px) for the gold border outline
 import java.awt.Color;            // AWT colour for the semi-transparent gold fill (#c9a84c) and bright gold border (#f0cc7a)

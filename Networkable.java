@@ -20,6 +20,26 @@
  *                any other source, in whole or in part.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1b "Interfaces"          - this file IS the canonical interface
+//                                   declaration pattern: a contract of
+//                                   abstract method signatures with no body
+//                                   and no fields. Implementing classes
+//                                   provide the bodies via the implements
+//                                   keyword.
+// Module 4c "Networking in Java"  - the contract revolves around
+//                                   ObjectOutputStream / ObjectInputStream,
+//                                   the typed-stream pattern shown in the
+//                                   networking module for sending/receiving
+//                                   Java objects across a Socket.
+// Module 1a "Modifiers"           - all interface methods are implicitly
+//                                   public, matching the modifiers module's
+//                                   teaching that interface members carry
+//                                   the most permissive visibility by default.
+// =========================================================================
+
 import java.io.IOException;           // Checked exception thrown when a stream read or write fails (e.g. broken socket)
 import java.io.ObjectInputStream;     // Deserializes Java objects received from a remote peer over a socket
 import java.io.ObjectOutputStream;    // Serializes Java objects and sends them to a remote peer over a socket

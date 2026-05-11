@@ -8,6 +8,31 @@
  bindings installed via registerCutsceneBindings/registerApprenticeKeyBindings.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 2a "Event Handling"  - implements MouseListener,
+//                               MouseMotionListener, and
+//                               MouseWheelListener simultaneously,
+//                               registering itself with GameCanvas
+//                               via addMouseListener et al. Direct
+//                               application of the listener registration
+//                               pattern from 2a.
+// Module 1b "Interfaces"      - this class is a "implements three
+//                               interfaces at once" example - exactly
+//                               the multi-interface inheritance teaching
+//                               from 1b.
+// Module 4b "Key Bindings"    - registerCutsceneBindings and
+//                               registerApprenticeKeyBindings install
+//                               additional InputMap/ActionMap entries
+//                               via the same pattern KeyBindings.java
+//                               uses - the canonical Key Bindings
+//                               approach.
+// Module 1d "Inner Classes"   - each AbstractAction registered in
+//                               registerApprenticeKeyBindings is an
+//                               anonymous inner class.
+// =========================================================================
+
 import java.awt.event.*;          // MouseEvent, MouseWheelEvent, ActionEvent, KeyEvent, InputEvent — all AWT event types used here
 import javax.swing.AbstractAction; // Base class for InputMap-backed key actions registered in registerApprenticeKeyBindings / registerCutsceneBindings
 import javax.swing.ActionMap;      // Holds the AbstractAction instances looked up by the logical names stored in InputMap

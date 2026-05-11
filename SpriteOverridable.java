@@ -25,6 +25,25 @@
  *                any other source, in whole or in part.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1b "Interfaces"      - interface as a "marker contract": two
+//                               accessor methods plus a static helper
+//                               method. Implementing classes (LoreFragment,
+//                               Portal, Trigger, Altar) opt into the
+//                               sprite-override behaviour without changing
+//                               their render signature.
+// Module 3a "Graphics"        - tryDrawSprite uses Graphics2D.drawImage()
+//                               with destination width/height parameters,
+//                               the bilinear-scaled draw form shown in
+//                               the Graphics module.
+// Module 1d "Inner / static"  - static interface method (Java 8+) keeps
+//                               the shared draw helper attached to the
+//                               contract, conceptually similar to a
+//                               static utility on a class.
+// =========================================================================
+
 import java.awt.Graphics2D;             // 2D rendering context required by the static draw helper
 import java.awt.image.BufferedImage;    // Cached bitmap returned by SpriteLoader.tryLoad()
 

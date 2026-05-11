@@ -13,6 +13,35 @@
  *                any other source, in whole or in part.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 2a "Event Handling"     - addActionListener via lambda for the
+//                                  CONNECT button and all three pause-
+//                                  menu buttons; addMouseListener with
+//                                  an anonymous MouseAdapter for hover
+//                                  highlighting. Direct application of
+//                                  the event-handling module's listener
+//                                  patterns.
+// Module 1d "Inner / Anonymous"  - anonymous JTextField subclass that
+//                                  overrides paintComponent for
+//                                  placeholder text; anonymous
+//                                  MouseAdapter for hover. Both are the
+//                                  exact "anonymous-class-as-listener"
+//                                  pattern shown in 1d.
+// Module 3a "Graphics"           - the placeholder JTextField's
+//                                  paintComponent override casts
+//                                  Graphics to Graphics2D, sets a
+//                                  translucent colour, and uses
+//                                  FontMetrics to centre text - the
+//                                  Graphics module's paintComponent
+//                                  pattern applied to a Swing component.
+// Module 1a "Modifiers"          - private static final WINDOW_WIDTH /
+//                                  WINDOW_HEIGHT constants matching
+//                                  GameCanvas.CANVAS_WIDTH /
+//                                  CANVAS_HEIGHT.
+// =========================================================================
+
 import javax.swing.JButton;          // Swing button used for the CONNECT button and all three pause-menu buttons
 import javax.swing.JFrame;           // Top-level Swing window that this class extends
 import javax.swing.JLayeredPane;     // Layered container allowing GameCanvas and overlay controls to occupy different Z-order layers

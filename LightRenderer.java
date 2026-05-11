@@ -12,6 +12,28 @@
  *                any other source, in whole or in part.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 3b "More Graphics"   - AffineTransform-style usage of Graphics2D
+//                               composite save/restore; AlphaComposite
+//                               for layered transparency; geometric Area
+//                               subtraction (full-canvas rect minus
+//                               light ellipse) builds on the
+//                               transformations and Path2D ideas from 3b.
+// Module 3a "Graphics"        - BufferedImage off-screen buffers,
+//                               Graphics2D drawing primitives (fill,
+//                               draw, setColor, setComposite),
+//                               RenderingHints.KEY_ANTIALIASING per the
+//                               Graphics module's anti-alias pattern.
+// Module 1a "Modifiers"       - private fields with public accessors;
+//                               final constants for layer dimensions.
+// (The DST_OUT cut-out technique, RadialGradientPaint, half-resolution
+//  shadow-fan buffer, and corruption-overlay polygon fan all go beyond
+//  the modules' graphics scope; flagged for external citation in the
+//  Cowork research prompt.)
+// =========================================================================
+
 import java.awt.AlphaComposite;       // Compositing rules for darkness layers (SRC_OVER) and the DST_OUT cut-out technique
 import java.awt.Color;                // AWT colour for darkness fill (black) and the centre-glow dot (semi-transparent white)
 import java.awt.Composite;            // Used to save/restore the graphics context's composite before and after compositing the shadow buffer

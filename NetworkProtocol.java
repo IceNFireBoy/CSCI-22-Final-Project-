@@ -21,6 +21,21 @@
  *                any other source, in whole or in part.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 4c "Networking in Java" - object-stream serialization across the
+//                                   Socket - the typed-stream variant of
+//                                   the DataInputStream / DataOutputStream
+//                                   pattern from 4c.
+// Module 1d "Inner Classes"      - packet types are public static nested
+//                                   classes - the static-nested-class
+//                                   pattern shown in 1d.
+// Module 1a "Modifiers"          - public final fields on packet classes;
+//                                   classes implement Serializable; private
+//                                   static final serialVersionUID constants.
+// =========================================================================
 import java.io.Serializable; // Marker interface required by Java Object Serialisation for all packet classes
 
 public class NetworkProtocol { // Pure namespace class; never instantiated

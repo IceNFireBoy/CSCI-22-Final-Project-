@@ -17,6 +17,18 @@
  *                any other source, in whole or in part.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1c "Abstract Classes" - extends AltarConcealment, supplying a
+//                                 concrete implementation of the abstract
+//                                 isRevealed predicate. Direct application
+//                                 of the abstract-method-implementation
+//                                 pattern from 1c.
+// Module 1a "Modifiers"         - private fields with public accessors and
+//                                 final constants where applicable.
+// =========================================================================
 import java.awt.Rectangle; // Plate AABB used for overlap testing against placed blocks
 
 public class PressurePlateConcealment extends AltarConcealment { // Reveals while a placed block overlaps the plate

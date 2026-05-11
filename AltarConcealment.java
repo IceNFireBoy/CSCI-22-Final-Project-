@@ -22,6 +22,21 @@
  *                any other source, in whole or in part.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1c "Abstract Classes" - minimal abstract-class example: zero
+//                                fields, one abstract method
+//                                (isRevealed). The abstract-classes
+//                                module's "use abstract when you want a
+//                                shared signature without forcing a
+//                                shared implementation" pattern - the
+//                                four subclasses (GhostWall, Breakable,
+//                                PressurePlate, Timed) provide totally
+//                                different reveal logic but share this
+//                                contract.
+// =========================================================================
+
 public abstract class AltarConcealment { // Abstract — never instantiated directly; subclasses provide the reveal logic
 
     /**

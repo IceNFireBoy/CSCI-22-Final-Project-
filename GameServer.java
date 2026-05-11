@@ -8,6 +8,46 @@
  a thread-safe queue, ensuring no race conditions.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 4c "Networking in Java" - this file IS the networking-module
+//                                  pattern at scale: ServerSocket binds
+//                                  to a port, accept() blocks until a
+//                                  client connects, and a fresh
+//                                  ClientHandler thread is spawned per
+//                                  client. The server listens on port
+//                                  9876 and accepts exactly two clients
+//                                  before transitioning to game state.
+//                                  Object streams replace the textbook's
+//                                  DataInputStream / DataOutputStream so
+//                                  the protocol can carry typed packet
+//                                  classes (NetworkProtocol.*).
+// Module 4a "Threads"            - per-client ClientHandler threads,
+//                                  separate game-loop thread, and a
+//                                  thread-safe LinkedBlockingQueue
+//                                  shared between them is the textbook
+//                                  producer/consumer threading shape.
+//                                  Volatile fields ensure cross-thread
+//                                  visibility for sessionActive and
+//                                  bothConnected.
+// Module 1d "Inner Classes"      - VictoryState is a nested enum;
+//                                  ClientHandler is a private inner
+//                                  class that owns one socket and one
+//                                  ObjectInputStream. Both are exact
+//                                  textbook examples from 1d.
+// Module 1a "Modifiers"          - private static final constants
+//                                  (PORT, CORE_COUNT, CORE_MAX_HEALTH,
+//                                  TICK_MS, RECONNECT_TIMEOUT_MS),
+//                                  volatile cross-thread fields, and
+//                                  per-instance final arrays follow the
+//                                  modifier conventions from 1a.
+// (Networking optimisation patterns - per-type cooldowns, partial-
+//  disconnect snapshot/reconnect, per-tick throttling - go beyond the
+//  course module 4c and are flagged for external citation in the
+//  accompanying Cowork research prompt.)
+// =========================================================================
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;

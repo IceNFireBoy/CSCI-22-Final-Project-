@@ -13,6 +13,20 @@ import java.util.List;
  is off. When battery empties, MouseApprentice disables light until F is pressed.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1a "Modifiers"      - canonical singleton: private constructor,
+//                               private static instance field, public
+//                               static getInstance(). Encapsulation of
+//                               global session state per 1a.
+// Module 4c "Networking"     - holds the per-client Socket and
+//                               ObjectOutputStream references; coordinates
+//                               outbound sends during the game-loop tick.
+// Module 2a "Event Handling" - mouse / keyboard events are routed through
+//                               this singleton from InputRouter.
+// =========================================================================
 public class GameSession { // Process-wide singleton; survives level reloads; owns role, block budget, battery, and the send callback
 
     // =========================================================================

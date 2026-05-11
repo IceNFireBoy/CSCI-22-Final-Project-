@@ -9,6 +9,26 @@
  to ensure lifetime countdown logic always runs first.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1c "Abstract Classes" - declared abstract; cannot be instantiated
+//                                directly. Holds shared state (durationMs,
+//                                elapsed, expired) and a default update()
+//                                implementation that all five concrete
+//                                subclasses (SearingBeam, BlockRain,
+//                                CrusherBlock, SpikeArray, Shield) inherit
+//                                via super.update(). Exact pattern from the
+//                                abstract-classes module.
+// Module 3c "Collision"        - getHitbox() returns a Rectangle for AABB
+//                                tests against player.getBounds(),
+//                                following the bounding-box collision
+//                                pattern from 3c.
+// Module 1a "Modifiers"        - protected fields shared with subclasses;
+//                                public accessors expose read-only state
+//                                to GameStarter and GameCanvas.
+// =========================================================================
+
 import java.awt.Graphics2D; // 2D rendering context; required by the abstract render() inherited from GameElement
 import java.awt.Rectangle;  // AWT rectangle returned by getHitbox(); used in collision tests with the Wanderer's bounds
 

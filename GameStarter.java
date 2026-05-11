@@ -9,6 +9,41 @@
  short socket timeout; EDT (Swing) paints when GameLoop calls canvas.repaint().
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 4c "Networking in Java" - client-side Socket creation, paired
+//                                  ObjectInputStream / ObjectOutputStream
+//                                  for typed object send/receive, and a
+//                                  background NetworkIO thread that owns
+//                                  the socket exclusively while the
+//                                  GameLoop thread handles input/physics
+//                                  /rendering. Direct application of the
+//                                  client-side pattern from 4c.
+// Module 4a "Threads"            - three named threads (GameLoop,
+//                                  NetworkIO, ConnectThread), volatile
+//                                  flags for cross-thread coordination
+//                                  (running, paused, connectionLost,
+//                                  victoryHandled, gameLoopStarted), and
+//                                  Thread.sleep / nanoTime scheduling
+//                                  inside the game loop. The threading
+//                                  module's start() vs run() distinction
+//                                  is honoured throughout.
+// Module 4b "Key Bindings"       - delegates input handling to
+//                                  KeyBindings#registerBindings(canvas)
+//                                  and routes the resulting
+//                                  PlayerInputState through InputRouter,
+//                                  decoupling Swing's input system from
+//                                  the game-loop tick (4b's intent).
+// Module 1a "Modifiers"          - static final TICK_MS, TICK_NS, and
+//                                  reconnect-tuning constants; volatile
+//                                  for cross-thread visibility; private
+//                                  fields with public getters for
+//                                  controlled exposure.
+// (The fixed-timestep nanoTime loop and exponential-backoff reconnect go
+//  beyond module 4a's coverage and are flagged for external citation in
+//  the Cowork research prompt.)
+// =========================================================================
 
 import java.io.File;
 import javax.swing.SwingUtilities;

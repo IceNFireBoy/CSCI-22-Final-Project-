@@ -8,6 +8,26 @@
  GameStarter calls checkPlayerHazard and checkProjectileTarget in own passes.
  */
 
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 3c "Collision"        - core of this file is the AABB overlap
+//                                test from the collision module: rectangle
+//                                vs rectangle intersection via the four
+//                                boundary comparisons. Uses
+//                                java.awt.Rectangle as the AABB carrier,
+//                                exactly as the module discusses.
+// Module 1a "Modifiers"        - private static final delay constants
+//                                (CRUMBLE_DELAY_MS, MIMIC_DELAY_MS) per
+//                                the constants pattern in 1a.
+// (The type-specific collision RESPONSE - SLIDE deflection, SPRING
+//  bounce, CRUMBLE start, MIMIC trigger, INVISIBLE light gating,
+//  PHANTOM charge gating, push-out resolution, top-only one-way
+//  platforms - goes beyond what 3c teaches; the module covers detection
+//  only. These response patterns are flagged for external citation in
+//  the Cowork research prompt.)
+// =========================================================================
+
 import java.awt.Rectangle; // AWT Rectangle used as the common AABB type returned by GameElement.getBounds()
 
 public class CollisionDetector { // Stateless AABB resolver; all collision context is passed as parameters; no mutable fields
