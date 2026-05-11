@@ -6,7 +6,30 @@
  InputRouter dispatches ability input.
  */
 
-
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1b "Interfaces"       - implements Damageable, Renderable to
+//                                participate in damage and render
+//                                pipelines. "Implements many" pattern.
+// Module 1d "Inner Classes"    - CoreHealthBar (HUD nested class) and the
+//                                RadiantState enum are nested inside this
+//                                class, exactly the inner-class
+//                                arrangement taught in 1d.
+// Module 3a "Graphics"         - render(Graphics2D) uses AlphaComposite
+//                                for the death fade-out and invincibility
+//                                blink, plus drawImage for the sprite
+//                                frames - direct application of the
+//                                Graphics module's drawing primitives.
+// Module 3c "Collision"        - getBounds() returns a Rectangle hitbox
+//                                used by CollisionDetector for AABB
+//                                resolution per the collision module.
+// Module 1a "Modifiers"        - public static final FAITHFUL_MAX,
+//                                RADIANT_*_MS constants; volatile
+//                                pendingCoreHitIndex for cross-thread
+//                                visibility (NetworkIO reads what the
+//                                game-loop thread writes).
+// =========================================================================
 
 import java.awt.AlphaComposite;      // Used in render() for the death fade-out and invincibility blink effects
 import java.awt.BasicStroke;         // Imported for future HUD stroke effects; not directly used in current code

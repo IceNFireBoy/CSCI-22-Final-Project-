@@ -25,6 +25,26 @@
  * @certification I certify that this code is my own work and has not been copied from
  *                any other source, in whole or in part.
  */
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 3b "More Graphics"  - the camera's getRenderOffsetX/Y values are
+//                              fed into Graphics2D.translate() in
+//                              GameCanvas.renderBoss(). This is the
+//                              "transform-the-coordinate-system, not the
+//                              shapes" idiom shown in the More-Graphics
+//                              module. screenToWorld / worldToScreen
+//                              helpers are inverse translations.
+// Module 1a "Modifiers"      - public static final ARENA_W / ARENA_H
+//                              dimensions; private singleton instance
+//                              field accessed via static getInstance()
+//                              method, matching the encapsulation
+//                              guidance from 1a.
+// Module 1d "Inner Classes"  - lazy-init singleton pattern (no inner
+//                              class but the same private-constructor /
+//                              static-instance shape).
+// =========================================================================
 public class Camera { // Singleton 2D pan camera; no zoom/rotation; boss arena only
 
     /**

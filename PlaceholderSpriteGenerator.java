@@ -37,6 +37,21 @@
  *                any other source, in whole or in part.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 3a "Graphics"       - generates BufferedImages procedurally
+//                               using Graphics2D primitives (fillRect,
+//                               drawOval, drawLine) and writes the
+//                               results via ImageIO.write. Direct
+//                               application of the BufferedImage and
+//                               Graphics2D drawing primitives from 3a.
+// Module 3b "More Graphics"  - AffineTransform-style rotated polygons
+//                               for some sprite shapes.
+// Module 1a "Modifiers"      - public static main method; private
+//                               static helpers; final colour constants.
+// =========================================================================
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;

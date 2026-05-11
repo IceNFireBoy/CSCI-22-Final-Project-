@@ -6,6 +6,20 @@
  no element-level serialisation needed; both clients run generator with same seed.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1c "Abstract Classes" - extends LevelGenerator, providing a
+//                                 concrete build() method that calls the
+//                                 inherited protected helpers (platform,
+//                                 brickRow, fragment, altar, portal, etc.).
+//                                 Canonical extend-abstract-and-implement
+//                                 pattern from 1c.
+// Module 1a "Modifiers"         - private helper methods, package-private
+//                                 build() override, protected access via
+//                                 inheritance.
+// =========================================================================
 import java.util.ArrayList; // ArrayList implementation for the output entity list
 import java.util.List;      // List interface for the returned GameElement collection
 import java.util.Random;    // Seeded PRNG for deterministic quadrant-jitter platform placement

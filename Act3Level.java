@@ -16,6 +16,20 @@
  *                any other source, in whole or in part.
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1c "Abstract Classes" - extends LevelGenerator, providing a
+//                                 concrete build() method that calls the
+//                                 inherited protected helpers (platform,
+//                                 brickRow, fragment, altar, portal, etc.).
+//                                 Canonical extend-abstract-and-implement
+//                                 pattern from 1c.
+// Module 1a "Modifiers"         - private helper methods, package-private
+//                                 build() override, protected access via
+//                                 inheritance.
+// =========================================================================
 public class Act3Level extends LevelGenerator { // Concrete Act 3 generator
 
     @Override

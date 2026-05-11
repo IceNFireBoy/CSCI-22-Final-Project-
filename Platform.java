@@ -9,6 +9,28 @@
  procedurally. Apprentice places platforms via GameSession.placeBlock().
  */
 
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 1c "Abstract Classes" - extends GameElement (abstract base) and
+//                                 provides concrete update / render. The
+//                                 inherits-and-implements-abstract-methods
+//                                 pattern from 1c.
+// Module 1d "Inner Classes"     - PlatformType is a public nested enum,
+//                                 exactly the nested-enum example in 1d.
+// Module 3a "Graphics"          - render() uses Graphics2D.fillRoundRect,
+//                                 drawRoundRect, drawImage, BasicStroke, and
+//                                 Color - the drawing primitives from 3a.
+// Module 3c "Collision"         - getBounds() inherited from GameElement
+//                                 supplies the AABB used by
+//                                 CollisionDetector. CRUMBLE / MIMIC /
+//                                 INVISIBLE / SLIDE / SPRING response logic
+//                                 goes beyond 3c (flagged for Cowork).
+// Module 1a "Modifiers"         - private fields, public accessors, public
+//                                 static final TILE_SIZE and
+//                                 SPRING_BOUNCE_FORCE constants.
+// =========================================================================
 import java.awt.BasicStroke;                      // Configures outline stroke widths for platform rendering
 import java.awt.Color;                             // AWT colour definitions for platform fill and border hues
 import java.awt.Graphics2D;                        // 2D rendering context passed to render() by GameCanvas

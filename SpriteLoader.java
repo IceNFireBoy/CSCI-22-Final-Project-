@@ -21,6 +21,28 @@
  * @certification I certify that this code is my own work and has not been copied from
  *                any other source, in whole or in part.
  */
+
+// =========================================================================
+// Citations - CSCI 22 Course Materials Applied
+// =========================================================================
+// Module 3a "Graphics"       - canonical ImageIO.read pattern for loading
+//                              a PNG into a BufferedImage; the loaded
+//                              BufferedImage is then drawn through
+//                              Graphics2D.drawImage in every entity's
+//                              render method. Direct application of the
+//                              image-loading pipeline from 3a.
+// Module 1a "Modifiers"      - private singleton instance + private
+//                              constructor + public static getInstance()
+//                              follows the modifier conventions from 1a.
+// Module 1d "Inner Classes"  - bounded HashMap<String, BufferedImage>
+//                              cache prevents redundant disk I/O. Keeps
+//                              the static helper inside the singleton
+//                              class scope.
+// (Bilinear scaling via Graphics2D.SCALE_SMOOTH RenderingHints in
+//  loadScaled and the magenta-placeholder fallback for missing assets
+//  go a bit beyond 3a; flagged for external citation if needed.)
+// =========================================================================
+
 import javax.imageio.ImageIO;                    // Java standard library for reading image files from disk
 import java.awt.image.BufferedImage;             // In-memory ARGB pixel buffer used as the canonical image type throughout the project
 import java.awt.Graphics2D;                      // 2D drawing context used to fill the magenta placeholder and to draw scaled images
