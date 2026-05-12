@@ -88,7 +88,7 @@ public class FragmentLibrary {
      * An ordered list of every {@link LoreFragment} collected by the Wanderer in this
      * session, preserved in collection order.
      */
-    private List<LoreFragment> collected;  // ArrayList: supports index access and iteration; order = collection order
+    private java.util.List<LoreFragment> collected;  // ArrayList: supports index access and iteration; order = collection order
 
     /**
      * A set of fragment ID strings corresponding to every entry in {@link #collected}.
@@ -596,7 +596,7 @@ public class FragmentLibrary {
      *
      * @return an unmodifiable view of the collected fragments; never {@code null}
      */
-    public List<LoreFragment> getCollected() {
+    public java.util.List<LoreFragment> getCollected() {
         return Collections.unmodifiableList(collected); // Unmodifiable wrapper: prevents external code from bypassing collect() checks
     }
 

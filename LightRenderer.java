@@ -248,7 +248,7 @@ public class LightRenderer {
      * @param plats list of candidate platforms to cast shadows from; may be
      *              empty but must not be {@code null}
      */
-    public void renderShadowFans(Graphics2D g, LightBall lb, List<Platform> plats) {
+    public void renderShadowFans(Graphics2D g, LightBall lb, java.util.List<Platform> plats) {
         if (g == null || lb == null || plats == null || plats.isEmpty()) return; // Null/empty guard: skip entirely if dependencies are missing
 
         Camera cam = Camera.getInstance(); // Get the singleton camera to transform world coordinates to screen coordinates
