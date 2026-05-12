@@ -581,7 +581,10 @@ public class GameServer {
             lastKnownWandererHealth = p.health;
             // Wanderer death → P8.10: play ARCHITECT_VICTORY cutscene first,
             // then commit VictoryState and broadcast VictoryPacket in endCutscene.
-            if (p.health <= 0 && victoryState == VictoryState.IN_PROGRESS
+            // Only fires during the boss fight; in Acts 1-3 the client restarts
+            // at Act 1 with full health instead of triggering the architect win.
+            if (p.health <= 0 && bossPhaseActive
+                    && victoryState == VictoryState.IN_PROGRESS
                     && pendingVictoryState == null) {
                 pendingVictoryState = VictoryState.APPRENTICE_WIN;
                 startCutscene(CutsceneID.ARCHITECT_VICTORY.name());

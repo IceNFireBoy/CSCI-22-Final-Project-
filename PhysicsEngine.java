@@ -138,9 +138,9 @@ public class PhysicsEngine { // Stateless physics engine; all simulation state l
             player.setConsecutiveJumps(0);                                        // Reset jump count: the player can jump again (up to MAX_CONSECUTIVE_JUMPS)
         }
 
-        // 8. Fall death — if player falls below the screen, deduct a life.
+        // 8. Fall death — if player falls below the screen, enter the death state.
         if (player.getY() > FALL_DEATH_Y) {                                      // Below the visible canvas height (768 px); implies fell off the bottom
-            player.loseLife();                                                    // Deduct one life and respawn the player at the level start position
+            player.loseLife();                                                    // Enter death state; Acts 1-3 reload Act 1, BOSS triggers ARCHITECT_VICTORY
         }
     }
 
