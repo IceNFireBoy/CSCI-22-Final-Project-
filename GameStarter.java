@@ -64,14 +64,7 @@ public class GameStarter {
     private static final long TICK_NS = TICK_MS * 1_000_000L; // Fixed tick duration in nanoseconds for precision scheduling
     private static final long NET_SEND_INTERVAL_MS = 16L; // Target interval between outbound network state packets
 
-    /**
-     * Socket read timeout in milliseconds used by the network thread. Short enough to
-     * keep the send loop on schedule; long enough that a single small packet arriving in
-     * one OS read() will not trigger a spurious timeout.
-     */
-    private static final int NET_RECV_TIMEOUT_MS = 15;
-
-    /** Initial milliseconds the network thread waits before the first reconnect attempt. */
+     
     private static final long RECONNECT_DELAY_MS = 3000L;
 
     /**
@@ -84,13 +77,13 @@ public class GameStarter {
     private static final int  RECONNECT_MAX_ATTEMPTS  = 5;
     private static final long RECONNECT_MAX_DELAY_MS  = 30_000L; // Cap doubling at 30 s
 
-    /** Horizontal spawn position of the Wanderer in world space. */
+     
     private static final int PLAYER_SPAWN_X = 100;
 
-    /** Vertical spawn position of the Wanderer in world space. */
+     
     private static final int PLAYER_SPAWN_Y = 400;
 
-    /** Delay in milliseconds before the UI is restored after a game-over sequence. */
+     
     private static final long MENU_RETURN_DELAY_MS = 2000L; // 2 s: gives the game-over notification time to read before the connect UI reappears
 
     // =========================================================================
@@ -101,7 +94,7 @@ public class GameStarter {
     // Singleton
     // =========================================================================
 
-    /** The single running instance; set in the constructor. */
+     
     private static GameStarter instance;
 
     /**
@@ -130,17 +123,28 @@ public class GameStarter {
     private String role;
 
     /**
-     * Serialised object output stream wrapping the socket's output channel. All sends
-     * are synchronised on this object to allow both the NetworkIO thread and the game
-     * loop thread (fragment collection) to write safely.
+     * Serialised object output stream wrapping the socket's output channel. All
+     * writes go through {@link #sendPacket(Object)} which serialises them on
+     * {@link #sendLock}; the field itself is {@code volatile} so the sender
+     * thread, the game-loop thread, and the reconnect path see updates after
+     * a stream replacement immediately.
      */
-    private ObjectOutputStream networkOut;
+    private volatile ObjectOutputStream networkOut;
 
     /**
      * Serialised object input stream wrapping the socket's input channel. Read
-     * exclusively by the NetworkIO thread.
+     * exclusively by the NetworkIO reader thread. {@code volatile} so a
+     * reconnecting socket's fresh input stream is observed without locking.
      */
-    private ObjectInputStream networkIn;
+    private volatile ObjectInputStream networkIn;
+
+    /**
+     * Stable monitor guarding writes to {@link #networkOut}. Locking on a
+     * dedicated final object (rather than on {@code networkOut} itself) means
+     * a reconnect that replaces the stream cannot leave two writer threads
+     * holding locks on different instances and racing on the new stream.
+     */
+    private final Object sendLock = new Object();
 
     /**
      * Hostname or IP address of the server, retained for use by the single reconnect
@@ -200,10 +204,10 @@ public class GameStarter {
      */
     private boolean levelReady = false;
 
-    /** Tick counter used to delay setting {@link #levelReady} to {@code true}. */
+     
     private int levelReadyDelay = 0;
 
-    /** Number of ticks to wait after a level load before portal/win checks resume. */
+     
     private static final int LEVEL_READY_FRAMES = 10;
 
     /**
@@ -275,10 +279,10 @@ public class GameStarter {
      */
     private volatile boolean running;
 
-    /** Whether the game is currently paused. */
+     
     private volatile boolean paused;
 
-    /** The dedicated game loop thread. Retained so {@link #stop()} can interrupt it. */
+     
     private Thread gameLoopThread;
 
     // =========================================================================
@@ -291,10 +295,10 @@ public class GameStarter {
      */
     private final Player player;
 
-    /** The physics engine that integrates velocity, applies gravity, and resolves collisions. */
+     
     private final Physics physicsEngine;
 
-    /** Translates the per-tick {@link KeyBindings.PlayerInputState} into engine method calls. */
+     
     private final InputRouter inputRouter;
 
     /**
@@ -336,13 +340,13 @@ public class GameStarter {
     // P8.6 — pre-boss altar state
     // -------------------------------------------------------------------------
 
-    /** True while the altar overlay is open, waiting for the Wanderer's choice. */
+     
     private boolean altarActive = false;
 
-    /** ms between faithful-cycle awards during the boss fight (20 seconds). */
+     
     private static final long FAITHFUL_CYCLE_INTERVAL_MS = 20_000L;
 
-    /** Timestamp of the last faithful-cycle award, reset on boss entry. */
+     
     private long faithfulCycleLastMs = 0L;
 
     // -------------------------------------------------------------------------
@@ -530,33 +534,29 @@ public class GameStarter {
     }
 
     /**
-     * The body of the NetworkIO thread. On each iteration it:
-     * <ol>
-     *   <li>Sends a state snapshot if at least {@value #NET_SEND_INTERVAL_MS} ms have
-     *       elapsed since the last send.</li>
-     *   <li>Attempts a non-blocking receive with a {@value #NET_RECV_TIMEOUT_MS} ms
-     *       socket timeout; processes the packet if one arrived.</li>
-     * </ol>
+     * The body of the NetworkIO reader thread. Uses BLOCKING reads
+     * (SO_TIMEOUT = 0) so that a slow LAN packet cannot fire a
+     * SocketTimeoutException mid-deserialization (which corrupts the
+     * ObjectInputStream and was the root cause of the spurious
+     * "network lost" pauses on remote clients).
      *
-     * <p>On any {@link IOException} that is not a mere {@link SocketTimeoutException},
-     * the method delegates to {@link #handleDisconnect()} which waits
-     * {@value #RECONNECT_DELAY_MS} ms then tries once to re-establish the connection.
-     * If the reconnect fails, the game loop is stopped.
+     * <p>Sending is handled by a separate sender thread spawned after the
+     * handshake; this thread does nothing but read inbound packets and
+     * delegate to {@link #handleInboundPacket(Object)}. On any
+     * non-recoverable {@link IOException} it delegates to
+     * {@link #handleDisconnect()}.
      */
     private void runNetworkIO() {
         if (networkOut == null || networkIn == null) return;
 
-        // ---- Phase 0: wait until server confirms both players connected ----
-        // Do NOT set a short socket timeout before this loop. A SocketTimeoutException
-        // that fires mid-deserialization corrupts the ObjectInputStream — the partial
-        // object bytes are consumed but never returned, so the next readObject() sees
-        // garbage and throws a non-timeout IOException, which we then misread as a
-        // dropped connection. Use blocking reads here; the server sends bothConnected=true
-        // immediately after the second client joins, so the wait is at most a few ms.
+        // ---- Always use blocking reads. ObjectInputStream is not safe to
+        // interrupt mid-object via SO_TIMEOUT — once partial bytes have been
+        // consumed from the underlying buffer, the stream is unrecoverable.
         try {
-            socket.setSoTimeout(0); // blocking reads during handshake
+            socket.setSoTimeout(0);
         } catch (IOException ignored) {}
 
+        // ---- Phase 0: wait until server confirms both players connected ----
         spinWaitForBothConnected:
         while (true) {
             try {
@@ -583,8 +583,6 @@ public class GameStarter {
                         break spinWaitForBothConnected;
                     }
                 }
-            } catch (SocketTimeoutException e) {
-                // No data yet — keep polling (should not occur with timeout=0)
             } catch (ClassNotFoundException e) {
                 System.err.println("[NetworkIO] Unknown packet class during wait: " + e.getMessage());
             } catch (IOException e) {
@@ -593,43 +591,53 @@ public class GameStarter {
             }
         }
 
-        // Handshake complete — switch to short timeout so the main loop
-        // never blocks longer than one tick waiting for inbound packets.
-        try {
-            socket.setSoTimeout(NET_RECV_TIMEOUT_MS);
-        } catch (IOException ignored) {}
+        // Handshake complete — spawn the dedicated sender thread that drives
+        // periodic outbound state without ever touching the input stream.
+        Thread senderThread = new Thread(this::runNetworkSender,
+                NET_THREAD_NAME + "-Sender");
+        senderThread.setDaemon(true);
+        senderThread.start();
 
-        long lastSendTime = 0L;
-
+        // ---- Main read loop: pure blocking reads ----
         while (running || !victoryHandled) {
-            long now = System.currentTimeMillis();
-
-            // ---- Send phase ----
-            if (now - lastSendTime >= NET_SEND_INTERVAL_MS) {
-                lastSendTime = now;
-                sendOutboundState();
-            }
-
-            // ---- Receive phase (non-blocking with socket timeout) ----
             try {
                 Object pkt = networkIn.readObject();
                 handleInboundPacket(pkt);
-            } catch (SocketTimeoutException e) {
-                // No data ready within the timeout — normal, continue to next tick
             } catch (ClassNotFoundException e) {
                 System.err.println("[NetworkIO] Unknown packet class: " + e.getMessage());
             } catch (IOException e) {
-                // Real connection error — attempt one reconnect
+                // Real connection error — attempt to reconnect.
                 if (!handleDisconnect()) {
                     return; // reconnect failed; loop exits
                 }
-                // Reconnect succeeded; reset send timer and carry on
-                lastSendTime = 0L;
+                // Reconnect succeeded; carry on with the new streams.
             }
+        }
+    }
 
-            // Brief yield to avoid busy-spinning at 100 % CPU between ticks
+    /**
+     * Sender thread body: periodically pushes role-appropriate outbound state
+     * to the server. Runs separately from the reader thread so the reader can
+     * stay in a permanently-blocking {@code readObject()} call (the only safe
+     * mode for ObjectInputStream over an unreliable network) while sends keep
+     * a steady cadence. Writes are serialised by {@link #sendPacket(Object)}
+     * which synchronises on {@link #networkOut}.
+     */
+    private void runNetworkSender() {
+        long lastSendTime = 0L;
+        while (running || !victoryHandled) {
+            long now = System.currentTimeMillis();
+            if (now - lastSendTime >= NET_SEND_INTERVAL_MS) {
+                lastSendTime = now;
+                try {
+                    sendOutboundState();
+                } catch (Exception e) {
+                    // Swallow — the reader thread will detect any real
+                    // disconnect on its next failed read and run handleDisconnect().
+                }
+            }
             try {
-                Thread.sleep(1L);
+                Thread.sleep(4L);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return;
@@ -682,15 +690,16 @@ public class GameStarter {
      * @param pkt the serializable packet to send; must not be {@code null}
      */
     private void sendPacket(Object pkt) {
-        if (networkOut == null) return;
-        synchronized (networkOut) {
+        synchronized (sendLock) {
+            ObjectOutputStream out = networkOut;
+            if (out == null) return;
             try {
-                networkOut.writeObject(pkt);
-                networkOut.flush();
+                out.writeObject(pkt);
+                out.flush();
                 // Reset prevents ObjectOutputStream from caching references, which
                 // would cause subsequent writes of the same object to send a back-
                 // reference instead of the updated field values.
-                networkOut.reset();
+                out.reset();
             } catch (IOException e) {
                 // Swallow here; the receive loop will detect the broken connection
                 // on the next read attempt and call handleDisconnect().
@@ -889,7 +898,9 @@ public class GameStarter {
                 networkOut.reset();
 
                 networkIn  = new ObjectInputStream(socket.getInputStream());
-                socket.setSoTimeout(NET_RECV_TIMEOUT_MS);
+                // Blocking reads on the new socket as well — never apply a
+                // short SO_TIMEOUT, see runNetworkIO() comment for why.
+                socket.setSoTimeout(0);
 
                 connectionLost = false;
                 if (canvas != null) {
@@ -1962,7 +1973,7 @@ public class GameStarter {
         }
     }
 
-    /** Removes all network-placed Platform blocks from the elements list. */
+     
     private void clearAllBlocks() {
         elements.removeAll(placedBlocks);
         placedBlocks.clear();
@@ -1995,7 +2006,7 @@ public class GameStarter {
         }
     }
 
-    /** Returns whether the game is currently paused. */
+     
     public boolean isPaused() {
         return paused;
     }
