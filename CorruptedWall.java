@@ -48,7 +48,8 @@
 //                                 collision module's overlap test.
 // =========================================================================
 import java.awt.*;
-public class CorruptedWall extends Hazard implements SpriteOverridable { // Falling hazard with FSM
+import java.awt.image.*;
+public class CorruptedWall extends Hazard { // Falling hazard with FSM
 
     // -------------------------------------------------------------------------
     // Constants
@@ -85,8 +86,6 @@ public class CorruptedWall extends Hazard implements SpriteOverridable { // Fall
     private int  shakeOffsetY;          // Same for vertical jitter
     private int  fallTargetY;           // World-space y at which the wall lands (computed from Wanderer position when WARNING started)
 
-    private String spritePath;          // Optional PNG override
-
     // -------------------------------------------------------------------------
     // Constructor
     // -------------------------------------------------------------------------
@@ -111,7 +110,6 @@ public class CorruptedWall extends Hazard implements SpriteOverridable { // Fall
         this.shakeOffsetX = 0;
         this.shakeOffsetY = 0;
         this.fallTargetY  = y;
-        this.spritePath   = null;
     }
 
     // -------------------------------------------------------------------------
@@ -218,65 +216,9 @@ public class CorruptedWall extends Hazard implements SpriteOverridable { // Fall
     @Override
     public void render(Graphics2D g) {
         if (!active) return;
-
-        // Sprite override wins; the override is rendered with the same shake
-        // offset during WARNING so the player still sees the danger cue.
         int rx = x + (phase == WallPhase.WARNING ? shakeOffsetX : 0);
         int ry = y + (phase == WallPhase.WARNING ? shakeOffsetY : 0);
-        if (spritePath != null
-            && SpriteOverridable.tryDrawSprite(g, this, rx, ry, width, height)) return;
-
-        // P9.6' convention path — try resources/sprites/hazards/wall.png when
-        // no explicit override is set.
-        if (spritePath == null) {
-            java.awt.image.BufferedImage img = SpriteLoader.getInstance()
-                .tryLoad("resources/sprites/hazards/wall.png");
-            if (img != null) {
-                g.drawImage(img, rx, ry, width, height, null);
-                return;
-            }
-        }
-
-        // Procedural fallback. Colour shifts during WARNING and FALLING to red.
-        Color fill;
-        switch (phase) {
-            case WARNING:
-            case FALLING:
-                fill = WALL_FILL_WARNING;
-                break;
-            case LANDED:
-                fill = new Color(0x40, 0x10, 0x18); // Slightly darker post-impact
-                break;
-            case IDLE:
-            default:
-                fill = WALL_FILL_IDLE;
-        }
-        g.setColor(fill);
-        g.fillRect(rx, ry, width, height);
-        g.setColor(WALL_OUTLINE);
-        g.drawRect(rx, ry, width, height);
-
-        // Brick-pattern detail to break up the silhouette.
-        g.setColor(WALL_OUTLINE);
-        for (int row = 16; row < height; row += 16) {
-            g.drawLine(rx, ry + row, rx + width, ry + row);
-        }
-        for (int col = 16; col < width; col += 32) {
-            int offset = ((col / 32) % 2 == 0) ? 0 : 16; // Stagger every other row
-            for (int row = 0; row < height; row += 16) {
-                if ((row / 16) % 2 == 0) {
-                    g.drawLine(rx + col, ry + row, rx + col, ry + row + 16);
-                } else if (col + offset < width) {
-                    g.drawLine(rx + col + offset, ry + row, rx + col + offset, ry + row + 16);
-                }
-            }
-        }
+        BufferedImage img = SpriteLoader.getInstance().tryLoad("resources/sprites/hazards/wall.png");
+        if (img != null) g.drawImage(img, rx, ry, width, height, null);
     }
-
-    // -------------------------------------------------------------------------
-    // SpriteOverridable
-    // -------------------------------------------------------------------------
-
-    @Override public void setSpritePath(String path) { this.spritePath = path; }
-    @Override public String getSpritePath() { return spritePath; }
 }

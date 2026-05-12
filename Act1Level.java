@@ -15,14 +15,14 @@
  *   platform(type, x, y, w, h)
  *   brickRow(startX, y, count)               // 32-px gap by default
  *   brickRow(startX, y, count, gap)
- *   fragment(id, x, y, unlock, body, spritePath)
- *   altar(id, x, y, opt1, opt2, spritePath)
+ *   fragment(id, x, y, unlock, body)
+ *   altar(id, x, y, opt1, opt2)
  *   portal(x, y)
- *   spike(x, y) / spike(x, y, w, h, spritePath)
- *   corruptedWall(x, y, w, h, triggerW, triggerH, spritePath)
- *   phantomBlock(x, y) / phantomBlock(x, y, w, h, spritePath)
- *   lightMover(x, y, MovePattern) / lightMover(x, y, pattern, amp, periodMs, behaviour, spritePath)
- *   trigger(type, x, y, params, spritePath)
+ *   spike(x, y) / spike(x, y, w, h)
+ *   corruptedWall(x, y, w, h, triggerW, triggerH)
+ *   phantomBlock(x, y) / phantomBlock(x, y, w, h)
+ *   lightMover(x, y, MovePattern) / lightMover(x, y, pattern, amp, periodMs, behaviour)
+ *   trigger(type, x, y, params)
  *   lastFragment().setGated(true)            // post-hoc fragment config
  *   lastAltar().setConcealment(...)          // post-hoc altar config
  * </pre>
@@ -82,8 +82,7 @@ public class Act1Level extends LevelGenerator { // Concrete Act 1 generator
         // Narrative-only (NONE unlock); sprite path null → procedural shard render.
         fragment("A1-INTRO", 244, 716, // id, x, y
                  LoreFragment.AbilityUnlock.NONE,
-                 "Entry 001. The first platform held. The apprentice is learning the grammar of light.",
-                 null);
+                 "Entry 001. The first platform held. The apprentice is learning the grammar of light.");
 
         // ---- Example portal ----
         // Default 48×80; collision with the Wanderer triggers level 2 load.
