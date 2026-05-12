@@ -37,8 +37,7 @@
 //                                 where present, static final constants
 //                                 follow the constants pattern from 1a.
 // =========================================================================
-import java.awt.Graphics2D; // 2D rendering context; passed to render() for drawing the Core's visual representation
-
+import java.awt.*;
 public class Core extends GameElement implements Damageable { // Extends GameElement for entity-list participation; implements Damageable for the takeDamage/health contract
 
     // -------------------------------------------------------------------------

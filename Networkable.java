@@ -40,10 +40,7 @@
 //                                   the most permissive visibility by default.
 // =========================================================================
 
-import java.io.IOException;           // Checked exception thrown when a stream read or write fails (e.g. broken socket)
-import java.io.ObjectInputStream;     // Deserializes Java objects received from a remote peer over a socket
-import java.io.ObjectOutputStream;    // Serializes Java objects and sends them to a remote peer over a socket
-
+import java.io.*;
 /**
  * Contract that any game object must satisfy in order to participate in the
  * client-server state-synchronisation cycle. Keeping this as a narrow two-method

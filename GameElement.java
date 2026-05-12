@@ -38,9 +38,7 @@
 //                                  modifier hierarchy taught in 1a.
 // =========================================================================
 
-import java.awt.Graphics2D; // 2D rendering context passed to every render() implementation
-import java.awt.Rectangle;  // AWT rectangle used as the return type of getBounds() for AABB collision tests
-
+import java.awt.*;
 public abstract class GameElement implements Renderable { // Abstract — cannot be instantiated directly; implements Renderable for getBounds() and render() contract
 
     // -------------------------------------------------------------------------

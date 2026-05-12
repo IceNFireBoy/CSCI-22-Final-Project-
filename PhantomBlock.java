@@ -50,11 +50,7 @@
 //                                 GameStarter.checkHazardContact() per the
 //                                 collision module's overlap test.
 // =========================================================================
-import java.awt.AlphaComposite; // Translucent fade based on charge level
-import java.awt.Color;           // Block palette
-import java.awt.Composite;       // Save/restore the graphics composite around the alpha draw
-import java.awt.Graphics2D;       // 2D rendering context
-
+import java.awt.*;
 public class PhantomBlock extends Platform implements SpriteOverridable { // Light-charging memory block
 
     // -------------------------------------------------------------------------

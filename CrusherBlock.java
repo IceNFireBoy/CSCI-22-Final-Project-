@@ -46,12 +46,7 @@
 //                                 checkBossAttackHits() AABB tests, the
 //                                 collision-module pattern.
 // =========================================================================
-import java.awt.BasicStroke; // Configures the 2 px magenta border stroke for the block outline
-import java.awt.Color;        // AWT colour for the dark fill (#1a1020) and magenta border (#8b2070)
-import java.awt.Graphics2D;   // 2D rendering context; used for fillRect and drawRect with stroke settings
-import java.awt.Point;        // AWT integer point for currentPos and targetPos; updated via setTargetPos()
-import java.awt.Stroke;       // Interface type; saved before and restored after setting the 2 px BasicStroke
-
+import java.awt.*;
 public class CrusherBlock extends BossAttack { // Extends BossAttack for the 8000 ms lifetime countdown
 
     // -------------------------------------------------------------------------

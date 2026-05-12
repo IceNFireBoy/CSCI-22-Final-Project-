@@ -29,8 +29,7 @@
 // Module 1a "Modifiers"         - private fields with public accessors and
 //                                 final constants where applicable.
 // =========================================================================
-import java.awt.Rectangle; // Plate AABB used for overlap testing against placed blocks
-
+import java.awt.*;
 public class PressurePlateConcealment extends AltarConcealment { // Reveals while a placed block overlaps the plate
 
     private final Rectangle plate; // World-space pressure-plate AABB; final — never mutated after construction

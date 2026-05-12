@@ -1,5 +1,5 @@
-import java.util.List;
 
+import java.util.*;
 /**
  Process-wide singleton holding session-level state that survives level reloads. Stores the
  role assignment the server assigns at connection time (Wanderer or Apprentice) and exposes
@@ -471,10 +471,14 @@ public class GameSession { // Process-wide singleton; survives level reloads; ow
      * @return the per-tick drain rate corresponding to the radius band
      */
     private float getDrainRate(int radius) {                                 // Maps radius to a tier-based drain rate; called by updateBattery() each tick
-        if (radius > 140) return DRAIN_HIGH;                                 // Widest light (>140 px): fastest drain, ~10 s lifetime
-        if (radius > 100) return DRAIN_MED;                                  // Medium-wide (100–140 px): medium drain, ~20 s lifetime
-        if (radius > 60)  return DRAIN_LOW;                                  // Medium-small (60–100 px): slow drain, ~40 s lifetime
-        return DRAIN_MIN;                                                     // Smallest (≤60 px): slowest drain, ~60 s lifetime
+        float base;
+        if (radius > 140) base = DRAIN_HIGH;                                 // Widest light (>140 px): fastest drain, ~10 s lifetime
+        else if (radius > 100) base = DRAIN_MED;                             // Medium-wide (100–140 px): medium drain, ~20 s lifetime
+        else if (radius > 60)  base = DRAIN_LOW;                             // Medium-small (60–100 px): slow drain, ~40 s lifetime
+        else base = DRAIN_MIN;                                                // Smallest (≤60 px): slowest drain, ~60 s lifetime
+        // Acts 2 and 3 get 2× battery life — halve the drain rate
+        if ("ACT2".equals(currentAct) || "ACT3".equals(currentAct)) base *= 0.5f;
+        return base;
     }
 
     /**

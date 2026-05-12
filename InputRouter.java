@@ -33,13 +33,8 @@
 //                               anonymous inner class.
 // =========================================================================
 
-import java.awt.event.*;          // MouseEvent, MouseWheelEvent, ActionEvent, KeyEvent, InputEvent — all AWT event types used here
-import javax.swing.AbstractAction; // Base class for InputMap-backed key actions registered in registerApprenticeKeyBindings / registerCutsceneBindings
-import javax.swing.ActionMap;      // Holds the AbstractAction instances looked up by the logical names stored in InputMap
-import javax.swing.InputMap;       // Maps KeyStroke instances to logical action name strings used in ActionMap
-import javax.swing.JComponent;     // The Swing component onto which InputMap/ActionMap entries are installed
-import javax.swing.KeyStroke;      // Encapsulates a key + modifier combination as the key in InputMap
-
+import java.awt.event.*;
+import javax.swing.*;
 public class InputRouter implements MouseListener, MouseMotionListener, MouseWheelListener {
 
     // -------------------------------------------------------------------------

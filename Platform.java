@@ -31,12 +31,9 @@
 //                                 static final TILE_SIZE and
 //                                 SPRING_BOUNCE_FORCE constants.
 // =========================================================================
-import java.awt.BasicStroke;                      // Configures outline stroke widths for platform rendering
-import java.awt.Color;                             // AWT colour definitions for platform fill and border hues
-import java.awt.Graphics2D;                        // 2D rendering context passed to render() by GameCanvas
-import java.awt.image.BufferedImage;               // Stores loaded tile sprites from SpriteLoader for each platform type
-import java.util.Random;                           // PRNG used to generate random shake offsets during the crumble animation
-
+import java.awt.*;
+import java.awt.image.*;
+import java.util.*;
 public class Platform extends GameElement { // Extends GameElement for position, AABB, active flag, and the update/render contract
 
     // =========================================================================

@@ -26,7 +26,7 @@
 //                                the constants pattern.
 // =========================================================================
 
-// java.util.List used at the use-site via fully-qualified name to avoid clashes with java.awt.List on user setups that pull in awt wildcard imports.
+import java.util.*;
 
 public class Physics { // Stateless physics engine; all simulation state lives on Player; called once per 16 ms tick
 
@@ -92,7 +92,7 @@ public class Physics { // Stateless physics engine; all simulation state lives o
     // Per-tick update
     // -------------------------------------------------------------------------
 
-    public void update(long deltaMs, Player player, java.util.List<GameElement> elements) { // Main physics step; called every 16 ms during platforming phases
+    public void update(long deltaMs, Player player, List<GameElement> elements) { // Main physics step; called every 16 ms during platforming phases
         long now = System.currentTimeMillis();                                     // Capture current wall-clock time once for dodge expiry and cooldown comparisons
 
         // 1. Expire dodge-roll invincibility once the duration has elapsed.

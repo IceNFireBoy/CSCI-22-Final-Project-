@@ -43,15 +43,9 @@
 //                                 checkBossAttackHits() AABB tests, the
 //                                 collision-module pattern.
 // =========================================================================
-import java.awt.AlphaComposite;  // Provides SRC_OVER compositing mode for drawing the semi-transparent fill and fully-opaque border
-import java.awt.BasicStroke;      // Configures the stroke width (1.5 px) for the gold border outline
-import java.awt.Color;            // AWT colour for the semi-transparent gold fill (#c9a84c) and bright gold border (#f0cc7a)
-import java.awt.Composite;        // Interface type saved before and restored after alpha compositing, preserving caller's composite state
-import java.awt.Graphics2D;       // 2D rendering context passed to render(); used for fillRect and drawRect with composite/stroke settings
-import java.awt.Rectangle;        // AWT rectangle for the shield hitbox (shieldRect) used in intersection tests with projectile bounds
-import java.awt.Stroke;           // Interface type saved before and restored after setting the 1.5 px BasicStroke
-import java.util.List;            // List interface for the projectiles reference; checked each tick for player-fired projectiles to intercept
-
+import java.awt.*;
+import java.util.*;
+import java.util.List;
 public class Shield extends BossAttack { // Extends BossAttack for the shared active-flag, lifetime timer, and super.update() duration management
 
     /**
@@ -75,7 +69,7 @@ public class Shield extends BossAttack { // Extends BossAttack for the shared ac
      * {@link GameStarter} manages; modifying projectile active-states here has
      * immediate effect on the game loop's update/render passes.</p>
      */
-    private java.util.List<Projectile> projectiles; // Live reference to GameStarter's projectile list; iterated in update() to intercept player shots
+    private List<Projectile> projectiles; // Live reference to GameStarter's projectile list; iterated in update() to intercept player shots
 
     /**
      * Constructs a new {@code Shield} at the fixed boss-panel position (717, 364)
@@ -95,7 +89,7 @@ public class Shield extends BossAttack { // Extends BossAttack for the shared ac
      * @param projectiles the list of active projectiles to check for interception;
      *                    may be {@code null} (the update loop guards against this)
      */
-    public Shield(java.util.List<Projectile> projectiles) {                  // Single-argument constructor: receives the live projectile list; position/size/lifetime are fixed
+    public Shield(List<Projectile> projectiles) {                  // Single-argument constructor: receives the live projectile list; position/size/lifetime are fixed
         super(717, 364, 120, 40, 2000L);                           // Delegate to BossAttack: place at (717,364), set 120×40 AABB, start 2000 ms countdown
         this.shieldRect = new Rectangle(717, 364, 120, 40);        // Construct an explicit Rectangle matching the super AABB for use in projectile intersection tests
         this.projectiles = projectiles;                             // Store live projectile list reference; iterated in update() to detect player-shot interceptions

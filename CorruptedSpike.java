@@ -35,10 +35,7 @@
 //                                 GameStarter.checkHazardContact() per the
 //                                 collision module's overlap test.
 // =========================================================================
-import java.awt.Color;        // Spike palette colours
-import java.awt.Graphics2D;    // 2D rendering context
-import java.awt.Polygon;        // Triangle silhouettes for each spike tooth
-
+import java.awt.*;
 public class CorruptedSpike extends Hazard implements SpriteOverridable { // Static damage hazard with sprite override
 
     // -------------------------------------------------------------------------

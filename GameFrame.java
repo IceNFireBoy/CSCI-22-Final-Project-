@@ -42,21 +42,10 @@
 //                                  CANVAS_HEIGHT.
 // =========================================================================
 
-import javax.swing.JButton;          // Swing button used for the CONNECT button and all three pause-menu buttons
-import javax.swing.JFrame;           // Top-level Swing window that this class extends
-import javax.swing.JLayeredPane;     // Layered container allowing GameCanvas and overlay controls to occupy different Z-order layers
-import javax.swing.JTextField;       // IP address input field displayed on top of the canvas before connection
-import javax.swing.SwingUtilities;   // Provides invokeLater() for safely updating UI components from background threads
-import javax.swing.border.LineBorder; // Thin coloured border used on the IP field and pause-menu buttons
-import java.awt.Color;               // AWT colour for background fills, foreground text, and border colours
-import java.awt.Cursor;              // Hand cursor applied to clickable buttons to signal interactivity
-import java.awt.Font;                // Font used for the IP field text, connect button label, and pause menu buttons
-import java.awt.FontMetrics;         // Measures the placeholder text width/height in the custom paintComponent override
-import java.awt.Graphics;            // Base graphics context received by paintComponent; cast to Graphics2D for placeholder rendering
-import java.awt.Graphics2D;          // 2D context used in the ipField paintComponent override to draw the placeholder string
-import java.awt.event.MouseAdapter;  // Adapter subclass used for hover-highlight colour changes on the connect button
-import java.awt.event.MouseEvent;    // Mouse event delivered to mouseEntered/mouseExited in the hover listener
-
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.border.*;
 public class GameFrame extends JFrame { // Extends JFrame: inherits all standard top-level window behaviour
 
     // -------------------------------------------------------------------------

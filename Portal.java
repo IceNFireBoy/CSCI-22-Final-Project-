@@ -36,14 +36,8 @@
 //                                 where present, static final constants
 //                                 follow the constants pattern from 1a.
 // =========================================================================
-import java.awt.BasicStroke;          // Allows specifying stroke width for outline drawing
-import java.awt.Color;                // AWT colour for frame, glow, and opening fills
-import java.awt.Graphics2D;           // 2D rendering context passed to render()
-import java.awt.Rectangle;            // AWT rectangle returned by getBounds() for collision tests
-import java.awt.Stroke;               // Interface for stroke style; saved/restored around custom draws
-import java.awt.geom.Arc2D;           // Provides an arc shape used to draw the semicircular archway top
-import java.awt.geom.RoundRectangle2D; // Rounded rectangle used for the outer glow halo
-
+import java.awt.*;
+import java.awt.geom.*;
 public class Portal extends GameElement implements SpriteOverridable { // Extends GameElement to participate in the entity list and AABB collision checks; implements SpriteOverridable so a level generator can swap the procedural archway for a PNG
 
     // -------------------------------------------------------------------------

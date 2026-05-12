@@ -52,18 +52,11 @@
 // Module 1a "Modifiers"      - public static main method; private
 //                               static helpers; final colour constants.
 // =========================================================================
-import java.awt.AlphaComposite;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Polygon;
-import java.awt.RenderingHints;
-import java.awt.geom.Arc2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
-
+import java.awt.*;
+import java.awt.geom.*;
+import java.awt.image.*;
+import java.io.*;
+import javax.imageio.*;
 public class PlaceholderSpriteGenerator { // Standalone utility — main() entry point only
 
     // -------------------------------------------------------------------------

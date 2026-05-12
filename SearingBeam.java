@@ -45,14 +45,7 @@
 //                                 checkBossAttackHits() AABB tests, the
 //                                 collision-module pattern.
 // =========================================================================
-import java.awt.AlphaComposite; // Provides SRC_OVER compositing for the semi-transparent glow layer
-import java.awt.BasicStroke;    // Configures the beam stroke widths (8f glow, 4f core)
-import java.awt.Color;          // AWT colour for glow and core (#f8e4a0 warm cream gold)
-import java.awt.Composite;      // Interface type; saved before and restored after alpha compositing
-import java.awt.Graphics2D;     // 2D rendering context; used for drawLine with stroke and composite settings
-import java.awt.Point;          // AWT integer point for beamTarget; updated each tick via setBeamTarget()
-import java.awt.Stroke;         // Interface type; saved before and restored after setting BasicStroke widths
-
+import java.awt.*;
 public class SearingBeam extends BossAttack { // Extends BossAttack but uses Long.MAX_VALUE duration; deactivated manually via setActive(false)
 
     // -------------------------------------------------------------------------

@@ -34,9 +34,7 @@
 // Module 1a "Modifiers"      - public static factory method (load),
 //                               private constructor, no instance state.
 // =========================================================================
-import java.util.ArrayList; // Used for the empty-default fallback list
-import java.util.List;      // Used by LoadResult.elements
-
+import java.util.*;
 public class LevelRegistry { // Stateless factory; no instance methods
 
     // -------------------------------------------------------------------------

@@ -53,11 +53,7 @@
 //                                visibility for pure helpers.
 // =========================================================================
 
-import java.util.ArrayList;        // Backing list for accumulated elements
-import java.util.HashMap;           // Default empty params map for triggers
-import java.util.List;              // Interface type for the elements list
-import java.util.Map;               // Interface type for trigger params
-
+import java.util.*;
 public abstract class LevelGenerator { // Abstract — every level subclass overrides build()
 
     // -------------------------------------------------------------------------

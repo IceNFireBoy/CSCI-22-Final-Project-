@@ -20,9 +20,7 @@
 //                               collision module's bounding-box approach.
 // =========================================================================
 
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-
+import java.awt.*;
 public interface Renderable {
 
     void render(Graphics2D g); // Draws entity to graphics context

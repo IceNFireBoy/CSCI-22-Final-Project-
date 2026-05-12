@@ -45,17 +45,13 @@
 //  the Cowork research prompt.)
 // =========================================================================
 
-import java.io.File;
-import javax.swing.SwingUtilities;
-import java.awt.Point;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
+import java.awt.*;
+import java.io.*;
+import java.net.*;
+import javax.swing.*;
+import java.util.*;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
+import java.util.concurrent.*;
 public class GameStarter {
 
     // =========================================================================
@@ -246,8 +242,8 @@ public class GameStarter {
      * entities. Drained on the GameLoop thread in Phase C-pre once {@code canvas}
      * and {@code player} are ready.
      */
-    private final java.util.List<String> pendingSnapshotMessages =
-            java.util.Collections.synchronizedList(new java.util.ArrayList<>());
+    private final List<String> pendingSnapshotMessages =
+            java.util.Collections.synchronizedList(new ArrayList<>());
 
     // =========================================================================
     // UI fields
@@ -312,14 +308,14 @@ public class GameStarter {
      * etc.). Uses {@link CopyOnWriteArrayList} so the network I/O thread can safely
      * add or remove elements while the game loop iterates.
      */
-    private final java.util.List<GameElement> elements;
+    private final List<GameElement> elements;
 
     /**
      * Tracks only the Platform objects spawned via the network protocol (PLACE_BLOCK).
      * Used by {@link #clearAllBlocks()} to remove placed blocks without touching
      * level-loaded entities. Also a CopyOnWriteArrayList for thread safety.
      */
-    private final java.util.List<Platform> placedBlocks;
+    private final List<Platform> placedBlocks;
 
     /**
      * P8.5 — live list of {@link BossAttack} instances spawned locally in
@@ -334,7 +330,7 @@ public class GameStarter {
      * {@link CopyOnWriteArrayList} so the NetworkIO thread can append a new
      * entry while the game loop is iterating for update / render.
      */
-    private final java.util.List<BossAttack> bossAttacks = new CopyOnWriteArrayList<>();
+    private final List<BossAttack> bossAttacks = new CopyOnWriteArrayList<>();
 
     // -------------------------------------------------------------------------
     // P8.6 — pre-boss altar state
@@ -1049,9 +1045,9 @@ public class GameStarter {
                     }
                 }
                 // Drain the buffered snapshot messages in order.
-                java.util.List<String> drained;
+                List<String> drained;
                 synchronized (pendingSnapshotMessages) {
-                    drained = new java.util.ArrayList<>(pendingSnapshotMessages);
+                    drained = new ArrayList<>(pendingSnapshotMessages);
                     pendingSnapshotMessages.clear();
                 }
                 for (String msg : drained) {
@@ -1301,7 +1297,7 @@ public class GameStarter {
                 // the iterate-then-remove pattern safe even if a new attack
                 // arrives on the NetworkIO thread mid-loop.
                 if (!bossAttacks.isEmpty()) {
-                    java.util.List<BossAttack> expired = new java.util.ArrayList<>();
+                    List<BossAttack> expired = new ArrayList<>();
                     for (BossAttack ba : bossAttacks) {
                         ba.update(TICK_MS);
                         if (ba.isExpired() || !ba.isActive()) expired.add(ba);
@@ -1313,7 +1309,7 @@ public class GameStarter {
                 // CopyOnWriteArrayList does not support iterator.remove(); collect first,
                 // then remove in a separate pass to avoid UnsupportedOperationException.
                 if (GameSession.getInstance().isWanderer()) {
-                    java.util.List<Platform> goneBlocks = new java.util.ArrayList<>();
+                    List<Platform> goneBlocks = new ArrayList<>();
                     for (Platform pb : placedBlocks) {
                         if (pb.fullyGone) goneBlocks.add(pb);
                     }
@@ -1860,7 +1856,7 @@ public class GameStarter {
             case "BLOCK_RAIN": {
                 // Collect the level's current Platforms so falling bricks can
                 // land on existing geometry rather than only the ground line.
-                java.util.List<Platform> plats = new java.util.ArrayList<Platform>();
+                List<Platform> plats = new ArrayList<Platform>();
                 for (GameElement el : elements) {
                     if (el instanceof Platform) plats.add((Platform) el);
                 }
@@ -1879,7 +1875,7 @@ public class GameStarter {
                 // Shield intercepts player projectiles; on the Apprentice
                 // client there are no locally tracked projectiles, so an
                 // empty list is fine — the shield still renders.
-                attack = new Shield(new java.util.ArrayList<Projectile>());
+                attack = new Shield(new ArrayList<Projectile>());
                 break;
             default:
                 System.out.println("[GameStarter] Ignoring unknown BOSS_ATK type: " + type);
@@ -2596,7 +2592,7 @@ public class GameStarter {
      * @return the {@link CopyOnWriteArrayList}-backed placed-block list;
      *         never {@code null}
      */
-    public java.util.List<Platform> getPlacedBlocks() {
+    public List<Platform> getPlacedBlocks() {
         return placedBlocks;
     }
 
@@ -2606,7 +2602,7 @@ public class GameStarter {
      *
      * @return the {@link CopyOnWriteArrayList}-backed entity list; never {@code null}
      */
-    public java.util.List<GameElement> getElements() {
+    public List<GameElement> getElements() {
         return elements;
     }
 

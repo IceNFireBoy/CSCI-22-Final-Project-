@@ -40,11 +40,7 @@
 //                                 where present, static final constants
 //                                 follow the constants pattern from 1a.
 // =========================================================================
-import java.awt.BasicStroke;   // Outline stroke for the rune ring
-import java.awt.Color;          // Stone, glow, and rune colours for the procedural fallback
-import java.awt.Graphics2D;     // 2D rendering context passed by GameCanvas
-import java.awt.RenderingHints; // Anti-aliasing hint for smooth rune curves
-
+import java.awt.*;
 public class Altar extends GameElement implements SpriteOverridable { // Visible interactable; opts into sprite override
 
     // -------------------------------------------------------------------------

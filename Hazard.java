@@ -30,8 +30,7 @@
 //                                visibility level taught in 1a.
 // =========================================================================
 
-import java.awt.Graphics2D; // 2D rendering context; required by the abstract render() contract inherited through GameElement
-
+import java.awt.*;
 public class Hazard extends GameElement implements Damageable { // Extends GameElement for entity-list participation; implements Damageable for takeDamage/health contract
 
     // -------------------------------------------------------------------------

@@ -29,9 +29,7 @@
 //                                to GameStarter and GameCanvas.
 // =========================================================================
 
-import java.awt.Graphics2D; // 2D rendering context; required by the abstract render() inherited from GameElement
-import java.awt.Rectangle;  // AWT rectangle returned by getHitbox(); used in collision tests with the Wanderer's bounds
-
+import java.awt.*;
 public abstract class BossAttack extends GameElement { // Abstract: cannot be instantiated; concrete attack types must extend this class
 
     // -------------------------------------------------------------------------

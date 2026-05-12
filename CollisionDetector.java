@@ -28,8 +28,7 @@
 //  the Cowork research prompt.)
 // =========================================================================
 
-import java.awt.Rectangle; // AWT Rectangle used as the common AABB type returned by GameElement.getBounds()
-
+import java.awt.*;
 public class CollisionDetector { // Stateless AABB resolver; all collision context is passed as parameters; no mutable fields
 
     // -------------------------------------------------------------------------

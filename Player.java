@@ -31,21 +31,11 @@
 //                                game-loop thread writes).
 // =========================================================================
 
-import java.awt.AlphaComposite;      // Used in render() for the death fade-out and invincibility blink effects
-import java.awt.BasicStroke;         // Imported for future HUD stroke effects; not directly used in current code
-import java.awt.Color;               // AWT colour for placeholder rect fallback rendering in render()
-import java.awt.Composite;           // Imported for possible future save/restore of composite in HUD rendering
-import java.awt.Graphics2D;          // 2D rendering context passed to render() and CoreHealthBar.render()
-import java.awt.Rectangle;           // AABB rectangle returned by getBounds() for collision detection
-import java.awt.Stroke;              // Imported for possible future HUD stroke customisation
-import java.awt.geom.Ellipse2D;      // Imported for possible future circular ability-indicator rendering
-import java.awt.image.BufferedImage; // Sprite frame image loaded by SpriteLoader and drawn in render()
-import java.util.ArrayList;          // Default backing list for activeEntities; used in melee hit detection
-import java.util.Collections;        // Provides unmodifiableSet wrapper for getActiveBoosts()
-import java.util.EnumSet;            // O(1) enum-keyed set for activeBoosts; avoids boxing overhead on per-attack hot path
-import java.util.List;               // Interface type for the active entity list passed to setActiveEntities()
-import java.util.Set;                // Interface type returned by getActiveBoosts()
-
+import java.awt.*;
+import java.awt.geom.*;
+import java.awt.image.*;
+import java.util.*;
+import java.util.List;
 public class Player implements Damageable, Renderable { // Implements Damageable (health contract) and Renderable (render contract)
 
     // -------------------------------------------------------------------------
@@ -297,7 +287,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     private long collectFlashStart; // Stamped by triggerCollectFlash(); checked by isCollectFlashActive() to determine elapsed time
 
     /** List of active game entities for collision queries. */
-    private java.util.List<GameElement> activeEntities; // Injected by setActiveEntities(); iterated in executeMelee() for hit detection
+    private List<GameElement> activeEntities; // Injected by setActiveEntities(); iterated in executeMelee() for hit detection
 
     // -------------------------------------------------------------------------
     // Respawn state (lives system removed — health bar is the single source of truth)
@@ -1214,7 +1204,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      *
      * @param entities the current active entity list; must not be {@code null}
      */
-    public void setActiveEntities(java.util.List<GameElement> entities) {
+    public void setActiveEntities(List<GameElement> entities) {
         this.activeEntities = entities; // Store reference; iterated by executeMelee() to find Damageable targets in the hitbox
     }
 

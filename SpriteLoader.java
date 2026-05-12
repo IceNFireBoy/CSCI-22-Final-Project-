@@ -43,13 +43,11 @@
 //  go a bit beyond 3a; flagged for external citation if needed.)
 // =========================================================================
 
-import javax.imageio.ImageIO;                    // Java standard library for reading image files from disk
-import java.awt.image.BufferedImage;             // In-memory ARGB pixel buffer used as the canonical image type throughout the project
-import java.awt.Graphics2D;                      // 2D drawing context used to fill the magenta placeholder and to draw scaled images
-import java.awt.RenderingHints;                  // Controls image scaling quality; we use BILINEAR interpolation for smooth resizing
-import java.io.File;                             // Wraps a filesystem path so ImageIO.read() can locate the asset
-import java.util.HashMap;                        // Backing store for the image cache; O(1) lookup by path string
-
+import java.awt.*;
+import java.awt.image.*;
+import java.io.*;
+import java.util.*;
+import javax.imageio.*;
 public class SpriteLoader { // Singleton — one shared image cache for the entire JVM session; no public constructor
 
     private static SpriteLoader instance;                              // The single instance; lazily created on first getInstance() call
