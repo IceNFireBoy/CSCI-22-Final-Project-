@@ -68,7 +68,7 @@ public class CutsceneRenderer { // Singleton: instantiated once eagerly; never m
     // Singleton
     // -------------------------------------------------------------------------
 
-    /** The single process-wide instance; created eagerly at class-load time. */
+     
     private static final CutsceneRenderer INSTANCE = new CutsceneRenderer(); // Eager singleton: no null-check overhead at call sites
 
     /**
@@ -100,7 +100,7 @@ public class CutsceneRenderer { // Singleton: instantiated once eagerly; never m
      */
     private volatile CutsceneID active; // Null = idle; non-null = cutscene in progress; read by isPlaying() every frame
 
-    /** Zero-based index of the panel currently on screen, advanced by {@link #advance()}. */
+     
     private volatile int panelIndex; // Tracks which dialogue line to display; ranges from 0 to lines.length-1
 
     /**

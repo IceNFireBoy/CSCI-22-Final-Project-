@@ -68,7 +68,7 @@ public class CorruptedWall extends Hazard implements SpriteOverridable { // Fall
     // FSM
     // -------------------------------------------------------------------------
 
-    /** Three-phase FSM driving the wall's state through its life cycle. */
+     
     public enum WallPhase { IDLE, WARNING, FALLING, LANDED }
 
     // -------------------------------------------------------------------------
@@ -208,7 +208,7 @@ public class CorruptedWall extends Hazard implements SpriteOverridable { // Fall
         return phase == WallPhase.FALLING || phase == WallPhase.LANDED;
     }
 
-    /** @return the current FSM phase; useful for sprite swaps and SFX cues */
+     
     public WallPhase getPhase() { return phase; }
 
     // -------------------------------------------------------------------------

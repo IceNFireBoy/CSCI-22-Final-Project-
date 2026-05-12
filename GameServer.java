@@ -72,16 +72,16 @@ public class GameServer {
     // Constants
     // =========================================================================
 
-    /** Port number the server listens on. */
+     
     private static final int PORT = 9876;
 
-    /** Number of Cores in the arena. */
+     
     private static final int CORE_COUNT = 4;
 
-    /** Starting health of each Core. */
+     
     private static final int CORE_MAX_HEALTH = 3;
 
-    /** Target tick duration in milliseconds for the 60 fps server loop. */
+     
     private static final long TICK_MS = 1000L / 60L;
 
     public static final int ARENA_W = 3072; // Boss-arena world width in pixels (mirrored by Camera.ARENA_W on client)
@@ -223,10 +223,10 @@ public class GameServer {
      */
     private final java.util.Random stunRng = new java.util.Random(System.nanoTime());
 
-    /** Minimum ms between opportunity rolls so rapid attacks cannot chain back-to-back windows. */
+     
     private static final long STUN_OPPORTUNITY_COOLDOWN_MS = 4_000L;
 
-    /** Wall-clock ms before which another stun opportunity cannot be rolled. */
+     
     private volatile long stunOpportunityCooldownUntilMs = 0L;
 
     /**
@@ -265,7 +265,7 @@ public class GameServer {
     // Fields — session persistence / reconnect
     // =========================================================================
 
-    /** Reference to the listening socket, stored for the reconnect acceptor thread. */
+     
     private ServerSocket serverSocket;
 
     /**
@@ -275,13 +275,13 @@ public class GameServer {
      */
     private volatile String vacantRole = null;
 
-    /** {@link System#currentTimeMillis()} when the partial disconnect was detected. */
+     
     private volatile long partialDisconnectTime = -1;
 
-    /** Maximum milliseconds the server will hold a session for a single disconnected client. */
+     
     private static final long RECONNECT_TIMEOUT_MS = 90 * 1000L;
 
-    /** Snapshot of all game state captured at the moment of partial disconnect. */
+     
     private SessionSnapshot snapshot = null;
 
     /**
@@ -1198,7 +1198,7 @@ public class GameServer {
         return -1;
     }
 
-    /** Convenience: whether the slot playing the Apprentice has signalled level ready. */
+     
     private boolean apprenticeLevelReady() {
         int slot = slotForRole("APPRENTICE");
         return slot >= 0 && levelReady[slot];
@@ -1634,13 +1634,13 @@ public class GameServer {
      */
     private class ClientHandler implements Runnable {
 
-        /** The socket belonging to the client this handler serves. */
+         
         @SuppressWarnings("unused") private final Socket socket;
 
-        /** Slot index this client occupies: {@link GameServer#SLOT_0} or {@link GameServer#SLOT_1}. */
+         
         private final int slot;
 
-        /** Input stream used to deserialise packets from this client; opened at the start of {@link #run()}. */
+         
         private ObjectInputStream in;
 
         /**
@@ -1662,7 +1662,7 @@ public class GameServer {
             this.slot = slot;
         }
 
-        /** Returns the current role label assigned to this slot, or "SLOT_<i>" if unassigned. */
+         
         private String currentRole() {
             String r = lobbySelectedRole[slot];
             return r != null ? r : ("SLOT_" + slot);

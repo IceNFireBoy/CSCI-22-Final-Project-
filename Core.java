@@ -44,7 +44,7 @@ public class Core extends GameElement implements Damageable { // Extends GameEle
     // Constants
     // -------------------------------------------------------------------------
 
-    /** The maximum number of hits a Core can absorb before being destroyed. */
+     
     private static final int MAX_HEALTH = 3; // 3 HP per Core; each successful Wanderer melee decrements this on the server
 
     // -------------------------------------------------------------------------

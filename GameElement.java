@@ -183,16 +183,16 @@ public abstract class GameElement implements Renderable { // Abstract — cannot
      */
     public static class CollisionBox { // Static nested class — no reference to the outer GameElement; can be created standalone
 
-        /** The x-coordinate of the left edge of this collision box in world space. */
+         
         public int x; // World-space left edge; set by constructor
 
-        /** The y-coordinate of the top edge of this collision box in world space. */
+         
         public int y; // World-space top edge; set by constructor
 
-        /** The width of this collision box in pixels. */
+         
         public int w; // Pixel width; used in intersects() to calculate the right edge as x+w
 
-        /** The height of this collision box in pixels. */
+         
         public int h; // Pixel height; used in intersects() to calculate the bottom edge as y+h
 
         /**

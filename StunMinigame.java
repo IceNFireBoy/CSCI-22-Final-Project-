@@ -94,16 +94,16 @@ public class StunMinigame { // POJO: no extends; interacts with GameStarter, Gam
     // State
     // -------------------------------------------------------------------------
 
-    /** Whether an opportunity window is currently open and accepting input. */
+     
     private boolean active = false; // True while the window is open; read by GameCanvas for render() and by InputRouter
 
-    /** Wall-clock millisecond timestamp when the current window was opened via {@link #open(int)}. */
+     
     private long startMs = 0L; // Recorded by open(); used by markerPosition() to compute elapsed sine phase
 
-    /** Wall-clock millisecond timestamp at which the current window automatically expires. */
+     
     private long endMs = 0L; // startMs + OPPORTUNITY_DURATION_MS; compared against nowMs in tick() and render()
 
-    /** Number of consecutive in-zone hits landed in the current open window. */
+     
     private int hits = 0; // Incremented on a zone hit; reset to 0 on a miss; compared against HITS_REQUIRED
 
     /**

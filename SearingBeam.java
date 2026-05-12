@@ -82,10 +82,10 @@ public class SearingBeam extends BossAttack { // Extends BossAttack but uses Lon
      */
     private int damageTick; // Monotonically increasing tick counter; modulo 30 gate limits damage to ~2 hits/second
 
-    /** The fixed world-space x of the beam's origin point (boss panel centre). */
+     
     private static final int BEAM_ORIGIN_X = 717; // Fixed x at the boss panel centre-left; matches the Shield position
 
-    /** The fixed world-space y of the beam's origin point. */
+     
     private static final int BEAM_ORIGIN_Y = 384; // Fixed y at the boss panel vertical centre
 
     // -------------------------------------------------------------------------

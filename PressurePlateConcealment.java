@@ -48,7 +48,7 @@ public class PressurePlateConcealment extends AltarConcealment { // Reveals whil
         this.plate = new Rectangle(plateX, plateY, plateW, plateH);
     }
 
-    /** Static factory mirror for fluent use. */
+     
     public static AltarConcealment of(int x, int y, int w, int h) {
         return new PressurePlateConcealment(x, y, w, h);
     }

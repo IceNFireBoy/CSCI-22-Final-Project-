@@ -77,13 +77,13 @@ public class NetworkProtocol { // Pure namespace class; never instantiated
          */
         private static final long serialVersionUID = 14L; // Monotonically increasing; bump whenever fields are added or removed
 
-        /** The Wanderer's x-coordinate in world space at packet-send time. */
+         
         public int x; // World-space left edge of the Wanderer's AABB; used by Apprentice for ghost rendering
 
-        /** The Wanderer's y-coordinate in world space at packet-send time. */
+         
         public int y; // World-space top edge of the Wanderer's AABB; used together with x for position tracking
 
-        /** The Wanderer's current health in the range [0, 5]. */
+         
         public int health; // Displayed as heart icons in both clients' HUDs; game ends when this reaches 0
 
         /**
@@ -143,7 +143,7 @@ public class NetworkProtocol { // Pure namespace class; never instantiated
      */
     public static class CoreStatePacket implements Serializable {
 
-        /** Serialisation version identifier. */
+         
         private static final long serialVersionUID = 3L; // Stable since initial implementation; bump if the health-array semantics change
 
         /**
@@ -188,7 +188,7 @@ public class NetworkProtocol { // Pure namespace class; never instantiated
      */
     public static class VictoryPacket implements Serializable {
 
-        /** Serialisation version identifier. */
+         
         private static final long serialVersionUID = 4L; // Stable; bump if VictoryState enum ordinals change
 
         /**
@@ -236,7 +236,7 @@ public class NetworkProtocol { // Pure namespace class; never instantiated
      */
     public static class FragmentCollectedPacket implements Serializable {
 
-        /** Serialisation version identifier. */
+         
         private static final long serialVersionUID = 6L; // Stable; bump if fragmentID semantics change
 
         /**
@@ -283,7 +283,7 @@ public class NetworkProtocol { // Pure namespace class; never instantiated
      */
     public static class StringPacket implements java.io.Serializable {
 
-        /** Serialisation version identifier. */
+         
         private static final long serialVersionUID = 10L; // Stable; bump if the message-string format changes fundamentally
 
         /**
@@ -338,7 +338,7 @@ public class NetworkProtocol { // Pure namespace class; never instantiated
      */
     public static class CutscenePacket implements Serializable {
 
-        /** Serialisation version identifier. */
+         
         private static final long serialVersionUID = 11L; // Bump if CutsceneID serialisation semantics change
 
         /**
@@ -396,7 +396,7 @@ public class NetworkProtocol { // Pure namespace class; never instantiated
      */
     public static class CoreHitPacket implements Serializable {
 
-        /** Serialisation version identifier. */
+         
         private static final long serialVersionUID = 9L; // Stable; bump if coreIndex range or semantics change
 
         /**
@@ -444,7 +444,7 @@ public class NetworkProtocol { // Pure namespace class; never instantiated
      */
     public static class RoleAssignmentPacket implements Serializable {
 
-        /** Serialisation version identifier. */
+         
         private static final long serialVersionUID = 7L; // Stable; bump if the role string constants change
 
         /**
@@ -609,7 +609,7 @@ public class NetworkProtocol { // Pure namespace class; never instantiated
      */
     public static class AltarChoicePacket implements Serializable {
 
-        /** Serialisation version identifier. */
+         
         private static final long serialVersionUID = 13L; // Added in P8.6; bump if altarId or choice semantics change
 
         /**

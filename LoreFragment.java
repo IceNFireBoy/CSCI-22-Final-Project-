@@ -56,19 +56,19 @@ public class LoreFragment extends GameElement implements SpriteOverridable { // 
      */
     public enum AbilityUnlock {
 
-        /** Fragment grants no gameplay ability; its value is purely narrative. */
+         
         NONE,
 
-        /** Unlocks the Wanderer's close-range melee strike ability. */
+         
         MELEE,
 
-        /** Unlocks the ability to fire a ranged energy projectile. */
+         
         PROJECTILE,
 
-        /** Unlocks the dodge-roll evasion manoeuvre. */
+         
         DODGE,
 
-        /** Unlocks the ability to cling to and traverse vertical wall surfaces. */
+         
         WALL_CLING,
 
         /**

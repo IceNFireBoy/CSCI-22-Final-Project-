@@ -155,7 +155,7 @@ public class PlaceholderSpriteGenerator { // Standalone utility — main() entry
         write(img, path);
     }
 
-    /** Stone pedestal with a glowing rune ring on top. 48×64 default size. */
+     
     private static void generateAltarPng(String path) throws IOException {
         BufferedImage img = newRgba(48, 64);
         Graphics2D g = setup(img);
@@ -177,7 +177,7 @@ public class PlaceholderSpriteGenerator { // Standalone utility — main() entry
         write(img, path);
     }
 
-    /** Two pillars + arch. 48×80 — matches the Portal AABB. */
+     
     private static void generatePortalPng(String path) throws IOException {
         BufferedImage img = newRgba(48, 80);
         Graphics2D g = setup(img);
@@ -193,7 +193,7 @@ public class PlaceholderSpriteGenerator { // Standalone utility — main() entry
         write(img, path);
     }
 
-    /** Single triangular tooth on a dark base. 32×16. */
+     
     private static void generateSpikePng(String path) throws IOException {
         BufferedImage img = newRgba(32, 16);
         Graphics2D g = setup(img);
@@ -207,7 +207,7 @@ public class PlaceholderSpriteGenerator { // Standalone utility — main() entry
         write(img, path);
     }
 
-    /** Brick-pattern wall. 64×128 — matches the default CorruptedWall size. */
+     
     private static void generateWallPng(String path) throws IOException {
         BufferedImage img = newRgba(64, 128);
         Graphics2D g = setup(img);
@@ -228,7 +228,7 @@ public class PlaceholderSpriteGenerator { // Standalone utility — main() entry
         write(img, path);
     }
 
-    /** Cool-blue ghost block with a top highlight. 32×32. */
+     
     private static void generatePhantomPng(String path) throws IOException {
         BufferedImage img = newRgba(32, 32);
         Graphics2D g = setup(img);
@@ -244,7 +244,7 @@ public class PlaceholderSpriteGenerator { // Standalone utility — main() entry
         write(img, path);
     }
 
-    /** Engineered gold mover block with two horizontal grooves. 64×16. */
+     
     private static void generateMoverPng(String path) throws IOException {
         BufferedImage img = newRgba(64, 16);
         Graphics2D g = setup(img);

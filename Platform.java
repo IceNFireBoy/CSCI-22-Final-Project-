@@ -71,24 +71,24 @@ public class Platform extends GameElement { // Extends GameElement for position,
     // Constants
     // -------------------------------------------------------------------------
 
-    /** Standard tile size in pixels; one tile = one grid cell in world space. */
+     
     public static final int TILE_SIZE = 32; // Used for default platform dimensions, wall thicknesses, and tile-aligned spacing throughout the codebase
 
-    /** Upward velocity impulse (px/tick) applied when the Wanderer lands on a SPRING platform. */
+     
     public static final float SPRING_BOUNCE_FORCE = 18f; // Read by CollisionDetector on SPRING top-face collision
 
-    /** Fallback fill colour shared by BRICK, SLIDE, WALL, and MIMIC when their sprite is absent. */
+     
     private static final Color FALLBACK_FILL   = new Color(0x2a, 0x2a, 0x35); // Dark blue-grey; matches the game's dungeon palette
-    /** Fallback fill colour for SPRING when the sprite is absent — teal-blue to distinguish it from BRICK. */
+     
     private static final Color SPRING_FILL     = new Color(0x3a, 0x4a, 0x5a); // Teal-blue; visually distinct from standard BRICK fallback
-    /** Outline colour used by every platform type in fallback (no-sprite) rendering. */
+     
     private static final Color FALLBACK_BORDER = new Color(0x4a, 0x4a, 0x58); // Slightly lighter than fill; provides subtle but visible edge
 
     // -------------------------------------------------------------------------
     // Core fields
     // -------------------------------------------------------------------------
 
-    /** The behavioural type of this platform; determines collision response and rendering. */
+     
     private PlatformType type; // Set at construction; read by CollisionDetector and render()
 
     /**
@@ -142,7 +142,7 @@ public class Platform extends GameElement { // Extends GameElement for position,
      */
     private long mimicStartTime; // Stamped by CollisionDetector via setMimicStartTime(); compared in update()
 
-    /** Delay in milliseconds between the Wanderer's first step and the MIMIC collapse. */
+     
     private static final long MIMIC_DELAY_MS = 800L; // 0.8 s — long enough for the Wanderer to notice but short enough to be dangerous
 
     // -------------------------------------------------------------------------

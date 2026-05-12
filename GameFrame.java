@@ -52,10 +52,10 @@ public class GameFrame extends JFrame { // Extends JFrame: inherits all standard
     // Constants
     // -------------------------------------------------------------------------
 
-    /** The fixed width of the game window in pixels. */
+     
     private static final int WINDOW_WIDTH  = 1024; // Matches CANVAS_W in GameCanvas and all rendering constants; must not be changed at runtime
 
-    /** The fixed height of the game window in pixels. */
+     
     private static final int WINDOW_HEIGHT = 768;  // Matches CANVAS_H in GameCanvas and all rendering constants
 
     // -------------------------------------------------------------------------
@@ -80,16 +80,16 @@ public class GameFrame extends JFrame { // Extends JFrame: inherits all standard
      */
     private JButton connectButton; // Triggers the background ConnectThread; disabled while connection is in progress
 
-    /** Pause menu button: view the fragment library. */
+     
     private JButton viewFragmentsBtn; // Toggles the fragment library overlay in GameCanvas when clicked
 
-    /** Pause menu button: resume the game. */
+     
     private JButton resumeBtn; // Calls GameStarter#togglePause() to resume the game loop when clicked
 
-    /** Pause menu button: quit the game. */
+     
     private JButton quitBtn; // Stops the game, resets to menu, and restores the connect UI when clicked
 
-    /** The layered pane used as the content pane. */
+     
     private JLayeredPane layeredPane; // Replaces the default content pane; allows overlay components to paint above GameCanvas
 
     // -------------------------------------------------------------------------

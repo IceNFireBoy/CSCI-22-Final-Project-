@@ -63,10 +63,10 @@ public class SpikeArray extends BossAttack { // Extends BossAttack for the share
      */
     private int groundY; // Ground level y; spike base is always at this y; spikes grow upward (decreasing y)
 
-    /** The full height of each spike in pixels when fully extended during the active phase. */
+     
     private static final int SPIKE_HEIGHT = 48; // 48 px = 1.5 standard tile heights; visually imposing but jumpable
 
-    /** The width of each spike in pixels at its base. Used for the triangle polygon and AABB. */
+     
     private static final int SPIKE_WIDTH = 12; // 12 px base width; narrow enough to make spacing between spikes visible
 
     /**

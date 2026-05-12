@@ -90,10 +90,10 @@ public class FragmentLibrary {
      */
     private Map<String, LoreFragment> collectedByID; // LinkedHashMap: preserves insertion order; render() uses this for quick ID→fragment lookup
 
-    /** The vertical scroll offset for the archive view, in pixels. */
+     
     private int scrollOffset; // Pixels scrolled down from the top of the list; clamped to [0, maxScroll] in render()
 
-    /** Reference to the Wanderer; set via {@link #setPlayer(Player)}. */
+     
     private Player player; // Injected by GameStarter; used in collect() to call player.unlockAbility() on combat fragments
 
     /**

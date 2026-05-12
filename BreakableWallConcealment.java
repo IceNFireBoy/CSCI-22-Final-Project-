@@ -32,7 +32,7 @@
 // =========================================================================
 public class BreakableWallConcealment extends AltarConcealment { // Reveals on MELEE
 
-    /** Static factory for fluent use in level layouts. */
+     
     public static AltarConcealment of() { return new BreakableWallConcealment(); }
 
     @Override

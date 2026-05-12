@@ -55,10 +55,10 @@ public class CorruptedSpike extends Hazard implements SpriteOverridable { // Sta
     // Fields
     // -------------------------------------------------------------------------
 
-    /** Wall-clock ms timestamp at which this spike may damage the Wanderer again. */
+     
     private long nextDamageMs; // Cooldown latch updated each time the spike deals damage
 
-    /** Optional PNG path that replaces the procedural spike row when set. */
+     
     private String spritePath; // Honoured by {@link SpriteOverridable#tryDrawSprite}
 
     // -------------------------------------------------------------------------

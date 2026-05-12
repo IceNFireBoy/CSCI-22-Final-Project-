@@ -75,10 +75,10 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
      */
     protected final LevelState state = new LevelState(); // Pre-configured; helpers overwrite fields
 
-    /** Tracks the most recently added {@link Altar} so subclasses can configure it post-hoc. */
+     
     private Altar lastAltar; // Updated by {@link #altar(...)}; null until at least one altar is placed
 
-    /** Tracks the most recently added {@link LoreFragment} so subclasses can configure it post-hoc. */
+     
     private LoreFragment lastFragment; // Updated by {@link #fragment(...)}; null until at least one is placed
 
     // -------------------------------------------------------------------------
@@ -141,16 +141,16 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
         this.spawnY = y;                     // Caller queries via getSpawnX()/getSpawnY()
     }
 
-    /** World-space spawn x; defaults to {@code -1} meaning "use caller's default". */
+     
     private int spawnX = -1;
 
-    /** World-space spawn y; defaults to {@code -1} meaning "use caller's default". */
+     
     private int spawnY = -1;
 
-    /** @return the configured spawn x, or {@code -1} if {@link #setSpawn(int, int)} was not called */
+     
     public int getSpawnX() { return spawnX; }
 
-    /** @return the configured spawn y, or {@code -1} if {@link #setSpawn(int, int)} was not called */
+     
     public int getSpawnY() { return spawnY; }
 
     // -------------------------------------------------------------------------

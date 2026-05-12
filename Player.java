@@ -55,7 +55,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     private boolean grounded; // True when standing on solid surface; set by CollisionDetector on top-face hit; reset by Physics each tick
     private boolean wallTouching; // True when pressing against a wall; set by CollisionDetector on side-face hit; enables wall-cling
 
-    /** Whether the Wanderer is currently invincible (e.g. during a dodge roll). */
+     
     private boolean invincible; // Suppresses incoming damage while true; set by executeDodge(), executeShadowDash(), and i-frame grants
 
     /**
@@ -81,20 +81,20 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     // Dodge-roll state
     // -------------------------------------------------------------------------
 
-    /** Whether a dodge roll is currently in progress. */
+     
     private boolean dodging; // True while the roll is active; syncs with dodgeActive for legacy compatibility
 
-    /** Absolute ms timestamp when the current dodge roll ends. */
+     
     private long dodgeEndTime; // When System.currentTimeMillis() >= this, the dodge roll ends and invincibility clears
 
-    /** Absolute ms timestamp before which another dodge roll cannot begin. */
+     
     private long dodgeCooldownEnd; // Cooldown expiry: executeDodge() sets this 3 s after the roll begins
 
     // -------------------------------------------------------------------------
     // Shadow-dash state
     // -------------------------------------------------------------------------
 
-    /** Absolute ms timestamp before which another shadow dash cannot begin. */
+     
     private long shadowDashCooldownEnd; // Cooldown expiry: executeShadowDash() sets this 5 s after the dash
 
     // -------------------------------------------------------------------------
@@ -138,16 +138,16 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     // branch on presence; the actual mechanics are wired up by the systems
     // that consume each flag.
 
-    /** P9.1' — Veil unlock: stealth-while-unlit windows for the Wanderer. */
+     
     private boolean hasVeil; // Set true by unlockAbility(VEIL); read by stealth and crawler-hostility code
 
-    /** P9.1' — Echo unlock: one-tile audible ping that briefly reveals nearby hazards. */
+     
     private boolean hasEcho; // Set true by unlockAbility(ECHO); consumed by the echo-ping ability
 
-    /** P9.1' — Tether unlock: short directional dash anchored to a placed block. */
+     
     private boolean hasTether; // Set true by unlockAbility(TETHER); enables tether-dash combat option
 
-    /** P9.1' — Shadow-step unlock: traversal blink, gated behind both VEIL and TETHER. */
+     
     private boolean hasShadowStep; // Set true by unlockAbility(SHADOW_STEP); requires hasVeil && hasTether to actually fire
 
     /**
@@ -161,7 +161,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     // P8.7 — Faithful meter
     // -------------------------------------------------------------------------
 
-    /** Maximum value of the faithful meter. */
+     
     public static final int FAITHFUL_MAX = 5; // Ceiling for the faithful score; scores above are clamped in setFaithful()
 
     /**
@@ -204,16 +204,16 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      */
     public enum RadiantState { IDLE, CHARGING, ACTIVE, COOLDOWN } // Four-state FSM for the Radiant Collapse ability
 
-    /** Duration of the SHIFT-hold charge window before Radiant Collapse activates. */
+     
     public static final long RADIANT_CHARGE_MS   = 2_000L;  // 2 seconds of continuous SHIFT hold required to fire
 
-    /** Duration of the full-arena illumination window. */
+     
     public static final long RADIANT_ACTIVE_MS   = 5000000_000L;  // 3-second arena reveal window; suppresses darkness overlay
 
-    /** Lockout duration after the active window ends before SHIFT is accepted again. */
+     
     public static final long RADIANT_COOLDOWN_MS = 60_000L; // 60-second cooldown; ability is rare and powerful
 
-    /** Current Radiant Collapse FSM state. */
+     
     private RadiantState radiantState = RadiantState.IDLE; // Starts IDLE; advanced by updateRadiantFsm() each tick in BOSS phase
 
     /**
@@ -237,17 +237,17 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     // HUD component
     // -------------------------------------------------------------------------
 
-    /** The HUD element that displays the health of all four Cores. */
+     
     private CoreHealthBar coreHealthBar; // Created in constructor; rendered by GameCanvas each frame during boss/act phases
 
     // -------------------------------------------------------------------------
     // Combat and ability state
     // -------------------------------------------------------------------------
 
-    /** Animation state key for the current sprite clip. */
+     
     private String animState; // Legacy state string (e.g. "wanderer_idle"); kept in sync with currentAnimState by update()
 
-    /** Cooldown remaining for melee attack in milliseconds. */
+     
     private long meleeCooldown; // Decremented each tick in updateCooldowns(); executeMelee() blocked while > 0
 
     /**
@@ -259,50 +259,50 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      */
     public volatile int pendingCoreHitIndex = -1; // -1 = no pending hit; set in executeMelee() when a Core is struck; read by NetworkIO thread
 
-    /** Whether the charge key is currently held for projectile. */
+     
     private boolean chargeHeld; // True while K key is held; drives "charge" animation; checked in releaseProjectile()
 
-    /** System.nanoTime() when charge began. */
+     
     private long chargeStartTime; // Nanosecond timestamp of charge start; used to compute hold duration in releaseProjectile()
 
-    /** Whether the dodge roll is currently active. */
+     
     private boolean dodgeActive; // True during the active dodge roll window; cleared by updateCooldowns() when dodgeEndTime elapses
 
-    /** Remaining cooldown for dodge roll in milliseconds. */
+     
     private long dodgeCooldownRemaining; // Decremented each tick; executeDodge() blocked while > 0
 
-    /** Remaining cooldown for shadow dash in milliseconds. */
+     
     private long dashCooldownRemaining; // Decremented each tick; executeShadowDash() blocked while > 0
 
-    /** Whether the heal flash overlay is active. */
+     
     private boolean healFlash; // True for 300 ms after heal(); triggers white flash overlay in render()
 
-    /** Absolute ms timestamp when heal flash expires. */
+     
     private long healFlashEnd; // heal() sets this to now + 300 ms; updateCooldowns() clears healFlash when this elapses
 
-    /** Whether the collect flash overlay is active. */
+     
     private boolean collectFlash; // True for 400 ms after triggerCollectFlash(); indicates a fragment was just picked up
 
-    /** Absolute ms timestamp when the collect flash started. */
+     
     private long collectFlashStart; // Stamped by triggerCollectFlash(); checked by isCollectFlashActive() to determine elapsed time
 
-    /** List of active game entities for collision queries. */
+     
     private List<GameElement> activeEntities; // Injected by setActiveEntities(); iterated in executeMelee() for hit detection
 
     // -------------------------------------------------------------------------
     // Respawn state (lives system removed — health bar is the single source of truth)
     // -------------------------------------------------------------------------
 
-    /** X-coordinate of the respawn point. */
+     
     private int respawnX; // Set by setRespawn() when the Wanderer passes a checkpoint; used by updateRespawn()
 
-    /** Y-coordinate of the respawn point. */
+     
     private int respawnY; // Set by setRespawn() when the Wanderer passes a checkpoint; used by updateRespawn()
 
-    /** Whether the Wanderer is currently in the death animation. */
+     
     private boolean isDead; // True after loseLife(); cleared by updateRespawn() after 1.2 s; blocks input routing
 
-    /** Timer tracking elapsed ms since death, for respawn delay. */
+     
     private long deathTimer; // Incremented each tick in updateRespawn() while isDead; respawn fires at 1200 ms
 
     /**
@@ -316,37 +316,37 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     // Animation state machine
     // -------------------------------------------------------------------------
 
-    /** Rendered sprite width in pixels (matches full bounding box). */
+     
     public static final int SPRITE_WIDTH  = 64; // Wanderer sprite is 64 px wide; bounds offset by 20 for the collision AABB
 
-    /** Rendered sprite height in pixels (matches full bounding box). */
+     
     public static final int SPRITE_HEIGHT = 96; // Wanderer sprite is 96 px tall; bounds offset by 8 for the collision AABB
 
-    /** Maximum Y-coordinate used when snapshotting the death position in {@link #loseLife()}. */
+     
     private static final int DEATH_ANIM_MAX_Y = 800; // Clamps the death animation below the canvas floor (768 px) so the sprite stays visible
 
-    /** Duration of the death animation in milliseconds before the Wanderer respawns. */
+     
     private static final long DEATH_ANIM_MS = 1200L; // 1.2 s window: long enough for the death effect to read, short enough not to stall play
 
-    /** Ticks between animation frame advances. */
+     
     private static final int FRAME_DELAY = 6; // 6 ticks per frame at 60 fps ≈ 10 fps animation; snappy but not jittery
 
-    /** Current animation frame index within the active clip. */
+     
     private int frameIndex = 0; // Incremented every FRAME_DELAY ticks; resets when the animation state changes
 
-    /** Tick counter used to advance {@link #frameIndex} at {@link #FRAME_DELAY}. */
+     
     private int frameTick = 0; // Counts ticks since last frame advance; compared against FRAME_DELAY in update()
 
-    /** Short animation state key, e.g. {@code "idle"}, {@code "run"}, {@code "jump"}. */
+     
     private String currentAnimState = "idle"; // Updated each tick in update(); drives getSpritePathForState() lookup
 
-    /** Previous animation state — used to reset {@link #frameIndex} on state change. */
+     
     private String lastAnimState = ""; // Compared against currentAnimState each tick; mismatch triggers frameIndex reset
 
-    /** X-coordinate where the Wanderer died (for death animation rendering). */
+     
     private int deathX; // Snapshotted in loseLife() so the death animation plays at the exact death position
 
-    /** Y-coordinate where the Wanderer died (for death animation rendering). */
+     
     private int deathY; // Snapshotted and clamped to 800 in loseLife() so the animation is always visible
 
     // -------------------------------------------------------------------------
@@ -360,10 +360,10 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      */
     private boolean wasOnGround = false; // Animation-layer grounded state; lags one COYOTE_MAX frame behind the physics grounded flag
 
-    /** Frames the Wanderer has been off the ground without being confirmed airborne. */
+     
     private int coyoteFrames = 0; // Counts frames since the Wanderer left the ground; when >= COYOTE_MAX, animation switches to fall
 
-    /** Grace period in frames before the animation treats the player as airborne. */
+     
     private static final int COYOTE_MAX = 4; // 4-frame coyote window at 60 fps ≈ 67 ms; prevents flickering on tile edges
 
     // -------------------------------------------------------------------------
@@ -1799,7 +1799,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
         return restartToAct1Pending;
     }
 
-    /** Clears the pending restart flag once {@link GameStarter} has handled it. */
+     
     public void clearRestartToAct1Pending() {
         this.restartToAct1Pending = false;
     }

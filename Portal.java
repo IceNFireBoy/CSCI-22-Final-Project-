@@ -44,19 +44,19 @@ public class Portal extends GameElement implements SpriteOverridable { // Extend
     // Constants
     // -------------------------------------------------------------------------
 
-    /** Width of the portal archway in pixels. */
+     
     private static final int PORTAL_WIDTH  = 48; // 48 px — just wider than the Wanderer (32 px) so entry feels natural
 
-    /** Height of the portal archway in pixels. */
+     
     private static final int PORTAL_HEIGHT = 80; // 80 px — tall enough to fit the Wanderer sprite with visual headroom
 
-    /** Base colour of the portal frame (gold). */
+     
     private static final Color FRAME_COLOR   = new Color(0xC9, 0xA8, 0x4C); // Warm gold matching the game's HUD and lore-fragment palette
 
-    /** Inner glow edge colour (bright gold). */
+     
     private static final Color GLOW_COLOR    = new Color(0xF0, 0xCC, 0x7A); // Lighter, more saturated gold for the highlight edge inside the arch
 
-    /** Inner opening fill colour (warm white). */
+     
     private static final Color OPENING_COLOR = new Color(0xFF, 0xF8, 0xE0); // Near-white warm colour representing the light beyond the portal
 
     // -------------------------------------------------------------------------

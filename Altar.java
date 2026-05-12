@@ -61,16 +61,16 @@ public class Altar extends GameElement implements SpriteOverridable { // Visible
      */
     private final int altarId; // Stable per-level ID; passed to the network protocol
 
-    /** First choice label shown in the overlay (e.g. {@code "POWER_SURGE"}). */
+     
     private final String option1; // Server uses this string verbatim in ALTAR_RESULT
 
-    /** Second choice label shown in the overlay (e.g. {@code "SIGHT_RESTRICTION"}). */
+     
     private final String option2; // Server uses this string verbatim in ALTAR_RESULT
 
-    /** Optional sprite override path; {@code null} → procedural pedestal draw. */
+     
     private String spritePath; // Set by setSpritePath; honored by SpriteOverridable.tryDrawSprite
 
-    /** Optional concealment behaviour; {@code null} → always visible/interactable. */
+     
     private AltarConcealment concealment; // Set by setConcealment after construction by P9.2' helpers
 
     /**
@@ -255,16 +255,16 @@ public class Altar extends GameElement implements SpriteOverridable { // Visible
     // Identity / state accessors
     // -------------------------------------------------------------------------
 
-    /** @return the altar's per-level identifier; matches {@code altarId} on the wire */
+     
     public int getAltarId() { return altarId; }
 
-    /** @return the first choice label as configured at construction */
+     
     public String getOption1() { return option1; }
 
-    /** @return the second choice label as configured at construction */
+     
     public String getOption2() { return option2; }
 
-    /** @return {@code true} if the player has already committed a choice at this altar */
+     
     public boolean isActivated() { return activated; }
 
     /**

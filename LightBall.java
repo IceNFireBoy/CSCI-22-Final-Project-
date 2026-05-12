@@ -67,32 +67,32 @@ public class LightBall { // Plain simulation object; no GameElement hierarchy; s
      */
     public static final float BALL_TURN_SPEED = 0.08f; // 8% velocity blend per tick; larger = snappier tracking, smaller = more inertia lag
 
-    /** Arena width in world-space pixels. Mirrors {@link GameServer#ARENA_W} (3072). */
+     
     private static final int ARENA_W = GameServer.ARENA_W; // 3072 px; used as the upper clamp bound for x in clampX()
 
-    /** Arena height in world-space pixels. Mirrors {@link GameServer#ARENA_H} (2304). */
+     
     private static final int ARENA_H = GameServer.ARENA_H; // 2304 px; used as the upper clamp bound for y in clampY()
 
     // -------------------------------------------------------------------------
     // Fields
     // -------------------------------------------------------------------------
 
-    /** Current world-space x of the ball; updated by {@link #step()} each tick. */
+     
     private float x; // Authoritative ball x; carried in ServerStatePacket; read by clients to position the light mask
 
-    /** Current world-space y of the ball; updated by {@link #step()} each tick. */
+     
     private float y; // Authoritative ball y; carried in ServerStatePacket; read by clients to position the light mask
 
-    /** Current per-tick velocity on the x axis; lerped toward desiredVx in {@link #step()}. */
+     
     private float vx; // X velocity in px/tick; updated by BALL_TURN_SPEED blend toward desired direction each tick
 
-    /** Current per-tick velocity on the y axis; lerped toward desiredVy in {@link #step()}. */
+     
     private float vy; // Y velocity in px/tick; updated by BALL_TURN_SPEED blend toward desired direction each tick
 
-    /** World-space x the ball is currently chasing. Set by {@link #setTarget(float, float)}. */
+     
     private float targetX; // Desired ball destination x; converted from Apprentice canvas-space cursor via camera transform before being set
 
-    /** World-space y the ball is currently chasing. Set by {@link #setTarget(float, float)}. */
+     
     private float targetY; // Desired ball destination y; same conversion path as targetX
 
     // -------------------------------------------------------------------------
@@ -198,22 +198,22 @@ public class LightBall { // Plain simulation object; no GameElement hierarchy; s
     // Accessors
     // -------------------------------------------------------------------------
 
-    /** Returns the ball's current world-space x coordinate after the latest step. */
+     
     public float getX() { return x; } // Read accessor; carried in ServerStatePacket; clients use this to position the light mask
 
-    /** Returns the ball's current world-space y coordinate after the latest step. */
+     
     public float getY() { return y; } // Read accessor; symmetric with getX()
 
-    /** Returns the ball's current world-space target x (the position it is chasing). */
+     
     public float getTargetX() { return targetX; } // Read accessor; may be used by server-side debug logging
 
-    /** Returns the ball's current world-space target y (the position it is chasing). */
+     
     public float getTargetY() { return targetY; } // Read accessor; symmetric with getTargetX()
 
-    /** Returns the ball's current per-tick x velocity (px/tick). */
+     
     public float getVelocityX() { return vx; } // Read accessor; useful for server-side debug or replays
 
-    /** Returns the ball's current per-tick y velocity (px/tick). */
+     
     public float getVelocityY() { return vy; } // Read accessor; symmetric with getVelocityX()
 
     /**

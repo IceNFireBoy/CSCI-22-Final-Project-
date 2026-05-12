@@ -52,10 +52,10 @@ public class BlockRain extends BossAttack { // Extends BossAttack for the shared
     // Constants
     // -------------------------------------------------------------------------
 
-    /** The number of falling blocks spawned by each Block Rain attack. */
+     
     private static final int BLOCK_COUNT = 8; // 8 blocks; enough to visibly fill the arena without being deterministic
 
-    /** The fall speed of each block in pixels per tick while it is airborne. */
+     
     private static final float FALL_SPEED = 6f; // 6 px/tick = 360 px/s; visible but not so fast it's impossible to dodge
 
     // -------------------------------------------------------------------------

@@ -149,16 +149,16 @@ public class GameSession { // Process-wide singleton; survives level reloads; ow
     // Block budget management
     // =========================================================================
 
-    /** Starting and default block budget for each level. */
+     
     private int blockBudget = 12; // Default 12 placement tokens; reset each level by resetBlockBudget()
 
-    /** Currently selected block type for placement (default BRICK). */
+     
     private String currentBlockType = "BRICK"; // Active block type string; matches Platform.PlatformType names; shown in the Apprentice HUD
 
-    /** Index into {@link #BLOCK_CYCLE} tracking which type is currently selected. */
+     
     private int blockCycleIndex = 0; // 0-based index into BLOCK_CYCLE; advanced by cycleBlockType()
 
-    /** Ordered array of block types the Apprentice can cycle through. */
+     
     private static final String[] BLOCK_CYCLE = {"BRICK", "SLIDE", "SPRING", "WALL", "CRUMBLE"}; // Five cyclic block types; cycleBlockType() wraps around from index 4 back to 0
 
     /**
@@ -360,25 +360,25 @@ public class GameSession { // Process-wide singleton; survives level reloads; ow
     // Light battery
     // =========================================================================
 
-    /** Maximum battery level (100%). */
+     
     private static final float MAX_BATTERY    = 100f; // Full battery; lightBattery is initialised to this value and recharged toward it
 
-    /** Drain rate per tick when light radius exceeds 140 px: depletes in ~10 s @60 fps. */
+     
     private static final float DRAIN_HIGH     =  0.1667f; // ~10 s lifetime at 60fps; radius > 140 = widest, most expensive light setting
 
-    /** Drain rate per tick for radii 100–140 px: depletes in ~20 s. */
+     
     private static final float DRAIN_MED      = 0.0833f; // ~20 s lifetime at 60fps; medium radius setting
 
-    /** Drain rate per tick for radii 60–100 px: depletes in ~40 s. */
+     
     private static final float DRAIN_LOW      = 0.0417f; // ~40 s lifetime at 60fps; smaller radius, less drain
 
-    /** Drain rate per tick for radii ≤ 60 px: depletes in ~60 s. */
+     
     private static final float DRAIN_MIN      = 0.0278f; // ~60 s lifetime at 60fps; smallest radius setting, slowest drain
 
-    /** Recharge rate per tick when light is off: half of DRAIN_MIN. */
+     
     private static final float REGEN_PER_TICK = 0.0139f; // Recharges at half the minimum drain rate when light is toggled off
 
-    /** Current battery level in the range [0, 100]. Starts full. */
+     
     private float lightBattery = MAX_BATTERY; // Apprentice light energy; drained each tick while light is on; recharged when off
 
     // =========================================================================

@@ -51,14 +51,14 @@ public class LightLockedMover extends Platform implements SpriteOverridable { //
     // Mode enums
     // -------------------------------------------------------------------------
 
-    /** The motion path traced by the platform when its motion is enabled. */
+     
     public enum MovePattern {
         LINEAR_X,   // Sinusoidal oscillation along x; amplitude in pixels
         LINEAR_Y,   // Sinusoidal oscillation along y
         CIRCULAR    // Circular orbit around the construction origin; amplitude is the radius
     }
 
-    /** Decides whether the light gates motion or unfreezes motion. */
+     
     public enum LightBehavior {
         FREEZE_ON_LIGHT, // Default: moves until lit, then frozen
         MOVE_ON_LIGHT    // Inverse: frozen until lit, then moves
@@ -144,7 +144,7 @@ public class LightLockedMover extends Platform implements SpriteOverridable { //
         }
     }
 
-    /** @return whether the platform is currently moving (false = frozen by light) */
+     
     public boolean isMotionEnabled() { return motionEnabled; }
 
     // -------------------------------------------------------------------------

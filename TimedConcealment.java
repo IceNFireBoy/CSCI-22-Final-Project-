@@ -30,10 +30,10 @@
 // =========================================================================
 public class TimedConcealment extends AltarConcealment { // Reveals only inside a window from level start
 
-    /** Window length in milliseconds; the altar hides after this much real time has passed. */
+     
     private final long durationMs;
 
-    /** Wall-clock ms snapshot taken on the first poll; -1 sentinel until snapped. */
+     
     private long firstPolledAtMs = -1L;
 
     /**
@@ -45,7 +45,7 @@ public class TimedConcealment extends AltarConcealment { // Reveals only inside 
         this.durationMs = Math.max(0L, durationMs);
     }
 
-    /** Static factory mirror for fluent use. */
+     
     public static AltarConcealment of(long durationMs) {
         return new TimedConcealment(durationMs);
     }

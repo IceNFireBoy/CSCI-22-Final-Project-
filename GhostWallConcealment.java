@@ -29,7 +29,7 @@
 // =========================================================================
 public class GhostWallConcealment extends AltarConcealment { // Reveals on DODGE
 
-    /** Static factory for fluent use in level layouts: {@code lastAltar().setConcealment(GhostWallConcealment.of())}. */
+     
     public static AltarConcealment of() { return new GhostWallConcealment(); }
 
     @Override

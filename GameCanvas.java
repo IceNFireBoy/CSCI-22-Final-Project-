@@ -68,10 +68,10 @@ public class GameCanvas extends JComponent {
     // Constants
     // -------------------------------------------------------------------------
 
-    /** The fixed rendering width of the canvas in pixels. */
+     
     public static final int CANVAS_WIDTH = 1024;
 
-    /** The fixed rendering height of the canvas in pixels. */
+     
     public static final int CANVAS_HEIGHT = 768;
 
     private static final Color BG_MENU      = new Color(0x0A, 0x0A, 0x0F);
@@ -105,11 +105,11 @@ public class GameCanvas extends JComponent {
 
     private LightRenderer lightRenderer;
 
-    /** Current light source position (canvas-space). */
+     
     private Point lightSource;
-    /** Current light radius in pixels. */
+     
     private int lightRadius;
-    /** Apprentice light velocity factor (0.0 to 1.0). */
+     
     private float lightVelocityFactor;
 
     // -------------------------------------------------------------------------
@@ -180,10 +180,10 @@ public class GameCanvas extends JComponent {
     // P8.6 — pre-boss altar overlay
     // -------------------------------------------------------------------------
 
-    /** Whether the altar choice overlay is currently showing. */
+     
     private boolean altarOpen = false;
 
-    /** The altarId of the active altar trigger, or -1 when no altar is open. */
+     
     private int altarId = -1;
 
     /**
@@ -193,37 +193,37 @@ public class GameCanvas extends JComponent {
      */
     private volatile String pendingAltarChoice = null;
 
-    /** Breadcrumb trail positions for Act 2. */
+     
     private Point[] breadcrumbs;
-    /** Alpha values for each breadcrumb (fading). */
+     
     private float[] breadcrumbAlphas;
 
-    /** Whether the game is paused. */
+     
     private boolean paused;
 
-    /** Whether the fragment library view is being shown. */
+     
     private boolean showFragmentLibrary;
 
-    /** Active on-screen notifications (each is [text, startTimeMs]). */
+     
     private final java.util.concurrent.CopyOnWriteArrayList<String[]> notifications =
             new java.util.concurrent.CopyOnWriteArrayList<>();
 
-    /** IP address text typed into the menu input field. */
+     
     private String ipInputText;
 
-    /** Mouse position for offline mouse fallback (C1). */
+     
     private Point mousePosition = new Point(512, 384);
 
-    /** Light source position for Act 2/3 (D2). */
+     
     private Point lightSourcePosition = new Point(512, 384);
 
-    /** Current game phase cached for mouse click routing (C1). */
+     
     private LevelState.GamePhase currentPhase = LevelState.GamePhase.MENU;
 
-    /** P8.10 — Outcome stored when VictoryPacket arrives; drives renderVictoryScreen. */
+     
     private GameServer.VictoryState victoryResult;
 
-    /** Shared lobby state updated from LOBBY_STATE server messages. */
+     
     private LobbyState lobbyState = new LobbyState();
 
     /**
@@ -256,7 +256,7 @@ public class GameCanvas extends JComponent {
     private final java.awt.Rectangle apprenticeCardBounds = new java.awt.Rectangle(582, 230, 280, 320);
 
 
-    /** Ghost block preview position for Apprentice gesture placement. */
+     
     private Point gesturePosition;
 
     /**
@@ -348,7 +348,7 @@ public class GameCanvas extends JComponent {
     // Setters for game state references
     // -------------------------------------------------------------------------
 
-    /** Sets the level state reference used for phase dispatch. */
+     
     public void setLevelState(LevelState levelState) {
         this.levelState = levelState;
         this.currentPhase = levelState.currentPhase;
@@ -359,7 +359,7 @@ public class GameCanvas extends JComponent {
         }
     }
 
-    /** Sets the current game phase directly (B5). */
+     
     public void setPhase(LevelState.GamePhase phase) {
         this.currentPhase = phase;
         this.levelState.currentPhase = phase;
@@ -369,27 +369,27 @@ public class GameCanvas extends JComponent {
         repaint();
     }
 
-    /** Sets the light source position for Act 2/3 (D2). */
+     
     public void setLightSourcePosition(Point p) {
         this.lightSourcePosition = p;
     }
 
-    /** Returns the current light source position. */
+     
     public Point getLightSourcePosition() {
         return lightSourcePosition;
     }
 
-    /** Sets the light radius for Act 2/3. */
+     
     public void setLightRadius(int r) {
         this.lightRadius = r;
     }
 
-    /** Sets the player reference used for rendering. */
+     
     public void setPlayer(Player player) {
         this.player = player;
     }
 
-    /** Sets the list of active game elements. */
+     
     public void setElements(List<GameElement> elements) {
         this.elements = elements;
     }
@@ -464,7 +464,7 @@ public class GameCanvas extends JComponent {
         });
     }
 
-    /** Dismisses the altar overlay and unregisters the 1/2 key bindings. */
+     
     public void closeAltarOverlay() {
         altarOpen = false;
         altarId   = -1;
@@ -474,7 +474,7 @@ public class GameCanvas extends JComponent {
         im.remove(javax.swing.KeyStroke.getKeyStroke('2'));
     }
 
-    /** Returns whether the altar overlay is currently visible. */
+     
     public boolean isAltarOpen() { return altarOpen; }
 
     /**
@@ -488,7 +488,7 @@ public class GameCanvas extends JComponent {
         return c;
     }
 
-    /** Sets the current light source position and radius. */
+     
     public void setLightSource(Point source, int radius, float velocityFactor) {
         this.lightSource = source;
         this.lightSourcePosition = source;
@@ -514,7 +514,7 @@ public class GameCanvas extends JComponent {
         this.bossLightReceived = true;
     }
 
-    /** P8.10 — Stores the match outcome so renderVictoryScreen can display it. */
+     
     public void setVictoryResult(GameServer.VictoryState result) {
         this.victoryResult = result;
     }
@@ -531,7 +531,7 @@ public class GameCanvas extends JComponent {
         return levelState == null || levelState.getLightActive();
     }
 
-    /** Returns true when the current act uses the light system (ACT2 or ACT3). */
+     
     private boolean isActWithLight() {
         if (levelState == null) return false;
         return levelState.currentPhase == LevelState.GamePhase.ACT2
@@ -613,23 +613,23 @@ public class GameCanvas extends JComponent {
         return 0.02f + (normalized * 0.98f);
     }
 
-    /** Sets the breadcrumb trail for Act 2. */
+     
     public void setBreadcrumbs(Point[] breadcrumbs, float[] alphas) {
         this.breadcrumbs = breadcrumbs;
         this.breadcrumbAlphas = alphas;
     }
 
-    /** Sets the pause state. */
+     
     public void setPaused(boolean paused) {
         this.paused = paused;
     }
 
-    /** Sets the ghost block preview position. */
+     
     public void setGesturePosition(Point pos) {
         this.gesturePosition = pos;
     }
 
-    /** Sets the menu IP input text. */
+     
     public void setIpInputText(String text) {
         this.ipInputText = text;
     }
@@ -715,12 +715,12 @@ public class GameCanvas extends JComponent {
         return lightRadius;
     }
 
-    /** Returns the current level state (public accessor for InputRouter). */
+     
     public LevelState getLevelStatePublic() {
         return levelState;
     }
 
-    /** Returns the current mouse position on the canvas. */
+     
     public Point getMousePosition2() {
         return mousePosition;
     }
@@ -733,12 +733,12 @@ public class GameCanvas extends JComponent {
      * @param y      world-space y-coordinate of the remote Wanderer
      * @param health current health of the remote Wanderer
      */
-    /** Shows or hides the fragment library overlay. */
+     
     public void setShowFragmentLibrary(boolean show) {
         this.showFragmentLibrary = show;
     }
 
-    /** Returns whether the fragment library is being shown. */
+     
     public boolean isShowingFragmentLibrary() {
         return showFragmentLibrary;
     }

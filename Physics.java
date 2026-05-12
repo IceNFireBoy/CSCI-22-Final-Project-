@@ -40,7 +40,7 @@ public class Physics { // Stateless physics engine; all simulation state lives o
 
     private static final float TERMINAL_VELOCITY = 18f; // Max fall speed (px/tick)
 
-    /** Y-coordinate threshold below which the Wanderer is considered to have fallen off the world. */
+     
     private static final int FALL_DEATH_Y = 900; // 132 px below the 768 px canvas; guarantees the player is off-screen before loseLife() fires
 
     // -------------------------------------------------------------------------

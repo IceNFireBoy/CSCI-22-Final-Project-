@@ -203,19 +203,19 @@ public class MouseApprentice { // Singleton mouse-state bus for the Apprentice r
      */
     public boolean isLightActive() { return lightActive && !forcedOff; } // Effective light state: both the player toggle AND the battery interlock must allow it
 
-    /** Returns the current canvas-space (or world-space during BOSS) mouse x coordinate. */
+     
     public int getX() { return mouseX; } // Read accessor for x; called by GameStarter Apprentice send block and by InputRouter block-placement logic
 
-    /** Returns the current canvas-space (or world-space during BOSS) mouse y coordinate. */
+     
     public int getY() { return mouseY; } // Read accessor for y; symmetric with getX()
 
-    /** Returns whether the primary (left) mouse button is currently held down. */
+     
     public boolean isLeftPressed() { return leftPressed; } // Read accessor for left-button state; used by game loop for continuous block-placement
 
-    /** Returns whether the secondary (right) mouse button is currently held down. */
+     
     public boolean isRightPressed() { return rightPressed; } // Read accessor for right-button state; used by game loop for block removal
 
-    /** Returns the current light-source radius in pixels, clamped to [MIN_RADIUS, MAX_RADIUS]. */
+     
     public int getLightRadius() { return lightRadius; } // Read accessor for radius; packed into LIGHT_UPDATE by GameStarter and read by LightRenderer for mask size
 
     /**

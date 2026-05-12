@@ -105,10 +105,10 @@ public class LevelRegistry { // Stateless factory; no instance methods
      */
     public static class LoadResult {
 
-        /** All entities (platforms, portals, fragments, altars, hazards, triggers) for this level. */
+         
         public final List<GameElement> elements;
 
-        /** Pre-configured level state (phase, time limit, block budget, spawn point). */
+         
         public final LevelState state;
 
         /**

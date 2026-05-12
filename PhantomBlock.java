@@ -57,13 +57,13 @@ public class PhantomBlock extends Platform implements SpriteOverridable { // Lig
     // Tuning constants
     // -------------------------------------------------------------------------
 
-    /** Maximum charge value; corresponds to ~{@code MAX_CHARGE / chargeRate} ticks of full-intensity light. */
+     
     public static final int DEFAULT_MAX_CHARGE = 1500;
 
-    /** Per-tick gain when fully illuminated; total time to top up = MAX_CHARGE / CHARGE_RATE ticks (≈ 9 s at default). */
+     
     public static final int DEFAULT_CHARGE_RATE = 18;
 
-    /** Per-tick drain when unlit; total persistence after a full charge ≈ MAX_CHARGE / DECAY_RATE ticks (≈ 5 s at default). */
+     
     public static final int DEFAULT_DECAY_RATE = 5;
 
     private static final Color BLOCK_FILL    = new Color(0x88, 0xB0, 0xD8); // Cool blue tint to read as "ghostly light memory"
@@ -137,10 +137,10 @@ public class PhantomBlock extends Platform implements SpriteOverridable { // Lig
         this.lightIntensity = Math.max(0f, Math.min(1f, intensity)); // Clamp defensively
     }
 
-    /** @return the most recently received light intensity in [0, 1] */
+     
     public float getLightIntensity() { return lightIntensity; }
 
-    /** @return current charge value in [0, maxCharge] */
+     
     public int getCharge() { return charge; }
 
     // -------------------------------------------------------------------------

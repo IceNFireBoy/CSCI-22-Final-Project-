@@ -90,10 +90,10 @@ public enum CutsceneID { // Enum — each constant corresponds to one discrete s
      */
     CORE_1_DESTROYED, // Index 6 — narrative beat on first Core kill; server sets architectOverride=true after this
 
-    /** Second Core destroyed. Narrative escalation — the Architect becomes desperate. */
+     
     CORE_2_DESTROYED, // Index 7 — plays when coreHealth[1] reaches 0
 
-    /** Third Core destroyed. The final confrontation is near. */
+     
     CORE_3_DESTROYED, // Index 8 — plays when coreHealth[2] reaches 0
 
     /**
