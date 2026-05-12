@@ -4,7 +4,7 @@
  behavior, a budget cost for Apprentice placement, and a lighting flag.
 
  Platform is the primary collision geometry class. CollisionDetector resolves player-platform
- overlaps each tick; PhysicsEngine reads isSolid() before axis resolution; LevelGenerator
+ overlaps each tick; Physics reads isSolid() before axis resolution; LevelGenerator
  subclasses instantiate platforms at level-build time; BossArenaGenerator creates platforms
  procedurally. Apprentice places platforms via GameSession.placeBlock().
  */

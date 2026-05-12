@@ -121,7 +121,7 @@ public class GameCanvas extends JComponent {
 
     private LevelState levelState;
     private Player player;
-    private List<GameElement> elements;
+    private java.util.List<GameElement> elements;
 
     private LightRenderer lightRenderer;
 
@@ -172,7 +172,7 @@ public class GameCanvas extends JComponent {
      * {@link GameStarter} so iteration here is safe against concurrent
      * append/remove.
      */
-    private List<BossAttack> bossAttacks;
+    private java.util.List<BossAttack> bossAttacks;
 
     // -------------------------------------------------------------------------
     // P8.8 — stun minigame overlay + stunned banner
@@ -314,7 +314,7 @@ public class GameCanvas extends JComponent {
      * animation. Stopped when the game phase leaves MENU so the game loop thread
      * takes over repaint scheduling.
      */
-    private Timer menuTimer;
+    private javax.swing.Timer menuTimer;
 
     // -------------------------------------------------------------------------
     // Constructor
@@ -360,7 +360,7 @@ public class GameCanvas extends JComponent {
         }
 
         // Drive particle animation during the menu before the game loop starts.
-        menuTimer = new Timer(16, e -> repaint());
+        menuTimer = new javax.swing.Timer(16, e -> repaint());
         menuTimer.start();
     }
 
@@ -410,7 +410,7 @@ public class GameCanvas extends JComponent {
     }
 
     /** Sets the list of active game elements. */
-    public void setElements(List<GameElement> elements) {
+    public void setElements(java.util.List<GameElement> elements) {
         this.elements = elements;
     }
 
@@ -425,7 +425,7 @@ public class GameCanvas extends JComponent {
      *                entered — no-op guarded by a null check inside
      *                {@code renderBoss})
      */
-    public void setBossAttacks(List<BossAttack> attacks) {
+    public void setBossAttacks(java.util.List<BossAttack> attacks) {
         this.bossAttacks = attacks;
     }
 

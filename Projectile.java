@@ -45,7 +45,7 @@ public class Projectile extends GameElement { // Extends GameElement for entity-
 
     private boolean isFromPlayer; // Origin flag: true = player; false = boss-origin; checked by Shield.update() for interception
 
-    private List<Platform> platforms; // Live platform list; iterated in update() for wall-hit detection; set via setPlatforms()
+    private java.util.List<Platform> platforms; // Live platform list; iterated in update() for wall-hit detection; set via setPlatforms()
 
     // -------------------------------------------------------------------------
     // Constructor
@@ -140,7 +140,7 @@ public class Projectile extends GameElement { // Extends GameElement for entity-
     // Setters
     // -------------------------------------------------------------------------
 
-    public void setPlatforms(List<Platform> platforms) { // Set platform list for wall-hit detection; must be called before first update
+    public void setPlatforms(java.util.List<Platform> platforms) { // Set platform list for wall-hit detection; must be called before first update
         this.platforms = platforms;                       // Store reference; iterated in update() each tick while the projectile is active
     }
 

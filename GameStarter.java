@@ -246,7 +246,7 @@ public class GameStarter {
      * entities. Drained on the GameLoop thread in Phase C-pre once {@code canvas}
      * and {@code player} are ready.
      */
-    private final List<String> pendingSnapshotMessages =
+    private final java.util.List<String> pendingSnapshotMessages =
             java.util.Collections.synchronizedList(new java.util.ArrayList<>());
 
     // =========================================================================
@@ -296,7 +296,7 @@ public class GameStarter {
     private final Player player;
 
     /** The physics engine that integrates velocity, applies gravity, and resolves collisions. */
-    private final PhysicsEngine physicsEngine;
+    private final Physics physicsEngine;
 
     /** Translates the per-tick {@link KeyBindings.PlayerInputState} into engine method calls. */
     private final InputRouter inputRouter;
@@ -312,14 +312,14 @@ public class GameStarter {
      * etc.). Uses {@link CopyOnWriteArrayList} so the network I/O thread can safely
      * add or remove elements while the game loop iterates.
      */
-    private final List<GameElement> elements;
+    private final java.util.List<GameElement> elements;
 
     /**
      * Tracks only the Platform objects spawned via the network protocol (PLACE_BLOCK).
      * Used by {@link #clearAllBlocks()} to remove placed blocks without touching
      * level-loaded entities. Also a CopyOnWriteArrayList for thread safety.
      */
-    private final List<Platform> placedBlocks;
+    private final java.util.List<Platform> placedBlocks;
 
     /**
      * P8.5 — live list of {@link BossAttack} instances spawned locally in
@@ -334,7 +334,7 @@ public class GameStarter {
      * {@link CopyOnWriteArrayList} so the NetworkIO thread can append a new
      * entry while the game loop is iterating for update / render.
      */
-    private final List<BossAttack> bossAttacks = new CopyOnWriteArrayList<>();
+    private final java.util.List<BossAttack> bossAttacks = new CopyOnWriteArrayList<>();
 
     // -------------------------------------------------------------------------
     // P8.6 — pre-boss altar state
@@ -402,7 +402,7 @@ public class GameStarter {
     public GameStarter() {
         instance           = this;
         this.player        = new Player(PLAYER_SPAWN_X, PLAYER_SPAWN_Y);
-        this.physicsEngine = new PhysicsEngine();
+        this.physicsEngine = new Physics();
         this.inputRouter   = new InputRouter();
         this.keyBindings   = new KeyBindings();
         this.elements      = new CopyOnWriteArrayList<>();
@@ -2596,7 +2596,7 @@ public class GameStarter {
      * @return the {@link CopyOnWriteArrayList}-backed placed-block list;
      *         never {@code null}
      */
-    public List<Platform> getPlacedBlocks() {
+    public java.util.List<Platform> getPlacedBlocks() {
         return placedBlocks;
     }
 
@@ -2606,7 +2606,7 @@ public class GameStarter {
      *
      * @return the {@link CopyOnWriteArrayList}-backed entity list; never {@code null}
      */
-    public List<GameElement> getElements() {
+    public java.util.List<GameElement> getElements() {
         return elements;
     }
 
@@ -2631,7 +2631,7 @@ public class GameStarter {
 
     /**
      * Returns the {@link InputRouter} that translates per-tick input state into
-     * {@link PhysicsEngine} calls.
+     * {@link Physics} calls.
      *
      * @return the input router; never {@code null}
      */

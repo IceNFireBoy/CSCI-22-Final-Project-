@@ -75,7 +75,7 @@ public class Shield extends BossAttack { // Extends BossAttack for the shared ac
      * {@link GameStarter} manages; modifying projectile active-states here has
      * immediate effect on the game loop's update/render passes.</p>
      */
-    private List<Projectile> projectiles; // Live reference to GameStarter's projectile list; iterated in update() to intercept player shots
+    private java.util.List<Projectile> projectiles; // Live reference to GameStarter's projectile list; iterated in update() to intercept player shots
 
     /**
      * Constructs a new {@code Shield} at the fixed boss-panel position (717, 364)
@@ -95,7 +95,7 @@ public class Shield extends BossAttack { // Extends BossAttack for the shared ac
      * @param projectiles the list of active projectiles to check for interception;
      *                    may be {@code null} (the update loop guards against this)
      */
-    public Shield(List<Projectile> projectiles) {                  // Single-argument constructor: receives the live projectile list; position/size/lifetime are fixed
+    public Shield(java.util.List<Projectile> projectiles) {                  // Single-argument constructor: receives the live projectile list; position/size/lifetime are fixed
         super(717, 364, 120, 40, 2000L);                           // Delegate to BossAttack: place at (717,364), set 120×40 AABB, start 2000 ms countdown
         this.shieldRect = new Rectangle(717, 364, 120, 40);        // Construct an explicit Rectangle matching the super AABB for use in projectile intersection tests
         this.projectiles = projectiles;                             // Store live projectile list reference; iterated in update() to detect player-shot interceptions

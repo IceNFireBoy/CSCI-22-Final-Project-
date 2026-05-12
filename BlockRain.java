@@ -73,7 +73,7 @@ public class BlockRain extends BossAttack { // Extends BossAttack for the shared
      * landed blocks can be extracted via {@link #getFallingBlocks()} and added to
      * the arena as permanent obstacles.
      */
-    private List<Platform> fallingBlocks; // 8 BRICK platforms; managed individually; exposed via getFallingBlocks() after expiry
+    private java.util.List<Platform> fallingBlocks; // 8 BRICK platforms; managed individually; exposed via getFallingBlocks() after expiry
 
     /**
      * Maps each falling block to its current vertical velocity. A velocity of 0
@@ -96,7 +96,7 @@ public class BlockRain extends BossAttack { // Extends BossAttack for the shared
      * falling block is tested against these platforms to determine when it has landed
      * on an existing surface rather than the default ground level.
      */
-    private List<Platform> groundPlatforms; // Existing arena platforms; used as a secondary landing surface check
+    private java.util.List<Platform> groundPlatforms; // Existing arena platforms; used as a secondary landing surface check
 
     /**
      * The default ground Y coordinate. Blocks that reach this y value are considered
@@ -125,7 +125,7 @@ public class BlockRain extends BossAttack { // Extends BossAttack for the shared
      * @param groundY         the default ground y-coordinate; blocks land here if no
      *                        platform intercepts them first
      */
-    public BlockRain(Player player, List<Platform> groundPlatforms, int groundY) { // Three-argument constructor: sets up player/platform refs and spawns 8 blocks
+    public BlockRain(Player player, java.util.List<Platform> groundPlatforms, int groundY) { // Three-argument constructor: sets up player/platform refs and spawns 8 blocks
         super(0, 0, 0, 0, 3000L);                     // Delegate to BossAttack: no fixed position (0,0); zero AABB; 3000 ms lifetime
         this.player = player;                           // Store Wanderer reference for per-tick contact damage checks
         this.groundPlatforms = groundPlatforms;         // Store existing platform list for secondary landing detection
@@ -240,7 +240,7 @@ public class BlockRain extends BossAttack { // Extends BossAttack for the shared
      * @return the mutable list of {@link Platform} instances; never {@code null};
      *         may contain both falling and landed blocks
      */
-    public List<Platform> getFallingBlocks() { // Called by GameStarter after expiry to promote landed blocks to permanent arena platforms
+    public java.util.List<Platform> getFallingBlocks() { // Called by GameStarter after expiry to promote landed blocks to permanent arena platforms
         return fallingBlocks;                   // Return the internal list; caller can add entries to the arena's platform list directly
     }
 }

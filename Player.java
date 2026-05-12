@@ -2,7 +2,7 @@
  The Wanderer — the keyboard-controlled protagonist of Lumen Architect. Stores position,
  health, physics velocity, ability unlock flags (melee, projectile, dodge, wall-cling),
  and faithful meter. The nested CoreHealthBar class renders the four Core health values
- on the HUD. PhysicsEngine moves the player each tick; CollisionDetector checks bounds;
+ on the HUD. Physics moves the player each tick; CollisionDetector checks bounds;
  InputRouter dispatches ability input.
  */
 
@@ -54,15 +54,15 @@ public class Player implements Damageable, Renderable { // Implements Damageable
 
     private int maxHealth; // Dynamic max health cap; starts at 100, raised by altar offerings
 
-    private int x; // World-space X coordinate (left edge); set by PhysicsEngine each tick; read by Camera and render()
-    private int y; // World-space Y coordinate (top edge); set by PhysicsEngine each tick; read by Camera and render()
+    private int x; // World-space X coordinate (left edge); set by Physics each tick; read by Camera and render()
+    private int y; // World-space Y coordinate (top edge); set by Physics each tick; read by Camera and render()
 
     private int health; // Current health; clamped between 0 and maxHealth; decremented by takeDamage(), incremented by heal()
 
-    private float velX; // Horizontal velocity in pixels per tick; set by PhysicsEngine.walk(); zeroed by stopWalking()
+    private float velX; // Horizontal velocity in pixels per tick; set by Physics.walk(); zeroed by stopWalking()
     private float velY; // Vertical velocity in pixels per tick; positive moves downward; accumulates GRAVITY each tick
 
-    private boolean grounded; // True when standing on solid surface; set by CollisionDetector on top-face hit; reset by PhysicsEngine each tick
+    private boolean grounded; // True when standing on solid surface; set by CollisionDetector on top-face hit; reset by Physics each tick
     private boolean wallTouching; // True when pressing against a wall; set by CollisionDetector on side-face hit; enables wall-cling
 
     /** Whether the Wanderer is currently invincible (e.g. during a dodge roll). */
@@ -78,14 +78,14 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * The direction the Wanderer is currently facing.
      * {@code 1} = right, {@code -1} = left.
      */
-    private int facingDirection; // Updated by PhysicsEngine#walk() based on velX sign; used in melee hitbox placement and sprite flip
+    private int facingDirection; // Updated by Physics#walk() based on velX sign; used in melee hitbox placement and sprite flip
 
     /**
      * The number of jumps performed since the Wanderer last touched the ground.
      * Reset to zero on grounding; capped by the engine at
-     * {@link PhysicsEngine#MAX_CONSECUTIVE_JUMPS}.
+     * {@link Physics#MAX_CONSECUTIVE_JUMPS}.
      */
-    private int consecutiveJumps; // Incremented in PhysicsEngine#jump(); reset to 0 in PhysicsEngine when grounded
+    private int consecutiveJumps; // Incremented in Physics#jump(); reset to 0 in Physics when grounded
 
     // -------------------------------------------------------------------------
     // Dodge-roll state
@@ -133,7 +133,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * Whether the Wanderer has unlocked wall-clinging and climbing, granted by the
      * {@link LoreFragment.AbilityUnlock#WALL_CLING} fragment.
      */
-    private boolean hasWallCling; // Unlocked via unlockAbility(WALL_CLING); enables wall-slide and wall-jump in PhysicsEngine
+    private boolean hasWallCling; // Unlocked via unlockAbility(WALL_CLING); enables wall-slide and wall-jump in Physics
 
     /**
      * Whether the Wanderer has unlocked the shadow-dash ability, granted by the
@@ -297,7 +297,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     private long collectFlashStart; // Stamped by triggerCollectFlash(); checked by isCollectFlashActive() to determine elapsed time
 
     /** List of active game entities for collision queries. */
-    private List<GameElement> activeEntities; // Injected by setActiveEntities(); iterated in executeMelee() for hit detection
+    private java.util.List<GameElement> activeEntities; // Injected by setActiveEntities(); iterated in executeMelee() for hit detection
 
     // -------------------------------------------------------------------------
     // Respawn state (lives system removed — health bar is the single source of truth)
@@ -394,8 +394,8 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @param y the initial y-coordinate of the Wanderer's top edge in world space
      */
     public Player(int x, int y) {
-        this.x = x; // Store spawn x; updated each physics tick by PhysicsEngine
-        this.y = y; // Store spawn y; updated each physics tick by PhysicsEngine
+        this.x = x; // Store spawn x; updated each physics tick by Physics
+        this.y = y; // Store spawn y; updated each physics tick by Physics
 
         // Physics velocity
         this.velX = 0f; // Start stationary horizontally
@@ -715,7 +715,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @param x the new x-coordinate in pixels
      */
     public void setX(int x) {
-        this.x = x; // Applied by PhysicsEngine after velocity integration or knockback
+        this.x = x; // Applied by Physics after velocity integration or knockback
     }
 
     /**
@@ -734,7 +734,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @param y the new y-coordinate in pixels
      */
     public void setY(int y) {
-        this.y = y; // Applied by PhysicsEngine after velocity integration or collision push-out
+        this.y = y; // Applied by Physics after velocity integration or collision push-out
     }
 
     /**
@@ -793,7 +793,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @param velX horizontal velocity; negative = moving left
      */
     public void setVelX(float velX) {
-        this.velX = velX; // Set by PhysicsEngine#walk() and stopWalking()
+        this.velX = velX; // Set by Physics#walk() and stopWalking()
     }
 
     /**
@@ -811,7 +811,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @param velY vertical velocity; positive = falling, negative = rising
      */
     public void setVelY(float velY) {
-        this.velY = velY; // Set by PhysicsEngine#jump() (negative) and gravity accumulation (positive)
+        this.velY = velY; // Set by Physics#jump() (negative) and gravity accumulation (positive)
     }
 
     // -------------------------------------------------------------------------
@@ -824,7 +824,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @return {@code true} if grounded
      */
     public boolean isGrounded() {
-        return grounded; // Read by PhysicsEngine to decide whether gravity applies
+        return grounded; // Read by Physics to decide whether gravity applies
     }
 
     /**
@@ -843,7 +843,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @return {@code true} if pressing against a wall tile
      */
     public boolean isWallTouching() {
-        return wallTouching; // Read by PhysicsEngine to enable wall-slide gravity reduction when hasWallCling is true
+        return wallTouching; // Read by Physics to enable wall-slide gravity reduction when hasWallCling is true
     }
 
     /**
@@ -909,7 +909,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @param facingDirection {@code 1} for right, {@code -1} for left
      */
     public void setFacingDirection(int facingDirection) {
-        this.facingDirection = facingDirection; // Written by PhysicsEngine#walk() based on velX sign
+        this.facingDirection = facingDirection; // Written by Physics#walk() based on velX sign
     }
 
     /**
@@ -918,7 +918,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @return consecutive jump count; reset to zero on grounding
      */
     public int getConsecutiveJumps() {
-        return consecutiveJumps; // Read by PhysicsEngine to enforce the MAX_CONSECUTIVE_JUMPS cap
+        return consecutiveJumps; // Read by Physics to enforce the MAX_CONSECUTIVE_JUMPS cap
     }
 
     /**
@@ -927,7 +927,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @param consecutiveJumps the new jump count value
      */
     public void setConsecutiveJumps(int consecutiveJumps) {
-        this.consecutiveJumps = consecutiveJumps; // Reset to 0 by PhysicsEngine when grounded; incremented on each jump
+        this.consecutiveJumps = consecutiveJumps; // Reset to 0 by Physics when grounded; incremented on each jump
     }
 
     // -------------------------------------------------------------------------
@@ -940,7 +940,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @return {@code true} while rolling
      */
     public boolean isDodging() {
-        return dodging; // Read by PhysicsEngine to apply roll velocity
+        return dodging; // Read by Physics to apply roll velocity
     }
 
     /**
@@ -949,7 +949,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @param dodging {@code true} to mark the roll as in progress
      */
     public void setDodging(boolean dodging) {
-        this.dodging = dodging; // Written by executeDodge() and PhysicsEngine
+        this.dodging = dodging; // Written by executeDodge() and Physics
     }
 
     /**
@@ -976,7 +976,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @return cooldown expiry in milliseconds
      */
     public long getDodgeCooldownEnd() {
-        return dodgeCooldownEnd; // Read by PhysicsEngine to enforce the 3-second cooldown
+        return dodgeCooldownEnd; // Read by Physics to enforce the 3-second cooldown
     }
 
     /**
@@ -998,7 +998,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @return cooldown expiry in milliseconds
      */
     public long getShadowDashCooldownEnd() {
-        return shadowDashCooldownEnd; // Read by PhysicsEngine to enforce the 5-second dash cooldown
+        return shadowDashCooldownEnd; // Read by Physics to enforce the 5-second dash cooldown
     }
 
     /**
@@ -1092,7 +1092,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @return {@code true} if wall-clinging is unlocked
      */
     public boolean isHasWallCling() {
-        return hasWallCling; // Read by PhysicsEngine for wall-slide gravity reduction
+        return hasWallCling; // Read by Physics for wall-slide gravity reduction
     }
 
     /**
@@ -1214,7 +1214,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      *
      * @param entities the current active entity list; must not be {@code null}
      */
-    public void setActiveEntities(List<GameElement> entities) {
+    public void setActiveEntities(java.util.List<GameElement> entities) {
         this.activeEntities = entities; // Store reference; iterated by executeMelee() to find Damageable targets in the hitbox
     }
 
@@ -1448,7 +1448,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      */
     public void update(long deltaMs) {
         // --- Coyote-time ground confirmation ---
-        // grounded is the raw physics value (set by PhysicsEngine after collision).
+        // grounded is the raw physics value (set by Physics after collision).
         // animGrounded adds COYOTE_MAX frames of grace before declaring airborne,
         // eliminating single-frame flicker when the player crosses a platform edge.
         boolean animGrounded;
@@ -1516,7 +1516,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * ARCHITECT_VICTORY cutscene instead.
      *
      * <p>Architecture role: Called by {@link #takeDamage(int)} when health reaches
-     * zero, and directly by out-of-bounds detection in {@link PhysicsEngine}.</p>
+     * zero, and directly by out-of-bounds detection in {@link Physics}.</p>
      */
     public void loseLife() {
         if (isDead) return;              // Guard: already dead; prevent double-death from same frame
@@ -1931,7 +1931,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
      * @return {@code true} while rolling
      */
     public boolean isDodgeActive() {
-        return dodgeActive; // Read by PhysicsEngine for dodge-velocity maintenance
+        return dodgeActive; // Read by Physics for dodge-velocity maintenance
     }
 
     /**

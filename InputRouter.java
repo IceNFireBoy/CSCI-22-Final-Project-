@@ -1,6 +1,6 @@
 /**
  Routes all keyboard and mouse input to game subsystems based on phase and client
- role (Wanderer/Apprentice). Single dispatcher bridging Swing events to PhysicsEngine,
+ role (Wanderer/Apprentice). Single dispatcher bridging Swing events to Physics,
  MouseApprentice, ability fires, lobby selection, and cutscene advancement.
 
  Implements MouseListener/MouseMotionListener/MouseWheelListener on GameCanvas.
@@ -115,7 +115,7 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
     // Key routing (called per tick by game loop)
     // =========================================================================
 
-    public void routeKeyEvent(KeyBindings.PlayerInputState input, Player player, PhysicsEngine physicsEngine) { // Routes key input each tick; suppressed during cutscenes
+    public void routeKeyEvent(KeyBindings.PlayerInputState input, Player player, Physics physicsEngine) { // Routes key input each tick; suppressed during cutscenes
         if (input == null || player == null || physicsEngine == null) return; // Null-guard: any missing dependency means no routing can occur safely
 
         // Cutscene lock: suppress all Wanderer input while a story sequence plays

@@ -112,7 +112,7 @@ public abstract class GameElement implements Renderable { // Abstract — cannot
     /**
      * Returns an axis-aligned bounding {@link Rectangle} for this element, derived
      * from its current position and dimensions. Used by {@link CollisionDetector} and
-     * {@link PhysicsEngine} for AABB overlap tests.
+     * {@link Physics} for AABB overlap tests.
      *
      * <p>Architecture role: Provides a uniform hitbox API across all entity types.
      * {@link Player#getBounds()} calls this on every platform each tick to resolve
@@ -171,7 +171,7 @@ public abstract class GameElement implements Renderable { // Abstract — cannot
      * the owning element so it can represent sub-regions, offset hitboxes, or
      * temporary test boxes without mutating the parent's fields.
      *
-     * <p>Architecture role: Used by {@link PhysicsEngine} and {@link CollisionDetector}
+     * <p>Architecture role: Used by {@link Physics} and {@link CollisionDetector}
      * to test narrow-phase AABB overlaps. For example, {@link CollisionDetector} builds
      * two CollisionBoxes for the Wanderer — a narrow vertical box and a wide horizontal
      * box — so that landing on a platform and walking through a doorway are resolved

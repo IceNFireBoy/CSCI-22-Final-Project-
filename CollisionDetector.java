@@ -3,8 +3,8 @@
  Platform-specific rules: INVISIBLE solid only when lit; CRUMBLE disappears after
  3000 ms; MIMIC collapses after 800 ms; SLIDE deflects velocity along slope.
 
- Created by PhysicsEngine and shared for session lifetime. All context passed via
- parameters. PhysicsEngine calls checkPlayerPlatform per platform per tick;
+ Created by Physics and shared for session lifetime. All context passed via
+ parameters. Physics calls checkPlayerPlatform per platform per tick;
  GameStarter calls checkPlayerHazard and checkProjectileTarget in own passes.
  */
 
