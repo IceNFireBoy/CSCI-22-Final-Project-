@@ -36,8 +36,7 @@
 //                                   classes implement Serializable; private
 //                                   static final serialVersionUID constants.
 // =========================================================================
-import java.io.Serializable; // Marker interface required by Java Object Serialisation for all packet classes
-
+import java.io.*;
 public class NetworkProtocol { // Pure namespace class; never instantiated
 
     /**

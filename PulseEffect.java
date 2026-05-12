@@ -40,14 +40,8 @@
 //                                 where present, static final constants
 //                                 follow the constants pattern from 1a.
 // =========================================================================
-import java.awt.AlphaComposite;        // Provides SRC_OVER compositing mode for drawing the ring at the current alpha level
-import java.awt.BasicStroke;            // Configures the ring's stroke width (1.5 px); thin line appropriate for a fast-fading visual
-import java.awt.Color;                  // AWT colour for the warm gold ring (#c9a84c) matching Portal and Shield palettes
-import java.awt.Composite;             // Interface type; current composite is saved before and restored after alpha-composited draw
-import java.awt.Graphics2D;            // 2D rendering context passed to render(); used with Ellipse2D and stroke settings
-import java.awt.Stroke;                // Interface type; current stroke is saved before and restored after setting BasicStroke(1.5f)
-import java.awt.geom.Ellipse2D;        // Geometric shape used to draw the expanding ring with precise floating-point dimensions
-
+import java.awt.*;
+import java.awt.geom.*;
 public class PulseEffect extends GameElement { // Extends GameElement for automatic management by the entity update/render loop and cleanup sweep
 
     // -------------------------------------------------------------------------

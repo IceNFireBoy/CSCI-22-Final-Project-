@@ -41,10 +41,7 @@
 //                                 checkBossAttackHits() AABB tests, the
 //                                 collision-module pattern.
 // =========================================================================
-import java.awt.Color;     // AWT colour for the dark purple spike fill (#4a3050)
-import java.awt.Graphics2D; // 2D rendering context; used for fillPolygon to draw each triangular spike
-import java.awt.Rectangle;  // AWT rectangle; used to build each spike's AABB for contact-damage tests
-
+import java.awt.*;
 public class SpikeArray extends BossAttack { // Extends BossAttack for the shared 2400 ms lifetime countdown
 
     // -------------------------------------------------------------------------

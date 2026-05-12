@@ -42,14 +42,8 @@
 // Module 1a "Modifiers"      - private fields with public accessors;
 //                               static final font / colour constants.
 // =========================================================================
-import java.awt.AlphaComposite;         // Used in render() for fade-in easing of the narration text
-import java.awt.Color;                   // AWT colour constants for background, text, and footer labels
-import java.awt.Font;                    // Fonts for the narration panel text and the footer prompt
-import java.awt.FontMetrics;             // Measures string widths for centring the footer and panel counter
-import java.awt.Graphics2D;             // 2D rendering context passed by GameCanvas to render()
-import java.awt.RenderingHints;          // Anti-aliasing hints applied at the start of render() for smooth text
-import java.awt.image.BufferedImage;     // Loaded panel art from SpriteLoader; drawn above the narration text
-
+import java.awt.*;
+import java.awt.image.*;
 public class CutsceneRenderer { // Singleton: instantiated once eagerly; never more than one instance
 
     // -------------------------------------------------------------------------

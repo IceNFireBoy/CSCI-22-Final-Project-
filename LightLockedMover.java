@@ -44,9 +44,7 @@
 //                                 GameStarter.checkHazardContact() per the
 //                                 collision module's overlap test.
 // =========================================================================
-import java.awt.Color;          // Block palette
-import java.awt.Graphics2D;      // 2D rendering context
-
+import java.awt.*;
 public class LightLockedMover extends Platform implements SpriteOverridable { // Light-gated moving platform
 
     // -------------------------------------------------------------------------

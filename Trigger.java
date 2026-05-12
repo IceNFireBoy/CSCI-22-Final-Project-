@@ -41,10 +41,8 @@
 //                                 where present, static final constants
 //                                 follow the constants pattern from 1a.
 // =========================================================================
-import java.awt.Graphics2D;   // 2D rendering context required by the abstract render() signature; unused here since triggers are invisible
-import java.util.HashMap;      // Default implementation for an empty parameter map when null is passed to the constructor
-import java.util.Map;          // General Map interface for the params field; allows any Map implementation to be passed at construction
-
+import java.awt.*;
+import java.util.*;
 public class Trigger extends GameElement implements SpriteOverridable { // Extends GameElement to be stored in the unified elements list and participate in AABB intersection checks; implements SpriteOverridable so a level generator may give a trigger a visible glyph
 
     // -------------------------------------------------------------------------

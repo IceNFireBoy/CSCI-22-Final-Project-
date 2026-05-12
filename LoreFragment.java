@@ -36,11 +36,7 @@
 //                                 where present, static final constants
 //                                 follow the constants pattern from 1a.
 // =========================================================================
-import java.awt.BasicStroke;  // Used to set the thin 0.8 px stroke for the inner highlight line in render()
-import java.awt.Color;         // AWT colour for the shard fill (gold), glow (amber), and highlight (near-white)
-import java.awt.Graphics2D;    // 2D rendering context passed by GameCanvas each frame
-import java.awt.Polygon;       // Used to build the 6-point angular shard silhouette in render()
-
+import java.awt.*;
 public class LoreFragment extends GameElement implements SpriteOverridable { // Extends GameElement for position, AABB, active flag, and update/render contract; implements SpriteOverridable so a level generator can swap the procedural shard for a PNG
 
     // =========================================================================

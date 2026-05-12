@@ -20,13 +20,9 @@
 //                                 where present, static final constants
 //                                 follow the constants pattern from 1a.
 // =========================================================================
-import java.awt.AlphaComposite; // Provides SRC_OVER compositing for the semi-transparent trail circles
-import java.awt.Color;           // AWT colour for the gold projectile body and trail (#f0cc7a)
-import java.awt.Composite;       // Interface type; saved before and restored after trail rendering
-import java.awt.Graphics2D;      // 2D rendering context; used for fillOval on the body and trail circles
-import java.awt.Rectangle;       // AWT rectangle for platform-collision bounds tests in update()
-import java.util.List;           // List interface for the platforms reference; iterated in update() for wall-collision checks
-
+import java.awt.*;
+import java.util.*;
+import java.util.List;
 public class Projectile extends GameElement { // Extends GameElement for entity-list participation; active flag managed by range/collision deactivation
 
     // -------------------------------------------------------------------------
@@ -45,7 +41,7 @@ public class Projectile extends GameElement { // Extends GameElement for entity-
 
     private boolean isFromPlayer; // Origin flag: true = player; false = boss-origin; checked by Shield.update() for interception
 
-    private java.util.List<Platform> platforms; // Live platform list; iterated in update() for wall-hit detection; set via setPlatforms()
+    private List<Platform> platforms; // Live platform list; iterated in update() for wall-hit detection; set via setPlatforms()
 
     // -------------------------------------------------------------------------
     // Constructor
@@ -140,7 +136,7 @@ public class Projectile extends GameElement { // Extends GameElement for entity-
     // Setters
     // -------------------------------------------------------------------------
 
-    public void setPlatforms(java.util.List<Platform> platforms) { // Set platform list for wall-hit detection; must be called before first update
+    public void setPlatforms(List<Platform> platforms) { // Set platform list for wall-hit detection; must be called before first update
         this.platforms = platforms;                       // Store reference; iterated in update() each tick while the projectile is active
     }
 

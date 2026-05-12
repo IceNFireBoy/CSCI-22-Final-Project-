@@ -34,20 +34,11 @@
 //  Cowork research prompt.)
 // =========================================================================
 
-import java.awt.AlphaComposite;       // Compositing rules for darkness layers (SRC_OVER) and the DST_OUT cut-out technique
-import java.awt.Color;                // AWT colour for darkness fill (black) and the centre-glow dot (semi-transparent white)
-import java.awt.Composite;            // Used to save/restore the graphics context's composite before and after compositing the shadow buffer
-import java.awt.Graphics2D;           // 2D rendering context passed by GameCanvas each frame
-import java.awt.Point;                // Holds the (x, y) screen-space centre of the light source for mask placement
-import java.awt.Rectangle;            // Platform AABB rectangle used in shadow-fan cull and corner calculations
-import java.awt.RenderingHints;       // Anti-aliasing hints applied to the overlay and half-res buffer graphics contexts
-import java.awt.geom.Area;            // Allows geometric subtraction of the light ellipse from the full-canvas rectangle
-import java.awt.geom.Ellipse2D;       // Represents the circular light cut-out subtracted from the darkness area
-import java.awt.geom.Rectangle2D;    // Full-canvas rectangle used as the starting area for darkness-layer geometry; also used for corruption fill regions
-import java.awt.image.BufferedImage;  // Off-screen image used for the darkness overlay and the half-resolution shadow-fan buffer
-import java.awt.image.RescaleOp;      // Pixel-level image operation that darkens the camera feed for Core 2 corruption
-import java.util.List;                // Platform list iterated in renderShadowFans()
-
+import java.awt.*;
+import java.awt.geom.*;
+import java.awt.image.*;
+import java.util.*;
+import java.util.List;
 public class LightRenderer {
 
     private static final int CANVAS_W = 1024; // Width of the game canvas in pixels; all overlay images match this size
@@ -248,7 +239,7 @@ public class LightRenderer {
      * @param plats list of candidate platforms to cast shadows from; may be
      *              empty but must not be {@code null}
      */
-    public void renderShadowFans(Graphics2D g, LightBall lb, java.util.List<Platform> plats) {
+    public void renderShadowFans(Graphics2D g, LightBall lb, List<Platform> plats) {
         if (g == null || lb == null || plats == null || plats.isEmpty()) return; // Null/empty guard: skip entirely if dependencies are missing
 
         Camera cam = Camera.getInstance(); // Get the singleton camera to transform world coordinates to screen coordinates

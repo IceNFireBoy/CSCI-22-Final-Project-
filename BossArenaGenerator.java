@@ -20,10 +20,7 @@
 //                                 build() override, protected access via
 //                                 inheritance.
 // =========================================================================
-import java.util.ArrayList; // ArrayList implementation for the output entity list
-import java.util.List;      // List interface for the returned GameElement collection
-import java.util.Random;    // Seeded PRNG for deterministic quadrant-jitter platform placement
-
+import java.util.*;
 public class BossArenaGenerator { // Stateless procedural generator; all per-run randomness derives from the seed passed to generate()
 
     // -------------------------------------------------------------------------

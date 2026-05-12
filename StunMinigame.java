@@ -43,15 +43,7 @@
 // Module 4a "Threads"        - timing uses System.currentTimeMillis()
 //                               compared in the game-loop thread.
 // =========================================================================
-import java.awt.AlphaComposite; // Used in render() to make the panel backdrop translucent (alpha=0.88)
-import java.awt.BasicStroke;    // Used in render() to set stroke widths for the track border and target zone outline
-import java.awt.Color;          // AWT colour for all panel elements: backdrop, track, zone, marker, pips, bar
-import java.awt.Composite;      // Interface type; saved and restored around the alpha-composite backdrop draw
-import java.awt.Font;           // Font for the panel title, difficulty hint, and key-hint labels
-import java.awt.FontMetrics;    // Measures string widths for right-aligned text placement
-import java.awt.Graphics2D;     // 2D rendering context passed by GameCanvas for the overlay draw
-import java.awt.Stroke;         // Interface type; saved before and restored after setting stroke widths
-
+import java.awt.*;
 public class StunMinigame { // POJO: no extends; interacts with GameStarter, GameCanvas, InputRouter
 
     // -------------------------------------------------------------------------

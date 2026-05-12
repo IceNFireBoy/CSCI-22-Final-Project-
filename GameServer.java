@@ -48,16 +48,10 @@
 //  accompanying Cowork research prompt.)
 // =========================================================================
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
-
+import java.io.*;
+import java.net.*;
+import java.util.*;
+import java.util.concurrent.*;
 public class GameServer {
 
     // =========================================================================
@@ -320,8 +314,8 @@ public class GameServer {
      * Each entry is {@code "type|x|y"}.  Updated from {@link Protocol#PLACE_BLOCK}
      * and {@link Protocol#REMOVE_BLOCK} messages so the snapshot is accurate.
      */
-    private final java.util.List<String> serverPlacedBlocks =
-            java.util.Collections.synchronizedList(new java.util.ArrayList<>());
+    private final List<String> serverPlacedBlocks =
+            java.util.Collections.synchronizedList(new ArrayList<>());
 
     // =========================================================================
     // Constructor
@@ -1335,7 +1329,7 @@ public class GameServer {
         snap.blockBudget      = lastKnownBlockBudget;
         snap.currentBlockType = lastKnownBlockType;
         synchronized (serverPlacedBlocks) {
-            snap.placedBlocks = new java.util.ArrayList<>(serverPlacedBlocks);
+            snap.placedBlocks = new ArrayList<>(serverPlacedBlocks);
         }
         snap.coreHealth  = coreHealth.clone();
         snap.capturedAt  = System.currentTimeMillis();

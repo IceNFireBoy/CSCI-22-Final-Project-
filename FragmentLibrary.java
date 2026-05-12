@@ -27,21 +27,9 @@
 //                               drawString for entries, drawImage for
 //                               fragment glyphs).
 // =========================================================================
-import java.awt.AlphaComposite;      // Provided for future translucent overlay effects; unused directly but retained for extension
-import java.awt.Color;               // AWT colour for background, gold title, body text, dim locked text, and badge fill
-import java.awt.Font;                // AWT font for title, ID labels, body text, locked placeholder, and combat badges
-import java.awt.FontMetrics;         // Measures text widths and heights for word-wrapping and layout
-import java.awt.Graphics2D;          // 2D rendering context passed by GameCanvas each frame
-import java.awt.RenderingHints;      // Anti-aliasing hints applied at the start of render() for smooth text and shapes
-import java.util.ArrayList;          // Backing collection for the ordered list of collected fragments
-import java.util.Collections;        // Provides unmodifiableList/unmodifiableSet wrappers returned by accessors
-import java.util.HashMap;            // Not used directly; retained in imports for potential future lookup tables
-import java.util.HashSet;            // Backing set for collectedIDs: O(1) duplicate detection
-import java.util.LinkedHashMap;      // Backing map for collectedByID: preserves insertion/collection order for archive display
-import java.util.List;               // Interface type for the collected list
-import java.util.Map;                // Interface type for collectedByID map
-import java.util.Set;                // Interface type for collectedIDs set
-
+import java.awt.*;
+import java.util.*;
+import java.util.List;
 public class FragmentLibrary {
 
     // -------------------------------------------------------------------------
@@ -88,7 +76,7 @@ public class FragmentLibrary {
      * An ordered list of every {@link LoreFragment} collected by the Wanderer in this
      * session, preserved in collection order.
      */
-    private java.util.List<LoreFragment> collected;  // ArrayList: supports index access and iteration; order = collection order
+    private List<LoreFragment> collected;  // ArrayList: supports index access and iteration; order = collection order
 
     /**
      * A set of fragment ID strings corresponding to every entry in {@link #collected}.
@@ -596,7 +584,7 @@ public class FragmentLibrary {
      *
      * @return an unmodifiable view of the collected fragments; never {@code null}
      */
-    public java.util.List<LoreFragment> getCollected() {
+    public List<LoreFragment> getCollected() {
         return Collections.unmodifiableList(collected); // Unmodifiable wrapper: prevents external code from bypassing collect() checks
     }
 

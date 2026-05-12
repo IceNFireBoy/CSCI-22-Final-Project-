@@ -44,9 +44,8 @@
 //                               static utility on a class.
 // =========================================================================
 
-import java.awt.Graphics2D;             // 2D rendering context required by the static draw helper
-import java.awt.image.BufferedImage;    // Cached bitmap returned by SpriteLoader.tryLoad()
-
+import java.awt.*;
+import java.awt.image.*;
 public interface SpriteOverridable { // Tiny interface — two accessors plus a static helper
 
     /**

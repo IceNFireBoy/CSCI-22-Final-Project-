@@ -53,34 +53,14 @@
 //                                  particle animation loop.
 // =========================================================================
 
-import javax.swing.JComponent;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.*;
+import java.awt.image.*;
+import javax.swing.*;
 import javax.swing.Timer;
-import java.awt.AlphaComposite;
-import java.awt.Composite;
-import java.awt.RadialGradientPaint;
-
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Stroke;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.Line2D;
-import java.awt.geom.RoundRectangle2D;
-import java.awt.image.BufferedImage;
-import java.awt.image.RescaleOp;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
-
 
 public class GameCanvas extends JComponent {
 
@@ -121,7 +101,7 @@ public class GameCanvas extends JComponent {
 
     private LevelState levelState;
     private Player player;
-    private java.util.List<GameElement> elements;
+    private List<GameElement> elements;
 
     private LightRenderer lightRenderer;
 
@@ -172,7 +152,7 @@ public class GameCanvas extends JComponent {
      * {@link GameStarter} so iteration here is safe against concurrent
      * append/remove.
      */
-    private java.util.List<BossAttack> bossAttacks;
+    private List<BossAttack> bossAttacks;
 
     // -------------------------------------------------------------------------
     // P8.8 — stun minigame overlay + stunned banner
@@ -314,7 +294,7 @@ public class GameCanvas extends JComponent {
      * animation. Stopped when the game phase leaves MENU so the game loop thread
      * takes over repaint scheduling.
      */
-    private javax.swing.Timer menuTimer;
+    private Timer menuTimer;
 
     // -------------------------------------------------------------------------
     // Constructor
@@ -360,7 +340,7 @@ public class GameCanvas extends JComponent {
         }
 
         // Drive particle animation during the menu before the game loop starts.
-        menuTimer = new javax.swing.Timer(16, e -> repaint());
+        menuTimer = new Timer(16, e -> repaint());
         menuTimer.start();
     }
 
@@ -410,7 +390,7 @@ public class GameCanvas extends JComponent {
     }
 
     /** Sets the list of active game elements. */
-    public void setElements(java.util.List<GameElement> elements) {
+    public void setElements(List<GameElement> elements) {
         this.elements = elements;
     }
 
@@ -425,7 +405,7 @@ public class GameCanvas extends JComponent {
      *                entered — no-op guarded by a null check inside
      *                {@code renderBoss})
      */
-    public void setBossAttacks(java.util.List<BossAttack> attacks) {
+    public void setBossAttacks(List<BossAttack> attacks) {
         this.bossAttacks = attacks;
     }
 
@@ -1471,7 +1451,7 @@ public class GameCanvas extends JComponent {
         // "full arena visible" rather than "dark mask off but silhouettes
         // still painted".
         if (!radiantReveal && elements != null) {
-            java.util.List<Platform> plats = new java.util.ArrayList<Platform>();
+            List<Platform> plats = new ArrayList<Platform>();
             for (GameElement elem : elements) {
                 if (elem instanceof Platform) {
                     plats.add((Platform) elem);

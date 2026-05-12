@@ -42,17 +42,9 @@
 //                                  reads cross-thread visibility.
 // =========================================================================
 
-import javax.swing.AbstractAction;  // Base class for all InputMap-backed key actions; supplies actionPerformed contract
-import javax.swing.ActionMap;        // Maps logical action name strings (e.g. "jump_pressed") to AbstractAction instances
-import javax.swing.InputMap;         // Maps KeyStroke instances to logical action name strings
-import javax.swing.JComponent;       // The Swing component onto which InputMap/ActionMap bindings are installed
-import javax.swing.KeyStroke;        // Encapsulates a key + modifier combination used as a map key in InputMap
-import java.awt.event.ActionEvent;   // Event object delivered to AbstractAction#actionPerformed when a binding fires
-import java.awt.event.InputEvent;    // Provides modifier-mask constants (SHIFT_DOWN_MASK) for SHIFT key registration
-import java.awt.event.KeyEvent;      // Provides VK_ virtual-key constants referenced by the public binding constants
-import java.util.HashSet;            // Backing set for pressedKeys: O(1) add/remove/contains for auto-repeat suppression
-import java.util.Set;                // Interface type for pressedKeys; keeps field declaration independent of impl
-
+import java.awt.event.*;
+import javax.swing.*;
+import java.util.*;
 public class KeyBindings {
 
     // =========================================================================

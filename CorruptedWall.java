@@ -47,10 +47,7 @@
 //                                 GameStarter.checkHazardContact() per the
 //                                 collision module's overlap test.
 // =========================================================================
-import java.awt.Color;        // Wall + warning palette
-import java.awt.Graphics2D;    // 2D rendering context
-import java.awt.Rectangle;      // Trigger zone math
-
+import java.awt.*;
 public class CorruptedWall extends Hazard implements SpriteOverridable { // Falling hazard with FSM
 
     // -------------------------------------------------------------------------
