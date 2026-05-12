@@ -1,40 +1,24 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Stores collected lore fragments and resolves which abilities they unlock.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.awt.*;
 import java.util.*;
 import java.util.List;
 public class FragmentLibrary {
-
-
-
-
 
     private static final int CANVAS_W = 1024;
     private static final int CANVAS_H = 768;
@@ -56,11 +40,6 @@ public class FragmentLibrary {
     private static final int RIGHT_MARGIN = 60;
     private static final int ENTRY_SPACING = 12;
 
-
-
-
-
-
     private static final String[] ALL_KNOWN_IDS = {
         "A1-INTRO",
         "A2-WALL_CLING",
@@ -68,52 +47,17 @@ public class FragmentLibrary {
         "A3-IRON"
     };
 
-
-
-
-
-
-
-
-
     private List<LoreFragment> collected;
-
-
-
-
 
     private Set<String> collectedIDs;
 
-
-
-
-
     private Map<String, LoreFragment> collectedByID;
-
 
     private int scrollOffset;
 
-
     private Player player;
 
-
-
-
-
-
-
     private CutsceneRenderer cutsceneRenderer = CutsceneRenderer.get();
-
-
-
-
-
-
-
-
-
-
-
 
     public FragmentLibrary() {
         this.collected     = new ArrayList<>();
@@ -122,67 +66,18 @@ public class FragmentLibrary {
         this.scrollOffset  = 0;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public void setPlayer(Player player) {
         this.player = player;
     }
-
-
-
-
-
-
-
-
-
-
-
 
     public void setCutsceneRenderer(CutsceneRenderer cutsceneRenderer) {
         this.cutsceneRenderer = cutsceneRenderer;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     private void triggerCutscene(CutsceneID id) {
         if (id == null || cutsceneRenderer == null) return;
         cutsceneRenderer.play(id);
     }
-
-
-
-
-
-
-
-
-
-
-
 
     private static CutsceneID cutsceneForUnlock(LoreFragment.AbilityUnlock unlock) {
         if (unlock == null) return null;
@@ -194,27 +89,6 @@ public class FragmentLibrary {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public void collect(LoreFragment f) {
 
         if (collectedIDs.contains(f.getFragmentID())) {
@@ -222,7 +96,6 @@ public class FragmentLibrary {
         }
 
         LoreFragment.AbilityUnlock unlock = f.getUnlock();
-
 
         if (unlock == LoreFragment.AbilityUnlock.SHADOW_DASH) {
             boolean hasDodgeFragment     = false;
@@ -237,105 +110,34 @@ public class FragmentLibrary {
             }
         }
 
-
         collected.add(f);
         collectedIDs.add(f.getFragmentID());
         collectedByID.put(f.getFragmentID(), f);
         f.collect();
 
-
         if (unlock != LoreFragment.AbilityUnlock.NONE && player != null) {
             player.unlockAbility(unlock);
         }
-
 
         triggerCutscene(cutsceneForUnlock(unlock));
         System.out.println("[FragmentLibrary] Fragment collected: " + f.getFragmentID());
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public void scrollUp(int amount) {
         scrollOffset = Math.max(0, scrollOffset - amount);
     }
-
-
-
-
-
-
-
-
-
-
 
     public void scrollDown(int amount) {
         scrollOffset += amount;
     }
 
-
-
-
-
-
-
-
-
     public int getScrollOffset() {
         return scrollOffset;
     }
 
-
-
-
-
-
-
-
-
-
     public void setScrollOffset(int offset) {
         this.scrollOffset = Math.max(0, offset);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public void render(Graphics2D g) {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
@@ -343,10 +145,8 @@ public class FragmentLibrary {
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                 RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-
         g.setColor(BG_COLOR);
         g.fillRect(0, 0, CANVAS_W, CANVAS_H);
-
 
         g.setFont(TITLE_FONT);
         g.setColor(GOLD_COLOR);
@@ -355,23 +155,19 @@ public class FragmentLibrary {
         int titleWidth = titleFm.stringWidth(title);
         g.drawString(title, (CANVAS_W - titleWidth) / 2, TITLE_Y);
 
-
         int lineY      = TITLE_Y + 8;
         int lineHalfW  = titleWidth / 2 + 30;
         g.drawLine(CANVAS_W / 2 - lineHalfW, lineY, CANVAS_W / 2 + lineHalfW, lineY);
 
-
         int clipTop    = LIST_START_Y;
         int clipBottom = CANVAS_H - 30;
         g.setClip(0, clipTop, CANVAS_W, clipBottom - clipTop);
-
 
         int totalHeight = computeTotalContentHeight(g);
         int maxScroll   = Math.max(0, totalHeight - (clipBottom - clipTop));
         if (scrollOffset > maxScroll) {
             scrollOffset = maxScroll;
         }
-
 
         int curY          = LIST_START_Y - scrollOffset;
         int textAreaWidth = CANVAS_W - LEFT_MARGIN - RIGHT_MARGIN;
@@ -380,13 +176,11 @@ public class FragmentLibrary {
             LoreFragment frag      = collectedByID.get(fragID);
             boolean      isCollected = (frag != null);
 
-
             g.setFont(ID_LABEL_FONT);
             FontMetrics idFm = g.getFontMetrics();
             g.setColor(GOLD_COLOR);
             String idLabel = "[ " + fragID + " ]";
             g.drawString(idLabel, LEFT_MARGIN, curY + idFm.getAscent());
-
 
             if (isCollected && frag.getUnlock() != LoreFragment.AbilityUnlock.NONE) {
                 g.setFont(BADGE_FONT);
@@ -394,7 +188,6 @@ public class FragmentLibrary {
                 String badge  = "UNLOCKED: " + frag.getUnlock().name();
                 int    badgeX = LEFT_MARGIN + idFm.stringWidth(idLabel) + 12;
                 int    badgeY = curY + idFm.getAscent();
-
 
                 int badgeW = badgeFm.stringWidth(badge) + 10;
                 int badgeH = badgeFm.getHeight() + 2;
@@ -408,7 +201,6 @@ public class FragmentLibrary {
             }
 
             curY += idFm.getHeight() + 4;
-
 
             if (isCollected) {
                 g.setFont(BODY_TEXT_FONT);
@@ -425,15 +217,12 @@ public class FragmentLibrary {
 
             curY += ENTRY_SPACING;
 
-
             g.setColor(new Color(0x22, 0x22, 0x2A));
             g.drawLine(LEFT_MARGIN, curY, CANVAS_W - RIGHT_MARGIN, curY);
             curY += ENTRY_SPACING;
         }
 
-
         g.setClip(null);
-
 
         if (scrollOffset > 0) {
             g.setColor(GOLD_COLOR);
@@ -446,27 +235,6 @@ public class FragmentLibrary {
             g.drawString("▼  Scroll Down", CANVAS_W / 2 - 40, clipBottom - 4);
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private int drawWrappedText(Graphics2D g, String text, int x, int y, int maxWidth) {
         FontMetrics fm     = g.getFontMetrics();
@@ -496,18 +264,6 @@ public class FragmentLibrary {
         return curY;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
     private int computeTotalContentHeight(Graphics2D g) {
         int height = 0;
 
@@ -517,7 +273,6 @@ public class FragmentLibrary {
 
         for (String fragID : ALL_KNOWN_IDS) {
             LoreFragment frag = collectedByID.get(fragID);
-
 
             height += idLineHeight;
 
@@ -531,25 +286,11 @@ public class FragmentLibrary {
                 height += g.getFontMetrics().getHeight();
             }
 
-
             height += ENTRY_SPACING * 2;
         }
 
         return height;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private int estimateWrappedHeight(FontMetrics fm, String text, int maxWidth) {
         if (text == null || text.isEmpty()) return fm.getHeight();
@@ -571,32 +312,9 @@ public class FragmentLibrary {
         return lines * fm.getHeight();
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     public List<LoreFragment> getCollected() {
         return Collections.unmodifiableList(collected);
     }
-
-
-
-
-
-
-
-
-
-
 
     public Set<String> getCollectedIDs() {
         return Collections.unmodifiableSet(collectedIDs);

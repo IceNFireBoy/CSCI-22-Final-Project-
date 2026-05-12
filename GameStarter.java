@@ -1,50 +1,20 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Main game-loop controller that coordinates physics updates and rendering.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.awt.*;
 import java.io.*;
 import java.net.*;
@@ -54,350 +24,105 @@ import java.util.List;
 import java.util.concurrent.*;
 public class GameStarter {
 
-
-
-
-
     private static final String LOOP_THREAD_NAME = "GameLoop";
     private static final String NET_THREAD_NAME = "NetworkIO";
     private static final long TICK_MS = 16L;
     private static final long TICK_NS = TICK_MS * 1_000_000L;
     private static final long NET_SEND_INTERVAL_MS = 16L;
 
-
     private static final long RECONNECT_DELAY_MS = 3000L;
-
-
-
-
-
-
-
 
     private static final int  RECONNECT_MAX_ATTEMPTS  = 5;
     private static final long RECONNECT_MAX_DELAY_MS  = 30_000L;
 
-
     private static final int PLAYER_SPAWN_X = 100;
-
 
     private static final int PLAYER_SPAWN_Y = 400;
 
-
     private static final long MENU_RETURN_DELAY_MS = 2000L;
 
-
-
-
-
-
-
-
-
-
     private static GameStarter instance;
-
-
-
-
-
 
     public static GameStarter getInstance() {
         return instance;
     }
 
-
-
-
-
-
-
-
-
     private Socket socket;
-
-
-
-
 
     private String role;
 
-
-
-
-
-
-
-
     private volatile ObjectOutputStream networkOut;
-
-
-
-
-
 
     private volatile ObjectInputStream networkIn;
 
-
-
-
-
-
-
     private final Object sendLock = new Object();
-
-
-
-
 
     private String lastHost;
 
-
-
-
     private int lastPort;
-
-
-
-
-
-
 
     private volatile boolean connectionLost;
 
-
-
-
-
-
     private volatile boolean connectionFailed;
-
-
-
-
-
-
 
     private volatile boolean victoryHandled;
 
-
-
-
-
-
-
     private volatile boolean gameLoopStarted = false;
-
-
-
-
-
-
 
     private volatile int lastHandledLevel = -1;
 
-
-
-
-
-
-
     private boolean levelReady = false;
-
 
     private int levelReadyDelay = 0;
 
-
     private static final int LEVEL_READY_FRAMES = 10;
-
-
-
-
-
-
 
     private int lightTargetTickCounter = 0;
 
-
-
-
-
-
-
     private static final int LIGHT_TARGET_TICK_INTERVAL = 3;
 
-
-
-
-
-
-
-
-
-
-
-
     private volatile boolean reconnecting = false;
-
-
-
-
-
-
-
 
     private final List<String> pendingSnapshotMessages =
             java.util.Collections.synchronizedList(new ArrayList<>());
 
-
-
-
-
-
-
-
-
-
     private volatile GameFrame gameFrame;
-
-
-
-
-
 
     private volatile GameCanvas canvas;
 
-
-
-
-
-
-
-
-
-
-
     private volatile boolean running;
-
 
     private volatile boolean paused;
 
-
     private Thread gameLoopThread;
-
-
-
-
-
-
-
-
 
     private final Player player;
 
-
     private final Physics physicsEngine;
-
 
     private final InputRouter inputRouter;
 
-
-
-
-
     private final KeyBindings keyBindings;
-
-
-
-
-
 
     private final List<GameElement> elements;
 
-
-
-
-
-
     private final List<Platform> placedBlocks;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private final List<BossAttack> bossAttacks = new CopyOnWriteArrayList<>();
 
-
-
-
-
-
     private boolean altarActive = false;
-
 
     private static final long FAITHFUL_CYCLE_INTERVAL_MS = 20_000L;
 
-
     private long faithfulCycleLastMs = 0L;
-
-
-
-
-
-
-
-
-
-
-
-
 
     private final StunMinigame stunMinigame = new StunMinigame();
 
-
-
-
-
-
     private volatile long architectStunnedBannerUntilMs = 0L;
-
-
-
-
 
     private int altarActiveTrigger = -1;
 
-
-
-
-
     private final LevelState levelState;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public GameStarter() {
         instance           = this;
@@ -413,24 +138,8 @@ public class GameStarter {
         this.player.setActiveEntities(this.elements);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public static void main(String[] args) {
         GameStarter starter = new GameStarter();
-
-
 
         SwingUtilities.invokeLater(() -> {
             starter.gameFrame = new GameFrame();
@@ -439,24 +148,6 @@ public class GameStarter {
 
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public boolean connectToServer(String host, int port) {
         this.lastHost = host;
         this.lastPort = port;
@@ -464,23 +155,10 @@ public class GameStarter {
         try {
             socket = new Socket(host, port);
 
-
-
-
-
-
-
-
             socket.setSoTimeout(0);
 
             networkOut = new ObjectOutputStream(socket.getOutputStream());
             networkOut.flush();
-
-
-
-
-
-
 
             networkOut.writeObject(new NetworkProtocol.StringPacket(
                     Protocol.RECONNECT_HELLO + "|FRESH"));
@@ -497,15 +175,12 @@ public class GameStarter {
             role = rap.role;
             GameSession.getInstance().setRole(role);
 
-
-
             reconnecting = role != null
                     && !"LOBBY".equals(role)
                     && ("WANDERER".equals(role) || "APPRENTICE".equals(role));
             if (reconnecting) {
                 System.out.println("[connectToServer] Reconnecting client — role=" + role);
             }
-
 
             GameSession.getInstance().setSendCallback(
                 msg -> sendPacket(new NetworkProtocol.StringPacket(msg)));
@@ -518,58 +193,24 @@ public class GameStarter {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
     public void startNetworkThread() {
         Thread netThread = new Thread(this::runNetworkIO, NET_THREAD_NAME);
         netThread.setDaemon(true);
         netThread.start();
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     private void runNetworkIO() {
         if (networkOut == null || networkIn == null) return;
-
-
-
 
         try {
             socket.setSoTimeout(0);
         } catch (IOException ignored) {}
-
 
         spinWaitForBothConnected:
         while (true) {
             try {
                 Object pkt = networkIn.readObject();
                 if (pkt instanceof NetworkProtocol.StringPacket) {
-
-
-
-
-
-
-
 
                     String msg = ((NetworkProtocol.StringPacket) pkt).message;
                     if (msg != null) pendingSnapshotMessages.add(msg);
@@ -592,13 +233,10 @@ public class GameStarter {
             }
         }
 
-
-
         Thread senderThread = new Thread(this::runNetworkSender,
                 NET_THREAD_NAME + "-Sender");
         senderThread.setDaemon(true);
         senderThread.start();
-
 
         while (running || !victoryHandled) {
             try {
@@ -616,14 +254,6 @@ public class GameStarter {
         }
     }
 
-
-
-
-
-
-
-
-
     private void runNetworkSender() {
         long lastSendTime = 0L;
         while (running || !victoryHandled) {
@@ -633,7 +263,6 @@ public class GameStarter {
                 try {
                     sendOutboundState();
                 } catch (Exception e) {
-
 
                 }
             }
@@ -646,22 +275,6 @@ public class GameStarter {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private void sendOutboundState() {
         if (GameSession.getInstance().isWanderer()) {
             sendPacket(new NetworkProtocol.PlayerStatePacket(
@@ -672,23 +285,12 @@ public class GameStarter {
                     player.getFaithful()
             ));
 
-
-
-
             int coreHit = player.consumePendingCoreHit();
             if (coreHit >= 0) {
                 sendPacket(new NetworkProtocol.CoreHitPacket(coreHit));
             }
         }
     }
-
-
-
-
-
-
-
-
 
     private void sendPacket(Object pkt) {
         synchronized (sendLock) {
@@ -698,25 +300,12 @@ public class GameStarter {
                 out.writeObject(pkt);
                 out.flush();
 
-
-
                 out.reset();
             } catch (IOException e) {
-
 
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
 
     private void handleInboundPacket(Object pkt) {
         if (pkt instanceof NetworkProtocol.ServerStatePacket) {
@@ -726,8 +315,6 @@ public class GameStarter {
             handleVictory(((NetworkProtocol.VictoryPacket) pkt).result);
 
         } else if (pkt instanceof NetworkProtocol.FragmentCollectedPacket) {
-
-
 
             NetworkProtocol.FragmentCollectedPacket f =
                     (NetworkProtocol.FragmentCollectedPacket) pkt;
@@ -758,15 +345,6 @@ public class GameStarter {
         }
     }
 
-
-
-
-
-
-
-
-
-
     private void applyServerState(NetworkProtocol.ServerStatePacket s) {
         GameSession session = GameSession.getInstance();
 
@@ -780,51 +358,25 @@ public class GameStarter {
             }
         }
 
-
         if (s.coreState != null) {
             levelState.coreHealth = s.coreState.health.clone();
         }
 
-
-
         GameSession.getInstance().setArchitectOverride(s.architectOverride);
-
-
-
-
-
-
 
         if (canvas != null) {
             canvas.setBossLightWorldPosition(s.lightX, s.lightY);
         }
-
 
         if (s.victoryState != GameServer.VictoryState.IN_PROGRESS) {
             handleVictory(s.victoryState);
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private void handleVictory(GameServer.VictoryState result) {
         if (victoryHandled) return;
         victoryHandled = true;
         running = false;
-
 
         SwingUtilities.invokeLater(() -> {
             if (canvas != null) {
@@ -836,34 +388,14 @@ public class GameStarter {
         });
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     private boolean handleDisconnect() {
         connectionLost = true;
         if (canvas != null) {
             canvas.setConnectionOverlay("Connection lost. Waiting...");
         }
 
-
-
-
-
-
-
         long delay = RECONNECT_DELAY_MS;
         for (int attempt = 1; attempt <= RECONNECT_MAX_ATTEMPTS; attempt++) {
-
 
             if (canvas != null) {
                 canvas.setConnectionOverlay(
@@ -879,15 +411,10 @@ public class GameStarter {
                 return false;
             }
 
-
             try {
                 socket     = new Socket(lastHost, lastPort);
                 networkOut = new ObjectOutputStream(socket.getOutputStream());
                 networkOut.flush();
-
-
-
-
 
                 String priorRole = GameSession.getInstance().role;
                 if (priorRole == null || "LOBBY".equals(priorRole)) {
@@ -899,7 +426,6 @@ public class GameStarter {
                 networkOut.reset();
 
                 networkIn  = new ObjectInputStream(socket.getInputStream());
-
 
                 socket.setSoTimeout(0);
 
@@ -919,7 +445,6 @@ public class GameStarter {
             }
         }
 
-
         connectionFailed = true;
         if (canvas != null) {
             canvas.setConnectionOverlay(
@@ -930,31 +455,8 @@ public class GameStarter {
         return false;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public void startGameLoop() {
         gameLoopThread = new Thread(() -> {
-
-
-
 
             while (gameFrame == null) {
                 try {
@@ -965,51 +467,31 @@ public class GameStarter {
                 }
             }
 
-
-
             canvas = gameFrame.getGameCanvas();
-
 
             canvas.setLevelState(levelState);
             canvas.setPlayer(player);
             canvas.setElements(elements);
 
-
             canvas.setBossAttacks(bossAttacks);
-
 
             canvas.setStunMinigame(stunMinigame);
 
-
-
-
             inputRouter.setGameCanvas(canvas);
 
-
             inputRouter.setStunMinigame(stunMinigame);
-
-
-
-
 
             try {
                 SwingUtilities.invokeAndWait(() -> {
                     keyBindings.registerBindings(canvas);
 
-
-
-
                     inputRouter.registerCutsceneBindings(canvas);
 
-
                     CutsceneRenderer.get().setLevelState(levelState);
-
 
                     if (GameSession.getInstance().isApprentice()) {
                         inputRouter.registerApprenticeKeyBindings(canvas);
                     }
-
-
 
                     canvas.setFocusTraversalKeysEnabled(false);
 
@@ -1029,18 +511,6 @@ public class GameStarter {
                 e.printStackTrace();
                 return;
             }
-
-
-
-
-
-
-
-
-
-
-
-
 
             canvas.setLevelState(levelState);
 
@@ -1070,26 +540,10 @@ public class GameStarter {
                 System.out.println("[GameLoop] Lobby phase entered - waiting for role selection.");
             }
 
-
-
-
-
-
-
-
-
-
-
-
             running = true;
             long nextTick = System.nanoTime();
 
             while (running) {
-
-
-
-
-
 
                 if (levelState.currentPhase == LevelState.GamePhase.LOBBY
                         || levelState.currentPhase == LevelState.GamePhase.PAUSED_WAITING) {
@@ -1110,15 +564,11 @@ public class GameStarter {
                     continue;
                 }
 
-
                 KeyBindings.PlayerInputState input = keyBindings.getInputState();
                 if (input.pausePressed) {
                     input.pausePressed = false;
                     togglePause();
                 }
-
-
-
 
                 if (paused) {
                     if (input.fragmentsPressed) {
@@ -1144,20 +594,11 @@ public class GameStarter {
                     continue;
                 }
 
-
-
-
-
                 if (!GameSession.getInstance().isApprentice()) {
-
 
                     inputRouter.routeKeyEvent(input, player, physicsEngine);
 
-
                     player.updateRespawn(TICK_MS);
-
-
-
 
                     if (player != null && player.isRestartToAct1Pending()) {
                         player.clearRestartToAct1Pending();
@@ -1172,24 +613,13 @@ public class GameStarter {
                         }
                     }
 
-
                     if (!player.isDead()) {
                         physicsEngine.update(TICK_MS, player, elements);
                     }
 
-
                     player.update(TICK_MS);
 
                 }
-
-
-
-
-
-
-
-
-
 
                 if (GameSession.getInstance().isApprentice()) {
                     MouseApprentice ma = MouseApprentice.getInstance();
@@ -1199,9 +629,6 @@ public class GameStarter {
                         lightTargetTickCounter++;
                         if (lightTargetTickCounter >= LIGHT_TARGET_TICK_INTERVAL) {
                             lightTargetTickCounter = 0;
-
-
-
 
                             GameSession.getInstance().sendToServer(
                                     Protocol.LIGHT_TARGET + "|"
@@ -1216,8 +643,6 @@ public class GameStarter {
                     }
                 }
 
-
-
                 if (canvas != null && GameSession.getInstance().isApprentice()) {
                     Point mp = canvas.getMousePosition2();
                     if (mp != null) {
@@ -1225,18 +650,12 @@ public class GameStarter {
                     }
                 }
 
-
                 if (GameSession.getInstance().isApprentice()) {
                     if (levelState.remoteWandererX >= 0) {
                         player.setPosition(levelState.remoteWandererX, levelState.remoteWandererY);
                         player.setAnimationState(levelState.remoteWandererState);
                     }
                 }
-
-
-
-
-
 
                 if (canvas != null) {
                     Point lightPos = canvas.getLightSourcePosition();
@@ -1277,7 +696,6 @@ public class GameStarter {
                     }
                 }
 
-
                 if (canvas != null
                         && (levelState.currentPhase == LevelState.GamePhase.ACT2
                             || levelState.currentPhase == LevelState.GamePhase.ACT3)) {
@@ -1291,14 +709,12 @@ public class GameStarter {
                     }
                 }
 
-
                 for (GameElement el : elements) {
                     if (el.isActive()
                             || (el instanceof Platform && !((Platform) el).fullyGone)) {
                         el.update(TICK_MS);
                     }
                 }
-
 
                 if (!GameSession.getInstance().isApprentice() && player != null) {
                     for (GameElement projEl : elements) {
@@ -1318,15 +734,6 @@ public class GameStarter {
                     }
                 }
 
-
-
-
-
-
-
-
-
-
                 if (!bossAttacks.isEmpty()) {
                     List<BossAttack> expired = new ArrayList<>();
                     for (BossAttack ba : bossAttacks) {
@@ -1335,9 +742,6 @@ public class GameStarter {
                     }
                     if (!expired.isEmpty()) bossAttacks.removeAll(expired);
                 }
-
-
-
 
                 if (GameSession.getInstance().isWanderer()) {
                     List<Platform> goneBlocks = new ArrayList<>();
@@ -1352,8 +756,6 @@ public class GameStarter {
                                 + pb.getBounds().x + "|" + pb.getBounds().y);
                     }
                 }
-
-
 
                 if (!GameSession.getInstance().isApprentice()) {
                     checkFragmentCollection();
@@ -1371,8 +773,6 @@ public class GameStarter {
                         }
                     }
 
-
-
                     long nowMsStun = System.currentTimeMillis();
                     stunMinigame.tick(nowMsStun);
                     int stunResult = stunMinigame.consumePendingResult();
@@ -1382,9 +782,7 @@ public class GameStarter {
                     }
                 }
 
-
                 canvas.repaint();
-
 
                 nextTick += TICK_NS;
                 long sleepNs = nextTick - System.nanoTime();
@@ -1399,7 +797,6 @@ public class GameStarter {
                     }
                 } else {
 
-
                     nextTick = System.nanoTime();
                 }
             }
@@ -1409,16 +806,6 @@ public class GameStarter {
         gameLoopThread.setDaemon(true);
         gameLoopThread.start();
     }
-
-
-
-
-
-
-
-
-
-
 
     private void handleMessage(String msg) {
         if (msg == null || msg.isEmpty()) return;
@@ -1475,8 +862,6 @@ public class GameStarter {
                 if (parts.length >= 2) {
                     int newLevel = Integer.parseInt(parts[1]);
 
-
-
                     if (newLevel != lastHandledLevel) {
                         lastHandledLevel = newLevel;
                         loadLevel(newLevel, false);
@@ -1491,11 +876,6 @@ public class GameStarter {
 
             case Protocol.BOSS_ARENA:
 
-
-
-
-
-
                 if (parts.length >= 2) {
                     try {
                         long seed = Long.parseLong(parts[1]);
@@ -1505,10 +885,6 @@ public class GameStarter {
                 break;
 
             case Protocol.BOSS_ATK:
-
-
-
-
 
                 if (parts.length >= 4) {
                     try {
@@ -1522,11 +898,6 @@ public class GameStarter {
 
             case Protocol.CORE_DAMAGED:
 
-
-
-
-
-
                 if (parts.length >= 2 && canvas != null) {
                     try {
                         int coreIdx = Integer.parseInt(parts[1]);
@@ -1537,18 +908,12 @@ public class GameStarter {
 
             case Protocol.ALTAR_RESULT:
 
-
-
                 if (parts.length >= 3) {
                     applyAltarResult(parts[2]);
                 }
                 break;
 
             case Protocol.STUN_OPPORTUNITY:
-
-
-
-
 
                 if (parts.length >= 3 && GameSession.getInstance().isWanderer()) {
                     try {
@@ -1562,9 +927,6 @@ public class GameStarter {
                 break;
 
             case Protocol.STUN_RESULT:
-
-
-
 
                 if (parts.length >= 2) {
                     try {
@@ -1587,20 +949,6 @@ public class GameStarter {
                     } catch (NumberFormatException ignored) {}
                 }
                 break;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
             case Protocol.RADIANT_ACTIVE:
                 if (parts.length >= 2 && player != null) {
@@ -1629,7 +977,6 @@ public class GameStarter {
                     role = assignedRole;
                     GameSession.getInstance().setRole(assignedRole);
 
-
                     if (GameSession.getInstance().isApprentice() && canvas != null) {
                         SwingUtilities.invokeLater(() -> {
                             inputRouter.registerApprenticeKeyBindings(canvas);
@@ -1637,19 +984,12 @@ public class GameStarter {
                         });
                     }
 
-
                     lastHandledLevel = 1;
-
-
 
                     loadLevel(1, false);
                     GameSession.getInstance().resetBlockBudget();
                 }
                 break;
-
-
-
-
 
             case Protocol.PARTNER_DISCONNECTED:
 
@@ -1658,10 +998,6 @@ public class GameStarter {
                     System.out.println("[GameStarter] PARTNER_DC → " + dcRole);
                     if (canvas != null) {
                         canvas.setPartnerDCRole(dcRole);
-
-
-
-
 
                         canvas.setReconnectCountdown(90);
                     }
@@ -1712,7 +1048,6 @@ public class GameStarter {
 
             case Protocol.GAME_RESUME:
 
-
                 System.out.println("[GameStarter] GAME_RESUME — restoring phase "
                         + prePausePhase);
                 if (prePausePhase != null
@@ -1734,10 +1069,6 @@ public class GameStarter {
                 }
                 break;
 
-
-
-
-
             case Protocol.SNAPSHOT_BEGIN:
                 applySnapshotBegin(parts);
                 break;
@@ -1756,7 +1087,6 @@ public class GameStarter {
             case Protocol.SNAPSHOT_END:
                 System.out.println("[GameStarter] SNAP_END — snapshot restore complete.");
 
-
                 break;
 
             default:
@@ -1765,22 +1095,7 @@ public class GameStarter {
         }
     }
 
-
-
-
-
-
-
     private LevelState.GamePhase prePausePhase;
-
-
-
-
-
-
-
-
-
 
     private void applySnapshotBegin(String[] parts) {
         if (parts.length < 14) {
@@ -1806,13 +1121,10 @@ public class GameStarter {
                     + " act=" + act + " wand=(" + wandX + "," + wandY + ")"
                     + " wandHealth=" + wandHealth + " budget=" + blockBudget);
 
-
             clearAllBlocks();
-
 
             lastHandledLevel = level;
             loadLevel(level, false);
-
 
             if (player != null) {
                 player.setX((int) wandX);
@@ -1821,11 +1133,9 @@ public class GameStarter {
                 player.setVelY(0);
                 player.setHealth(wandHealth);
 
-
             }
             levelState.setWandererPosition(wandX, wandY);
             levelState.setWandererHealth(wandHealth);
-
 
             levelState.setLightPosition(lightX, lightY);
             levelState.setLightRadius(lightRadius);
@@ -1835,7 +1145,6 @@ public class GameStarter {
                 canvas.setLightSource(new java.awt.Point(lightX, lightY),
                         effectiveRadius, 0f);
             }
-
 
             GameSession.getInstance().setBlockBudget(blockBudget);
             GameSession.getInstance().setCurrentBlockType(blockType);
@@ -1847,35 +1156,7 @@ public class GameStarter {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private void spawnBossAttack(String type, int x, int y) {
-
 
         Player authoritativePlayer = GameSession.getInstance().isApprentice()
                 ? null : player;
@@ -1885,7 +1166,6 @@ public class GameStarter {
                 attack = new SearingBeam(new Point(x, y), authoritativePlayer);
                 break;
             case "BLOCK_RAIN": {
-
 
                 List<Platform> plats = new ArrayList<Platform>();
                 for (GameElement el : elements) {
@@ -1904,8 +1184,6 @@ public class GameStarter {
                 break;
             case "SHIELD":
 
-
-
                 attack = new Shield(new ArrayList<Projectile>());
                 break;
             default:
@@ -1919,15 +1197,6 @@ public class GameStarter {
         }
     }
 
-
-
-
-
-
-
-
-
-
     private int inferBossGroundY() {
         int defaultGround = Camera.ARENA_H - Platform.TILE_SIZE;
         if (player != null && player.getY() > Camera.ARENA_H / 2) {
@@ -1936,11 +1205,6 @@ public class GameStarter {
         }
         return defaultGround;
     }
-
-
-
-
-
 
     private void spawnBlock(String type, int x, int y) {
 
@@ -1957,11 +1221,6 @@ public class GameStarter {
         placedBlocks.add(block);
         System.out.println("[GameState] Spawned block type: " + t + " at " + x + "," + y);
     }
-
-
-
-
-
 
     private void removeBlockAt(int x, int y) {
         final double SNAP_TOLERANCE = 48.0;
@@ -1993,20 +1252,11 @@ public class GameStarter {
         }
     }
 
-
     private void clearAllBlocks() {
         elements.removeAll(placedBlocks);
         placedBlocks.clear();
         System.out.println("[GameState] Block list cleared for new level.");
     }
-
-
-
-
-
-
-
-
 
     public void togglePause() {
         paused = !paused;
@@ -2026,21 +1276,11 @@ public class GameStarter {
         }
     }
 
-
     public boolean isPaused() {
         return paused;
     }
 
-
-
-
-
-
-
-
-
     private void checkPortalCollision() {
-
 
         if (!levelReady) {
             levelReadyDelay++;
@@ -2053,10 +1293,6 @@ public class GameStarter {
         for (GameElement el : elements) {
             if (el instanceof Portal && el.isActive()) {
                 if (player.getBounds().intersects(el.getBounds())) {
-
-
-
-
 
                     if (levelState.currentLevel >= 3) {
                         System.out.println("LEVEL COMPLETE — entering boss arena (P8.2)");
@@ -2082,42 +1318,20 @@ public class GameStarter {
         }
     }
 
-
-
-
-
-
-
-
-
     public void loadLevel(int levelNum) {
         loadLevel(levelNum, true);
     }
-
-
-
-
-
-
-
-
-
 
     private void loadLevel(int levelNum, boolean broadcast) {
         elements.clear();
         placedBlocks.clear();
 
-
-
         levelReady = false;
         levelReadyDelay = 0;
-
 
         if (physicsEngine != null) {
             physicsEngine.setFallDeathY(Physics.DEFAULT_FALL_DEATH_Y);
         }
-
-
 
         if (broadcast && GameSession.getInstance().isWanderer()) {
             lastHandledLevel = levelNum;
@@ -2125,34 +1339,20 @@ public class GameStarter {
             GameSession.getInstance().sendToServer(Protocol.CLEAR_BLOCKS);
         }
 
-
-
-
-
         LevelRegistry.LoadResult result = LevelRegistry.load(levelNum, 0L);
         elements.addAll(result.elements);
         levelState.currentLevel = levelNum;
-
-
-
-
-
 
         if (player == null) {
             System.out.println("ERROR: player is null during level load");
             return;
         }
 
-
         player.setX(60);
         player.setY(652);
         player.setVelX(0);
         player.setVelY(0);
         player.setRespawn(60, 652);
-
-
-
-
 
         if (levelNum == 1) {
             levelState.currentPhase = LevelState.GamePhase.ACT1;
@@ -2167,7 +1367,6 @@ public class GameStarter {
         System.out.println("[Level] Loaded level " + levelNum
             + " act=" + GameSession.getInstance().getCurrentAct());
 
-
         if (levelNum >= 2 && canvas != null) {
             canvas.setLightSourcePosition(new java.awt.Point(
                     player.getX() + Player.SPRITE_WIDTH  / 2,
@@ -2177,67 +1376,33 @@ public class GameStarter {
         System.out.println("Loaded level " + levelNum + " with " + elements.size() + " entities");
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private void enterBossArena(long seed) {
         System.out.println("[BossArena] Entering boss arena with seed=" + seed);
 
-
         faithfulCycleLastMs = 0L;
-
 
         stunMinigame.forceClose();
         architectStunnedBannerUntilMs = 0L;
         if (canvas != null) canvas.setArchitectStunnedUntilMs(0L);
-
-
-
-
 
         elements.clear();
         placedBlocks.clear();
         LevelRegistry.LoadResult bossResult = LevelRegistry.load(4, seed);
         elements.addAll(bossResult.elements);
 
-
-
         levelReady = false;
         levelReadyDelay = 0;
-
 
         if (physicsEngine != null) {
             physicsEngine.setFallDeathY(BossArenaGenerator.ARENA_H + 256);
         }
-
 
         levelState.currentPhase = LevelState.GamePhase.BOSS;
         GameSession.getInstance().setCurrentAct("BOSS");
         levelState.currentLevel = 4;
         lastHandledLevel = 4;
 
-
         if (player != null) {
-
 
             final int spawnX = BossArenaGenerator.CENTER_X;
             final int spawnY = BossArenaGenerator.ARENA_H - BossArenaGenerator.BOSS_SPAWN_Y_OFFSET;
@@ -2250,14 +1415,10 @@ public class GameStarter {
             player.setDead(false);
             player.clearRestartToAct1Pending();
 
-
             if (GameSession.getInstance().isWanderer()) {
                 grantAllAbilities();
             }
         }
-
-
-
 
         if (player != null) {
             Camera.getInstance().snapTo(player.getX(), player.getY());
@@ -2265,12 +1426,9 @@ public class GameStarter {
             Camera.getInstance().reset();
         }
 
-
-
         System.out.println("[BossArena] Arena built with " + elements.size()
                 + " entities; phase=BOSS");
     }
-
 
     private void grantAllAbilities() {
         if (player == null) return;
@@ -2281,15 +1439,6 @@ public class GameStarter {
         System.out.println("[BossArena] All Wanderer abilities granted.");
     }
 
-
-
-
-
-
-
-
-
-
     public void stop() {
         running = false;
         if (gameLoopThread != null) {
@@ -2297,12 +1446,10 @@ public class GameStarter {
         }
     }
 
-
     public void stopGame() {
         running = false;
         System.out.println("Game stopped.");
     }
-
 
     public void resetToMenu() {
         elements.clear();
@@ -2317,22 +1464,6 @@ public class GameStarter {
         levelState.currentLevel = 1;
         System.out.println("Reset to main menu complete.");
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private void checkFragmentCollection() {
         for (GameElement el : elements) {
@@ -2354,24 +1485,6 @@ public class GameStarter {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private void checkAltarTrigger() {
         if (altarActive) return;
         for (GameElement el : elements) {
@@ -2391,7 +1504,6 @@ public class GameStarter {
                 SwingUtilities.invokeLater(() -> canvas.openAltarOverlay(finalId));
                 break;
             }
-
 
             if (!(el instanceof Trigger)) continue;
             Trigger t = (Trigger) el;
@@ -2414,19 +1526,6 @@ public class GameStarter {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     private void checkHazardContact() {
         if (player == null || player.isDead()) return;
         for (GameElement el : elements) {
@@ -2446,12 +1545,6 @@ public class GameStarter {
         }
     }
 
-
-
-
-
-
-
     private void checkFaithfulCycle() {
         if (player == null) return;
         if (levelState.currentPhase != LevelState.GamePhase.BOSS) return;
@@ -2467,14 +1560,6 @@ public class GameStarter {
             if (canvas != null) canvas.showNotification("Survived an attack cycle — Faith +1");
         }
     }
-
-
-
-
-
-
-
-
 
     private void applyAltarResult(String choice) {
         if (player == null) return;
@@ -2494,14 +1579,6 @@ public class GameStarter {
         });
     }
 
-
-
-
-
-
-
-
-
     private void grantAbility(LoreFragment.AbilityUnlock unlock) {
         switch (unlock) {
             case MELEE:       player.setHasMelee(true);       break;
@@ -2510,16 +1587,10 @@ public class GameStarter {
             case WALL_CLING:  player.setHasWallCling(true);   break;
             case SHADOW_DASH: player.setHasShadowDash(true);  break;
 
-
-
             case EMBER:
             case IRON:
                 player.activateBoost(unlock);
                 break;
-
-
-
-
 
             case RADIANT_COLLAPSE:
                 GameSession.getInstance().setRadiantCollapseUnlocked(true);
@@ -2529,10 +1600,6 @@ public class GameStarter {
         }
     }
 
-
-
-
-
     private String getFragmentNotificationText(LoreFragment frag) {
         String base = "Fragment collected: " + frag.getFragmentID();
         if (frag.getUnlock() != LoreFragment.AbilityUnlock.NONE) {
@@ -2540,18 +1607,6 @@ public class GameStarter {
         }
         return base;
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
     private void checkWinLoss() {
 
@@ -2571,16 +1626,10 @@ public class GameStarter {
             return;
         }
 
-
         if (levelState.currentPhase == LevelState.GamePhase.BOSS && !player.isAlive()) {
             handleLoss();
         }
     }
-
-
-
-
-
 
     private void handleWin() {
         if (!victoryHandled) {
@@ -2589,114 +1638,47 @@ public class GameStarter {
         }
     }
 
-
-
-
-
-
     private void handleLoss() {
         if (!victoryHandled) {
             running = false;
         }
     }
 
-
-
-
-
-
-
-
-
-
-
     public Socket getSocket() {
         return socket;
     }
-
-
-
-
-
-
 
     public String getRole() {
         return role;
     }
 
-
-
-
-
-
     public GameFrame getGameFrame() {
         return gameFrame;
     }
-
-
-
-
-
 
     public Player getPlayer() {
         return player;
     }
 
-
-
-
-
-
-
-
-
     public List<Platform> getPlacedBlocks() {
         return placedBlocks;
     }
-
-
-
-
-
-
 
     public List<GameElement> getElements() {
         return elements;
     }
 
-
-
-
-
-
     public LevelState getLevelState() {
         return levelState;
     }
-
-
-
-
-
-
 
     public KeyBindings getKeyBindings() {
         return keyBindings;
     }
 
-
-
-
-
-
-
     public InputRouter getInputRouter() {
         return inputRouter;
     }
-
-
-
-
-
 
     public boolean isRunning() {
         return running;

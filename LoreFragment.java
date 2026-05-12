@@ -1,216 +1,63 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Defines lore-fragment collectibles and the ability unlocks they grant.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.awt.*;
 public class LoreFragment extends GameElement implements SpriteOverridable {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public enum AbilityUnlock {
-
 
         NONE,
 
-
         MELEE,
-
 
         PROJECTILE,
 
-
         DODGE,
-
 
         WALL_CLING,
 
-
-
-
-
         SHADOW_DASH,
-
-
-
-
-
-
-
-
-
-
-
 
         EMBER,
 
-
-
-
-
         IRON,
-
-
-
-
-
-
-
 
         RADIANT_COLLAPSE,
 
-
-
-
-
-
-
-
-
-
-
-
-
         VEIL,
-
-
-
-
-
-
 
         ECHO,
 
-
-
-
-
-
-
         TETHER,
-
-
-
-
-
-
-
 
         SHADOW_STEP
     }
 
-
-
-
-
-
-
-
-
-
     private String fragmentID;
-
-
-
-
 
     private String bodyText;
 
-
-
-
-
-
     private AbilityUnlock unlock;
-
-
-
-
-
 
     private boolean collected;
 
-
-
-
-
-
     private boolean gated;
 
-
-
-
-
-
-
     private String spritePath;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public LoreFragment(String fragmentID, String bodyText, AbilityUnlock unlock,
                         int x, int y) {
@@ -223,63 +70,16 @@ public class LoreFragment extends GameElement implements SpriteOverridable {
         this.spritePath = null;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @Override
     public void update(long deltaMs) {
 
-
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public void render(Graphics2D g) {
         if (collected) return;
 
-
         if (SpriteOverridable.tryDrawSprite(g, this, x, y, width, height)) return;
-
-
-
-
-
-
 
         if (spritePath == null) {
             String conv = defaultSpritePath(unlock);
@@ -294,7 +94,6 @@ public class LoreFragment extends GameElement implements SpriteOverridable {
 
         boolean isCombat = (unlock != AbilityUnlock.NONE);
 
-
         long now = System.currentTimeMillis();
         float pulse = (float)(Math.sin(now * 0.004) * 0.3 + 0.7);
         int glowSize = (int)(pulse * 8);
@@ -305,7 +104,6 @@ public class LoreFragment extends GameElement implements SpriteOverridable {
         }
         g.fillOval(x - glowSize, y - glowSize,
                    width + glowSize * 2, height + glowSize * 2);
-
 
         int cx = x + width / 2;
         int cy = y + height / 2;
@@ -322,169 +120,58 @@ public class LoreFragment extends GameElement implements SpriteOverridable {
         }
         g.fill(shard);
 
-
         g.setColor(new Color(0xff, 0xff, 0xf0, 180));
         g.setStroke(new BasicStroke(0.8f));
         g.drawLine(cx - r / 3, cy - r / 2,
                    cx + r / 4, cy);
     }
 
-
-
-
-
-
-
-
     public void setCollected(boolean collected) {
         this.collected = collected;
     }
-
-
-
-
-
-
-
-
-
-
-
 
     public String getFragmentID() {
         return fragmentID;
     }
 
-
-
-
-
-
-
     public String getBodyText() {
         return bodyText;
     }
-
-
-
-
-
-
-
 
     public AbilityUnlock getUnlock() {
         return unlock;
     }
 
-
-
-
-
-
-
-
     public boolean isCollected() {
         return collected;
     }
-
-
-
-
-
-
-
-
-
-
 
     public void collect() {
         this.collected = true;
         setActive(false);
     }
 
-
-
-
-
-
-
-
-
     public boolean isGated() {
         return gated;
     }
 
-
-
-
-
-
-
-
-
     public void setGated(boolean gated) {
         this.gated = gated;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public void setSpritePath(String path) {
         this.spritePath = path;
     }
 
-
-
-
-
-
-
     @Override
     public String getSpritePath() {
         return spritePath;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public static String defaultSpritePath(AbilityUnlock unlock) {
         if (unlock == null) return null;
         switch (unlock) {
-
 
             case NONE:             return "resources/sprites/fragments/lore.png";
             case MELEE:            return "resources/sprites/fragments/melee.png";
@@ -499,8 +186,6 @@ public class LoreFragment extends GameElement implements SpriteOverridable {
             case ECHO:             return "resources/sprites/fragments/echo.png";
             case TETHER:           return "resources/sprites/fragments/tether.png";
             case SHADOW_STEP:      return "resources/sprites/fragments/shadow_step.png";
-
-
 
             default: return "resources/sprites/fragments/" + unlock.name().toLowerCase() + ".png";
         }

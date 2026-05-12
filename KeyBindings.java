@@ -1,55 +1,24 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Maps keyboard keys to player-action flags for the Wanderer role.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.awt.event.*;
 import javax.swing.*;
 import java.util.*;
 public class KeyBindings {
-
-
-
-
 
     public static final int MOVE_LEFT = KeyEvent.VK_A;
     public static final int MOVE_LEFT_ALT = KeyEvent.VK_LEFT;
@@ -66,36 +35,17 @@ public class KeyBindings {
     public static final int FRAGMENTS = KeyEvent.VK_F;
     public static final int TOGGLE_CAMERA = KeyEvent.VK_C;
 
-
-
-
-
     private final PlayerInputState inputState;
     private final Set<String> pressedKeys;
-
-
-
-
 
     public KeyBindings() {
         this.inputState  = new PlayerInputState();
         this.pressedKeys = new HashSet<>();
     }
 
-
-
-
-
     public void registerBindings(JComponent component) {
         InputMap  im = component.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap am = component.getActionMap();
-
-
-
-
-
-
-
 
         bindKey(im, KeyEvent.VK_A,      0, "moveLeft");
         bindKey(im, KeyEvent.VK_LEFT,   0, "moveLeft");
@@ -111,16 +61,11 @@ public class KeyBindings {
         bindKey(im, KeyEvent.VK_F,      0, "fragments");
         bindKey(im, KeyEvent.VK_C,      0, "cameraToggle");
 
-
-
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT,
                                       InputEvent.SHIFT_DOWN_MASK, false),
                "dash_pressed");
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true),
                "dash_released");
-
-
-
 
         am.put("moveLeft_pressed", new AbstractAction() {
             @Override
@@ -135,9 +80,6 @@ public class KeyBindings {
             }
         });
 
-
-
-
         am.put("moveRight_pressed", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -150,12 +92,6 @@ public class KeyBindings {
                 inputState.moveRight = false;
             }
         });
-
-
-
-
-
-
 
         am.put("jump_pressed", new AbstractAction() {
             @Override
@@ -172,9 +108,6 @@ public class KeyBindings {
             }
         });
 
-
-
-
         am.put("attack_pressed", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -190,13 +123,6 @@ public class KeyBindings {
             }
         });
 
-
-
-
-
-
-
-
         am.put("charge_pressed", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -211,13 +137,8 @@ public class KeyBindings {
             public void actionPerformed(ActionEvent e) {
                 inputState.chargeHeld = false;
 
-
-
             }
         });
-
-
-
 
         am.put("dodge_pressed", new AbstractAction() {
             @Override
@@ -234,9 +155,6 @@ public class KeyBindings {
             }
         });
 
-
-
-
         am.put("pulse_pressed", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -251,13 +169,6 @@ public class KeyBindings {
                 pressedKeys.remove("pulse");
             }
         });
-
-
-
-
-
-
-
 
         am.put("dash_pressed", new AbstractAction() {
             @Override
@@ -276,9 +187,6 @@ public class KeyBindings {
             }
         });
 
-
-
-
         am.put("pause_pressed", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -293,9 +201,6 @@ public class KeyBindings {
                 pressedKeys.remove("pause");
             }
         });
-
-
-
 
         am.put("fragments_pressed", new AbstractAction() {
             @Override
@@ -312,7 +217,6 @@ public class KeyBindings {
             }
         });
 
-
         am.put("cameraToggle_pressed", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -328,7 +232,6 @@ public class KeyBindings {
             }
         });
 
-
         bindKey(im, KeyEvent.VK_R, 0, "recapture");
         am.put("recapture_pressed", new AbstractAction() {
             @Override
@@ -343,7 +246,6 @@ public class KeyBindings {
                 pressedKeys.remove("recapture");
             }
         });
-
 
         bindKey(im, KeyEvent.VK_TAB, 0, "tab");
         am.put("tab_pressed", new AbstractAction() {
@@ -364,46 +266,23 @@ public class KeyBindings {
         });
     }
 
-
-
-
-
     public PlayerInputState getInputState() {
         return inputState;
     }
-
-
-
-
 
     private void bindKey(InputMap im, int keyCode, int modifiers, String name) {
         im.put(KeyStroke.getKeyStroke(keyCode, modifiers, false), name + "_pressed");
         im.put(KeyStroke.getKeyStroke(keyCode, modifiers, true),  name + "_released");
     }
 
-
-
-
-
-
-
-
-
-
-
-
     public static class PlayerInputState {
 
         public static final long CHARGE_THRESHOLD_MS = 1000L;
-
-
 
         public volatile boolean moveLeft;
         public volatile boolean moveRight;
         public volatile boolean chargeHeld;
         public volatile long chargeStartTime;
-
-
 
         public volatile boolean jumpPressed;
         public volatile boolean attackPressed;
@@ -414,8 +293,6 @@ public class KeyBindings {
         public volatile boolean pausePressed;
         public volatile boolean fragmentsPressed;
         public volatile boolean cameraTogglePressed;
-
-
 
         public PlayerInputState() {
             moveLeft       = false;
@@ -433,8 +310,6 @@ public class KeyBindings {
             cameraTogglePressed = false;
         }
 
-
-
         public void consumeEdgeFlags() {
             jumpPressed   = false;
             attackPressed = false;
@@ -444,7 +319,6 @@ public class KeyBindings {
             pausePressed         = false;
             fragmentsPressed     = false;
             cameraTogglePressed  = false;
-
 
         }
     }

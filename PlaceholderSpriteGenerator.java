@@ -1,74 +1,26 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Generates colored-rectangle placeholder sprites when real art is missing.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.awt.*;
 import java.awt.geom.*;
 import java.awt.image.*;
 import java.io.*;
 import javax.imageio.*;
 public class PlaceholderSpriteGenerator {
-
-
-
-
-
-
-
-
-
-
-
 
     private static Color colourFor(LoreFragment.AbilityUnlock u) {
         switch (u) {
@@ -89,23 +41,15 @@ public class PlaceholderSpriteGenerator {
         }
     }
 
-
-
-
-
     public static void main(String[] args) throws IOException {
-
 
         new File("resources/sprites/fragments").mkdirs();
         new File("resources/sprites/altars").mkdirs();
         new File("resources/sprites/portals").mkdirs();
         new File("resources/sprites/hazards").mkdirs();
 
-
-
         for (LoreFragment.AbilityUnlock u : LoreFragment.AbilityUnlock.values()) {
             String filename = u.name().toLowerCase();
-
 
             if (u == LoreFragment.AbilityUnlock.NONE)              filename = "lore";
             if (u == LoreFragment.AbilityUnlock.RADIANT_COLLAPSE)  filename = "radiant";
@@ -114,12 +58,9 @@ public class PlaceholderSpriteGenerator {
                 colourFor(u));
         }
 
-
         generateAltarPng("resources/sprites/altars/stone.png");
 
-
         generatePortalPng("resources/sprites/portals/portal.png");
-
 
         generateSpikePng("resources/sprites/hazards/spike.png");
         generateWallPng("resources/sprites/hazards/wall.png");
@@ -128,15 +69,6 @@ public class PlaceholderSpriteGenerator {
 
         System.out.println("PlaceholderSpriteGenerator: all PNGs written under resources/sprites/");
     }
-
-
-
-
-
-
-
-
-
 
     private static void generateFragmentPng(String path, Color c) throws IOException {
         BufferedImage img = newRgba(20, 20);
@@ -155,11 +87,9 @@ public class PlaceholderSpriteGenerator {
         write(img, path);
     }
 
-
     private static void generateAltarPng(String path) throws IOException {
         BufferedImage img = newRgba(48, 64);
         Graphics2D g = setup(img);
-
 
         g.setColor(new Color(0x2A, 0x2A, 0x32));
         g.fillRect(0, 16, 48, 48);
@@ -177,7 +107,6 @@ public class PlaceholderSpriteGenerator {
         write(img, path);
     }
 
-
     private static void generatePortalPng(String path) throws IOException {
         BufferedImage img = newRgba(48, 80);
         Graphics2D g = setup(img);
@@ -193,7 +122,6 @@ public class PlaceholderSpriteGenerator {
         write(img, path);
     }
 
-
     private static void generateSpikePng(String path) throws IOException {
         BufferedImage img = newRgba(32, 16);
         Graphics2D g = setup(img);
@@ -206,7 +134,6 @@ public class PlaceholderSpriteGenerator {
         g.dispose();
         write(img, path);
     }
-
 
     private static void generateWallPng(String path) throws IOException {
         BufferedImage img = newRgba(64, 128);
@@ -228,7 +155,6 @@ public class PlaceholderSpriteGenerator {
         write(img, path);
     }
 
-
     private static void generatePhantomPng(String path) throws IOException {
         BufferedImage img = newRgba(32, 32);
         Graphics2D g = setup(img);
@@ -244,7 +170,6 @@ public class PlaceholderSpriteGenerator {
         write(img, path);
     }
 
-
     private static void generateMoverPng(String path) throws IOException {
         BufferedImage img = newRgba(64, 16);
         Graphics2D g = setup(img);
@@ -257,10 +182,6 @@ public class PlaceholderSpriteGenerator {
         g.dispose();
         write(img, path);
     }
-
-
-
-
 
     private static BufferedImage newRgba(int w, int h) {
         return new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);

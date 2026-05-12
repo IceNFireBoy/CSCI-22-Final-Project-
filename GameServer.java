@@ -1,66 +1,25 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Authoritative server that owns game state, processes input, and broadcasts updates.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 public class GameServer {
-
-
-
-
-
-
-
-
 
     public enum VictoryState {
         IN_PROGRESS,
@@ -68,19 +27,11 @@ public class GameServer {
         APPRENTICE_WIN
     }
 
-
-
-
-
-
     private static final int PORT = 9876;
-
 
     private static final int CORE_COUNT = 5;
 
-
     private static final int CORE_MAX_HEALTH = 3;
-
 
     private static final long TICK_MS = 1000L / 60L;
 
@@ -90,39 +41,11 @@ public class GameServer {
     private static final int SLOT_0 = 0;
     private static final int SLOT_1 = 1;
 
-
-
-
-
-
-
-
-
-
-
     private final ObjectOutputStream[] outs = new ObjectOutputStream[2];
-
-
-
-
-
 
     private final boolean[] clientConnected = new boolean[2];
 
-
-
-
-
-
     private final LinkedBlockingQueue<Object> sharedQueue = new LinkedBlockingQueue<>();
-
-
-
-
-
-
-
-
 
     private int[] coreHealth;
 
@@ -135,50 +58,20 @@ public class GameServer {
     private final Set<String> serverCollectedFragments = new HashSet<>();
     private int destroyedCoreCount = 0;
 
-
-
-
-
     private volatile String activeCutsceneId = null;
     private final boolean[] cutsceneAcked = new boolean[2];
     private volatile long cutsceneStartMs = 0L;
     private static final long CUTSCENE_GUARD_MS = 30_000L;
 
-
-
-
-
     private volatile long bossArenaSeed = 0L;
     private volatile boolean bossArenaStarted = false;
-
-
-
-
 
     private volatile LightBall lightBall = null;
     private volatile boolean bossPhaseActive = false;
 
-
-
-
-
-
-
-
-
-
-
-
-
     private static final String[] ATTACK_TYPES = {
             "SEARING_BEAM", "BLOCK_RAIN", "CRUSHER", "SPIKE_ARRAY", "SHIELD"
     };
-
-
-
-
-
-
 
     private static final long[] ATTACK_COOLDOWN_MS = {
             5_000L,
@@ -188,114 +81,35 @@ public class GameServer {
             6_000L
     };
 
-
-
-
-
-
-
-
     private final long[] attackCooldownUntilMs = new long[ATTACK_TYPES.length];
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private volatile long architectStunnedUntilMs = 0L;
 
-
-
-
-
-
-
-
-
-
     private final java.util.Random stunRng = new java.util.Random(System.nanoTime());
-
 
     private static final long STUN_OPPORTUNITY_COOLDOWN_MS = 4_000L;
 
-
     private volatile long stunOpportunityCooldownUntilMs = 0L;
-
-
-
-
-
-
 
     private boolean bothConnected = false;
 
-
-
-
-
-
     private volatile boolean sessionActive = true;
-
-
-
-
-
-
-
-
-
 
     private final String[] lobbySelectedRole = new String[2];
 
-
-
-
-
     private final String[] lobbyHoverState = {"NONE", "NONE"};
-
-
-
-
-
 
     private ServerSocket serverSocket;
 
-
-
-
-
-
     private volatile String vacantRole = null;
-
 
     private volatile long partialDisconnectTime = -1;
 
-
     private static final long RECONNECT_TIMEOUT_MS = 90 * 1000L;
-
 
     private SessionSnapshot snapshot = null;
 
-
-
-
-
-
-
     private volatile boolean gamePaused = false;
-
-
-
-
-
 
     private int lastKnownLevel = 1;
     private String lastKnownAct = "ACT1";
@@ -309,17 +123,8 @@ public class GameServer {
     private int lastKnownBlockBudget = 12;
     private String lastKnownBlockType = "BRICK";
 
-
-
-
-
-
     private final List<String> serverPlacedBlocks =
             java.util.Collections.synchronizedList(new ArrayList<>());
-
-
-
-
 
     public GameServer() {
         this.coreHealth = new int[CORE_COUNT];
@@ -327,10 +132,6 @@ public class GameServer {
         this.architectOverride = false;
         this.victoryState = VictoryState.IN_PROGRESS;
     }
-
-
-
-
 
     public static void main(String[] args) {
         System.out.println("Lumen Architect Server starting on port " + PORT + "...");
@@ -375,8 +176,6 @@ public class GameServer {
                 String msg = ((NetworkProtocol.StringPacket) pkt).message;
                 if (msg != null && msg.startsWith(Protocol.RECONNECT_HELLO + "|")) {
 
-
-
                     sock.setSoTimeout(0);
                     return in;
                 }
@@ -384,8 +183,6 @@ public class GameServer {
         } catch (IOException | ClassNotFoundException e) {
 
         }
-
-
 
         try { sock.setSoTimeout(0); } catch (IOException ignored) {}
         return null;
@@ -397,17 +194,8 @@ public class GameServer {
         this.serverSocket = serverSocket;
         try {
 
-
-
-
-
-
             try { serverSocket.setSoTimeout(0); }
             catch (IOException ignored) {}
-
-
-
-
 
             Socket socket0 = null;
             ObjectInputStream in0 = null;
@@ -429,7 +217,6 @@ public class GameServer {
             outs[SLOT_0].writeObject(new NetworkProtocol.RoleAssignmentPacket("LOBBY"));
             outs[SLOT_0].flush();
 
-
             Socket socket1 = null;
             ObjectInputStream in1 = null;
             while (in1 == null) {
@@ -449,7 +236,6 @@ public class GameServer {
             outs[SLOT_1].writeObject(new NetworkProtocol.RoleAssignmentPacket("LOBBY"));
             outs[SLOT_1].flush();
 
-
             Thread handler0 = new Thread(
                     new ClientHandler(socket0, in0, SLOT_0),
                     "ClientHandler-SLOT0");
@@ -462,9 +248,7 @@ public class GameServer {
             handler1.setDaemon(true);
             handler1.start();
 
-
             this.bothConnected = true;
-
 
             Thread gameLoop = new Thread(this::runGameLoop, "ServerLoop");
             gameLoop.setDaemon(true);
@@ -479,21 +263,10 @@ public class GameServer {
             Thread.currentThread().interrupt();
         } finally {
 
-
             for (Socket s : sockets) closeQuietly(s);
             System.out.println("[Server] Session sockets closed.");
         }
     }
-
-
-
-
-
-
-
-
-
-
 
     private void runGameLoop() {
         try {
@@ -501,8 +274,6 @@ public class GameServer {
                 long tickStart = System.currentTimeMillis();
 
                 if (gamePaused) {
-
-
 
                     sharedQueue.clear();
                     broadcastState();
@@ -513,9 +284,6 @@ public class GameServer {
                         processPacket(packet);
                     }
 
-
-
-
                     if (activeCutsceneId != null
                             && (System.currentTimeMillis() - cutsceneStartMs)
                                     > CUTSCENE_GUARD_MS) {
@@ -524,18 +292,12 @@ public class GameServer {
                         endCutscene(activeCutsceneId);
                     }
 
-
-
-
-
-
                     if (bossPhaseActive && lightBall != null) {
                         lightBall.step();
                     }
 
                     broadcastState();
                 }
-
 
                 long elapsed = System.currentTimeMillis() - tickStart;
                 long remaining = TICK_MS - elapsed;
@@ -555,17 +317,6 @@ public class GameServer {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
     private void processPacket(Object packet) {
         if (packet instanceof NetworkProtocol.PlayerStatePacket) {
             NetworkProtocol.PlayerStatePacket p = (NetworkProtocol.PlayerStatePacket) packet;
@@ -574,9 +325,6 @@ public class GameServer {
             lastKnownWandererX = p.x;
             lastKnownWandererY = p.y;
             lastKnownWandererHealth = p.health;
-
-
-
 
             if (p.health <= 0 && bossPhaseActive
                     && victoryState == VictoryState.IN_PROGRESS
@@ -598,20 +346,11 @@ public class GameServer {
 
         } else if (packet instanceof NetworkProtocol.StringPacket) {
 
-
             String msg = ((NetworkProtocol.StringPacket) packet).message;
             if (msg != null) updateLastKnownFromMessage(msg);
             broadcastToAll(packet);
         }
     }
-
-
-
-
-
-
-
-
 
     private void updateLastKnownFromMessage(String msg) {
         try {
@@ -684,14 +423,6 @@ public class GameServer {
         }
     }
 
-
-
-
-
-
-
-
-
     private static String actFromLevel(int lvl) {
         if (lvl == 1) return "ACT1";
         if (lvl == 2) return "ACT2";
@@ -699,31 +430,9 @@ public class GameServer {
         return "ACT3";
     }
 
-
-
-
-
-
-
     private void broadcast(String message) {
         broadcastToAll(new NetworkProtocol.StringPacket(message));
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private void handleCutsceneMessage(String msg, int slot) {
         String[] parts = msg.split("\\|");
@@ -745,13 +454,6 @@ public class GameServer {
         }
     }
 
-
-
-
-
-
-
-
     void startCutscene(String id) {
         if (id == null) return;
         try { CutsceneID.valueOf(id); }
@@ -764,13 +466,6 @@ public class GameServer {
         System.out.println("[Server] Cutscene start broadcast: " + id);
     }
 
-
-
-
-
-
-
-
     private void endCutscene(String id) {
         if (id == null || !id.equals(activeCutsceneId)) return;
         broadcastToAll(new NetworkProtocol.CutscenePacket(id, false));
@@ -779,9 +474,6 @@ public class GameServer {
         this.cutsceneAcked[0] = false;
         this.cutsceneAcked[1] = false;
         this.cutsceneStartMs  = 0L;
-
-
-
 
         if (pendingVictoryState == VictoryState.WANDERER_WIN) {
             if (CutsceneID.CORE_4_DESTROYED.name().equals(id)) {
@@ -803,25 +495,6 @@ public class GameServer {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private synchronized void handleBossEnter(int slot) {
         if (bossArenaStarted) return;
         if (slot < 0 || slot >= 2) return;
@@ -833,38 +506,13 @@ public class GameServer {
         bossArenaSeed = System.currentTimeMillis();
         System.out.println("[Server] BOSS_ENTER received — arena seed=" + bossArenaSeed);
 
-
-
-
-
-
         this.lightBall = new LightBall(ARENA_W / 2f, ARENA_H / 2f);
         this.bossPhaseActive = true;
 
-
-
         broadcast(Protocol.BOSS_ARENA + "|" + bossArenaSeed);
-
-
-
-
 
         startCutscene(CutsceneID.ARCHITECT_SPEAKS.name());
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private void handleLightTargetMessage(String msg, int slot) {
         if (!bossPhaseActive || lightBall == null) return;
@@ -880,20 +528,6 @@ public class GameServer {
 
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private synchronized void handleAltarChoice(String msg, int slot) {
         if (!"WANDERER".equals(roleForSlot(slot))) return;
@@ -911,38 +545,6 @@ public class GameServer {
         broadcast(result);
         System.out.println("[Server] Altar " + altarId + " resolved: " + choice);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private synchronized void handleAttackMessage(String msg, int slot) {
         if (!bossPhaseActive) return;
@@ -965,9 +567,6 @@ public class GameServer {
         }
         long now = System.currentTimeMillis();
 
-
-
-
         if (now < architectStunnedUntilMs) {
             return;
         }
@@ -984,28 +583,13 @@ public class GameServer {
             return;
         }
 
-
         attackCooldownUntilMs[typeIdx] = now + ATTACK_COOLDOWN_MS[typeIdx];
         broadcast(Protocol.BOSS_ATK + "|" + type + "|" + x + "|" + y + "|" + now);
         System.out.println("[Server] Boss attack dispatched: " + type
                 + " at (" + x + ", " + y + ")");
 
-
-
-
-
         maybeRollStunOpportunity(now);
     }
-
-
-
-
-
-
-
-
-
-
 
     private void maybeRollStunOpportunity(long now) {
         if (now < stunOpportunityCooldownUntilMs) return;
@@ -1022,18 +606,6 @@ public class GameServer {
                 + " (faithful=" + faithful
                 + ", P=" + String.format("%.2f", p) + ")");
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
     private synchronized void handleStunResultMessage(String msg, int slot) {
         if (!bossPhaseActive) return;
@@ -1059,46 +631,22 @@ public class GameServer {
         broadcast(Protocol.STUN_RESULT + "|" + success);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     private void handleCoreHit(int coreIndex) {
         if (coreIndex < 0 || coreIndex >= CORE_COUNT) return;
         if (coreHealth[coreIndex] <= 0) return;
 
         coreHealth[coreIndex]--;
 
-
-
-
         broadcast(Protocol.CORE_DAMAGED + "|" + coreIndex);
 
         if (coreHealth[coreIndex] <= 0) {
             destroyedCoreCount++;
 
-
             if (destroyedCoreCount == 1) {
                 architectOverride = true;
             }
 
-
             broadcastToAll(new NetworkProtocol.CoreStatePacket(coreHealth.clone()));
-
-
-
-
-
-
 
             String cutsceneName = "CORE_" + (coreIndex + 1) + "_DESTROYED";
             try {
@@ -1109,9 +657,6 @@ public class GameServer {
                         + " — skipping trigger.");
             }
 
-
-
-
             if (destroyedCoreCount >= CORE_COUNT) {
                 architectOverride = false;
                 pendingVictoryState = VictoryState.WANDERER_WIN;
@@ -1119,19 +664,7 @@ public class GameServer {
         }
     }
 
-
-
-
-
-
-
-
-
-
     public synchronized void broadcastState() {
-
-
-
 
         float lx = (lightBall != null) ? lightBall.getX() : 0f;
         float ly = (lightBall != null) ? lightBall.getY() : 0f;
@@ -1148,21 +681,12 @@ public class GameServer {
         broadcastToAll(state);
     }
 
-
-
-
-
-
-
-
-
     private synchronized void broadcastToAll(Object obj) {
         for (int i = 0; i < 2; i++) {
             if (clientConnected[i] && outs[i] != null) {
                 try {
                     outs[i].writeObject(obj);
                     outs[i].flush();
-
 
                     outs[i].reset();
                 } catch (IOException e) {
@@ -1174,22 +698,10 @@ public class GameServer {
         }
     }
 
-
-
-
-
-
-
-
-
     private String roleForSlot(int slot) {
         if (slot < 0 || slot >= lobbySelectedRole.length) return null;
         return lobbySelectedRole[slot];
     }
-
-
-
-
 
     private int slotForRole(String role) {
         if (role == null) return -1;
@@ -1199,24 +711,10 @@ public class GameServer {
         return -1;
     }
 
-
     private boolean apprenticeLevelReady() {
         int slot = slotForRole("APPRENTICE");
         return slot >= 0 && levelReady[slot];
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private synchronized void handleLobbyMessage(String msg, int senderSlot) {
         String[] parts = msg.split("\\|");
@@ -1256,10 +754,6 @@ public class GameServer {
         }
     }
 
-
-
-
-
     private synchronized void broadcastLobbyState() {
         boolean wTaken = "WANDERER".equals(lobbySelectedRole[0])
                       || "WANDERER".equals(lobbySelectedRole[1]);
@@ -1276,11 +770,6 @@ public class GameServer {
                 + (aHover ? "1" : "0");
         broadcastToAll(new NetworkProtocol.StringPacket(state));
     }
-
-
-
-
-
 
     private synchronized void checkLobbyComplete() {
         if (lobbySelectedRole[0] == null || lobbySelectedRole[1] == null) return;
@@ -1300,19 +789,6 @@ public class GameServer {
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private synchronized SessionSnapshot captureSnapshot() {
         SessionSnapshot snap = new SessionSnapshot();
@@ -1337,24 +813,9 @@ public class GameServer {
         return snap;
     }
 
-
-
-
-
-
-
-
-
-
-
-
     private synchronized void handlePartialDisconnect(int disconnectedSlot) {
         if (vacantRole != null) return;
         if (!sessionActive)     return;
-
-
-
-
 
         String disconnectedRole = lobbySelectedRole[disconnectedSlot];
         if (disconnectedRole == null) {
@@ -1374,12 +835,9 @@ public class GameServer {
         snapshot              = captureSnapshot();
         gamePaused            = true;
 
-
-
         closeQuietly(sockets[disconnectedSlot]);
         sockets[disconnectedSlot] = null;
         outs[disconnectedSlot]    = null;
-
 
         if (clientConnected[survivingSlot] && outs[survivingSlot] != null) {
             try {
@@ -1402,12 +860,6 @@ public class GameServer {
         startReconnectAcceptor();
     }
 
-
-
-
-
-
-
     private void startReconnectAcceptor() {
         Thread t = new Thread(() -> {
             long lastTimerBroadcast = 0;
@@ -1416,13 +868,6 @@ public class GameServer {
                 while (gamePaused && sessionActive && vacantRole != null) {
                     try {
                         Socket newSocket = serverSocket.accept();
-
-
-
-
-
-
-
 
                         ObjectInputStream newIn = readHello(newSocket);
                         if (newIn == null) {
@@ -1460,9 +905,6 @@ public class GameServer {
                 sessionActive = false;
             } finally {
 
-
-
-
                 try {
                     if (serverSocket != null && !serverSocket.isClosed()) {
                         serverSocket.setSoTimeout(0);
@@ -1478,16 +920,6 @@ public class GameServer {
         t.start();
     }
 
-
-
-
-
-
-
-
-
-
-
     private synchronized void handleReconnectingClient(Socket newSocket,
                                                        ObjectInputStream newIn) {
         if (vacantRole == null || snapshot == null) {
@@ -1495,15 +927,10 @@ public class GameServer {
             return;
         }
 
-
-
-
-
         String            reconnectingRole = vacantRole;
         SessionSnapshot   snap             = snapshot;
         int               slot             = slotForRole(reconnectingRole);
         if (slot < 0) {
-
 
             System.out.println("[Server] No slot matches reconnecting role '"
                     + reconnectingRole + "' — closing reconnect socket.");
@@ -1511,9 +938,6 @@ public class GameServer {
             return;
         }
         int               other            = 1 - slot;
-
-
-
 
         vacantRole            = null;
         partialDisconnectTime = -1;
@@ -1524,23 +948,18 @@ public class GameServer {
             outs[slot] = new ObjectOutputStream(newSocket.getOutputStream());
             outs[slot].flush();
 
-
             outs[slot].writeObject(new NetworkProtocol.RoleAssignmentPacket(reconnectingRole));
             outs[slot].flush();
-
 
             sendSnapshot(outs[slot], snap);
 
             clientConnected[slot] = true;
-
-
 
             Thread handler = new Thread(
                     new ClientHandler(newSocket, newIn, slot),
                     "ClientHandler-" + reconnectingRole + "-RC");
             handler.setDaemon(true);
             handler.start();
-
 
             if (clientConnected[other] && outs[other] != null) {
                 try {
@@ -1558,9 +977,6 @@ public class GameServer {
                 }
             }
 
-
-
-
             gamePaused = false;
 
             System.out.println("[Server] Reconnect complete: " + reconnectingRole
@@ -1572,25 +988,12 @@ public class GameServer {
             closeQuietly(newSocket);
             clientConnected[slot] = false;
 
-
-
             sessionActive = false;
         }
     }
 
-
-
-
-
-
-
-
-
-
-
     private void sendSnapshot(ObjectOutputStream out, SessionSnapshot snap)
             throws IOException {
-
 
         String header = Protocol.SNAPSHOT_BEGIN + "|"
                 + snap.currentLevel     + "|"
@@ -1622,40 +1025,13 @@ public class GameServer {
         out.reset();
     }
 
-
-
-
-
-
-
-
-
-
-
-
     private class ClientHandler implements Runnable {
-
 
         @SuppressWarnings("unused") private final Socket socket;
 
-
         private final int slot;
 
-
         private ObjectInputStream in;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         ClientHandler(Socket socket, ObjectInputStream in, int slot) {
             this.socket = socket;
@@ -1663,27 +1039,17 @@ public class GameServer {
             this.slot = slot;
         }
 
-
         private String currentRole() {
             String r = lobbySelectedRole[slot];
             return r != null ? r : ("SLOT_" + slot);
         }
 
-
-
-
-
-
         @Override
         public void run() {
             try {
 
-
-
                 while (clientConnected[slot] && sessionActive) {
                     Object packet = in.readObject();
-
-
 
                     if (packet instanceof NetworkProtocol.StringPacket) {
                         String msg = ((NetworkProtocol.StringPacket) packet).message;
@@ -1702,52 +1068,25 @@ public class GameServer {
                         }
                         if (msg != null && Protocol.BOSS_ENTER.equals(msg)) {
 
-
-
-
-
                             handleBossEnter(slot);
                             continue;
                         }
                         if (msg != null && msg.startsWith(Protocol.ATTACK + "|")) {
-
-
-
-
-
-
-
-
 
                             handleAttackMessage(msg, slot);
                             continue;
                         }
                         if (msg != null && msg.startsWith(Protocol.LIGHT_TARGET + "|")) {
 
-
-
-
-
-
-
-
-
                             handleLightTargetMessage(msg, slot);
                             continue;
                         }
                         if (msg != null && msg.startsWith(Protocol.ALTAR_CHOICE + "|")) {
 
-
-
-
-
                             handleAltarChoice(msg, slot);
                             continue;
                         }
                         if (msg != null && msg.startsWith(Protocol.STUN_RESULT + "|")) {
-
-
-
 
                             handleStunResultMessage(msg, slot);
                             continue;
@@ -1771,78 +1110,33 @@ public class GameServer {
             }
         }
 
-
-
-
-
-
-
-
         private void handleClientDisconnect() {
             int other = 1 - slot;
-
 
             if (clientConnected[other] && vacantRole == null && sessionActive) {
                 handlePartialDisconnect(slot);
             } else {
-
 
                 sessionActive = false;
             }
         }
     }
 
-
-
-
-
-
-
-
-
-
     public int[] getCoreHealth() {
         return coreHealth;
     }
-
-
-
-
-
-
 
     public boolean isArchitectOverride() {
         return architectOverride;
     }
 
-
-
-
-
-
-
-
     public void setArchitectOverride(boolean architectOverride) {
         this.architectOverride = architectOverride;
     }
 
-
-
-
-
-
     public VictoryState getVictoryState() {
         return victoryState;
     }
-
-
-
-
-
-
-
-
-
 
     private final Socket[] sockets = new Socket[2];
 }

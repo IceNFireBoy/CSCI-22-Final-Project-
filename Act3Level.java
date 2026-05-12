@@ -1,52 +1,32 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Defines the platform and hazard layout for Act 3, the third playable level.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 public class Act3Level extends LevelGenerator {
 
     @Override
     public LevelRegistry.LoadResult build() {
 
-
         setPhase(LevelState.GamePhase.ACT3);
         setBlockBudget(20);
         setSpawn(60, 652);
 
-
         brickRow(0, 740, 32);
 
-
         platform(Platform.PlatformType.BRICK, 200, 620, 128, 16);
-
-
 
         platform(Platform.PlatformType.INVISIBLE, 380, 540);
         platform(Platform.PlatformType.INVISIBLE, 460, 480);
@@ -54,7 +34,6 @@ public class Act3Level extends LevelGenerator {
         platform(Platform.PlatformType.MIMIC, 560, 440, 64, 16);
         platform(Platform.PlatformType.MIMIC, 700, 440);
         platform(Platform.PlatformType.BRICK, 820, 400, 96, 16);
-
 
         fragment("A3-SHADOW_DASH", 580, 416,
                  LoreFragment.AbilityUnlock.SHADOW_DASH,
@@ -71,23 +50,16 @@ public class Act3Level extends LevelGenerator {
                  "Entry 067. Agile is the survivor. Dodge the killing blow.",
                  "resources/sprites/fragments/dodge.png");
 
-
-
         altar(3, 300, 692, "POWER_SURGE", "SIGHT_RESTRICTION", null);
         lastAltar().setConcealment(BreakableWallConcealment.of());
 
         altar(4, 760, 692, "POWER_SURGE", "SIGHT_RESTRICTION", null);
         lastAltar().setConcealment(GhostWallConcealment.of());
 
-
-
-
         phantomBlock(420, 580, 64, 32, "resources/sprites/hazards/phantom_block.png");
-
 
         lightMover(700, 540, LightLockedMover.MovePattern.CIRCULAR,
                    72, 4000, LightLockedMover.LightBehavior.FREEZE_ON_LIGHT, "resources/sprites/hazards/light_mover.png");
-
 
         spike(160, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
         spike(220, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
@@ -97,12 +69,7 @@ public class Act3Level extends LevelGenerator {
         spike(740, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
         spike(790, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
 
-
-
         corruptedWall(840, 320, 80, 160, 320, 320, "resources/sprites/hazards/corrupted_wall.png");
-
-
-
 
         portal(920, 320);
 

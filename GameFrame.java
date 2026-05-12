@@ -1,110 +1,43 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Top-level application window that hosts the GameCanvas.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
 public class GameFrame extends JFrame {
 
-
-
-
-
-
     private static final int WINDOW_WIDTH  = 1024;
-
 
     private static final int WINDOW_HEIGHT = 768;
 
-
-
-
-
-
-
-
-
     private GameCanvas gameCanvas;
-
-
-
-
 
     private JTextField ipField;
 
-
-
-
-
     private JButton connectButton;
-
 
     private JButton viewFragmentsBtn;
 
-
     private JButton resumeBtn;
-
 
     private JButton quitBtn;
 
-
     private JLayeredPane layeredPane;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public GameFrame() {
         super("Lumen Architect");
@@ -114,35 +47,14 @@ public class GameFrame extends JFrame {
         initUI();
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private void initUI() {
-
 
         layeredPane = new JLayeredPane();
         layeredPane.setPreferredSize(new java.awt.Dimension(WINDOW_WIDTH, WINDOW_HEIGHT));
 
-
         gameCanvas = new GameCanvas();
         gameCanvas.setBounds(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
         layeredPane.add(gameCanvas, JLayeredPane.DEFAULT_LAYER);
-
-
-
 
         ipField = new JTextField() {
             @Override
@@ -170,7 +82,6 @@ public class GameFrame extends JFrame {
         ipField.setOpaque(true);
         layeredPane.add(ipField, JLayeredPane.PALETTE_LAYER);
 
-
         connectButton = new JButton("CONNECT");
         connectButton.setBounds(431, 560, 162, 44);
         connectButton.setBackground(new Color(0xC9, 0xA8, 0x4C));
@@ -181,7 +92,6 @@ public class GameFrame extends JFrame {
         connectButton.setOpaque(true);
         connectButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         layeredPane.add(connectButton, JLayeredPane.PALETTE_LAYER);
-
 
         connectButton.addMouseListener(new MouseAdapter() {
             @Override
@@ -194,15 +104,9 @@ public class GameFrame extends JFrame {
             }
         });
 
-
-
-
-
-
         connectButton.addActionListener(e -> {
             String host = ipField.getText().trim();
             if (host.isEmpty()) host = "localhost";
-
 
             connectButton.setEnabled(false);
             gameCanvas.setConnectionStatus("Connecting to " + host + "...");
@@ -214,10 +118,6 @@ public class GameFrame extends JFrame {
                 if (success) {
                     SwingUtilities.invokeLater(() -> {
                         String role = GameSession.getInstance().role;
-
-
-
-
 
                         boolean isReconnect = role != null && !"LOBBY".equals(role);
                         gameCanvas.setConnectionStatus(isReconnect
@@ -241,7 +141,6 @@ public class GameFrame extends JFrame {
 
         });
 
-
         Color pauseBg   = new Color(0x1A, 0x12, 0x20);
         Color pauseFg   = new Color(0xC9, 0xA8, 0x4C);
         Font  pauseFont = new Font("Serif", Font.PLAIN, 16);
@@ -257,7 +156,6 @@ public class GameFrame extends JFrame {
         quitBtn = createPauseButton("Quit", pauseBg, pauseFg, pauseFont);
         quitBtn.setBounds(412, 440, 200, 44);
         layeredPane.add(quitBtn, Integer.valueOf(200));
-
 
         viewFragmentsBtn.addActionListener(e -> {
             System.out.println("View Fragments clicked");
@@ -288,26 +186,10 @@ public class GameFrame extends JFrame {
             gameCanvas.repaint();
         });
 
-
         hidePauseButtons();
 
         setContentPane(layeredPane);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private JButton createPauseButton(String text, Color bg, Color fg, Font font) {
         JButton btn = new JButton(text);
@@ -322,27 +204,11 @@ public class GameFrame extends JFrame {
         return btn;
     }
 
-
-
-
-
-
-
-
-
-
     public void showPauseButtons() {
         viewFragmentsBtn.setVisible(true);
         resumeBtn.setVisible(true);
         quitBtn.setVisible(true);
     }
-
-
-
-
-
-
-
 
     public void hidePauseButtons() {
         viewFragmentsBtn.setVisible(false);
@@ -350,58 +216,17 @@ public class GameFrame extends JFrame {
         quitBtn.setVisible(false);
     }
 
-
-
-
-
-
-
-
-
-
-
     public JButton getViewFragmentsBtn() {
         return viewFragmentsBtn;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public GameCanvas getGameCanvas() {
         return gameCanvas;
     }
 
-
-
-
-
-
-
-
-
-
     public JButton getConnectButton() {
         return connectButton;
     }
-
-
-
-
-
-
-
-
-
 
     public JTextField getIpField() {
         return ipField;

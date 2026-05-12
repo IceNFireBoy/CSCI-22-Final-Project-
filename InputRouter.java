@@ -1,45 +1,23 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Routes keyboard and mouse input events to the correct game actions.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.awt.event.*;
 import javax.swing.*;
 public class InputRouter implements MouseListener, MouseMotionListener, MouseWheelListener {
-
-
-
-
 
     private GameCanvas canvas;
     private GameSession session;
@@ -53,23 +31,11 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
     private static final long SHIELD_COOLDOWN = 8000;
     private static final long SPIKE_COOLDOWN = 6000;
 
-
-
-
-
     private String lastLobbyHoverRole = "NONE";
     private String localSelectedRole = "NONE";
     private static InputRouter instance;
 
-
-
-
-
     public static InputRouter getInstance() { return instance; }
-
-
-
-
 
     public InputRouter() {
         instance = this;
@@ -84,10 +50,6 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
         canvas.addMouseWheelListener(this);
         canvas.setFocusable(true);
     }
-
-
-
-
 
     public void setStunMinigame(StunMinigame m) {
         this.stunMinigame = m;
@@ -107,13 +69,8 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
         canvas.setFocusable(true);
     }
 
-
-
-
-
     public void routeKeyEvent(KeyBindings.PlayerInputState input, Player player, Physics physicsEngine) {
         if (input == null || player == null || physicsEngine == null) return;
-
 
         if (CutsceneRenderer.get().isPlaying()) {
             input.consumeEdgeFlags();
@@ -121,22 +78,16 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
             return;
         }
 
-
         if (input.moveLeft)  physicsEngine.walk(player, -1);
         if (input.moveRight) physicsEngine.walk(player,  1);
 
-
         if (!input.moveLeft && !input.moveRight) physicsEngine.stopWalking(player);
-
 
         if (input.jumpPressed) { physicsEngine.jump(player); input.jumpPressed = false; }
 
-
         if (input.attackPressed) { player.executeMelee(); input.attackPressed = false; }
 
-
         if (input.dodgePressed) { physicsEngine.dodgeRoll(player); input.dodgePressed = false; }
-
 
         if (input.chargeHeld && !prevChargeHeld) {
             player.startCharge();
@@ -149,22 +100,11 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
         }
         prevChargeHeld = input.chargeHeld;
 
-
-
-
-
-
-
-
-
-
-
         String act = getAct();
         if ("BOSS".equals(act)) {
             if (player.isRadiantCollapseUnlocked()) {
                 player.updateRadiantFsm(System.currentTimeMillis(), input.shiftHeld);
             }
-
 
             input.dashPressed = false;
         } else if (input.dashPressed) {
@@ -172,10 +112,6 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
             input.dashPressed = false;
         }
     }
-
-
-
-
 
     private String getAct() {
         if (session == null) session = GameSession.getInstance();
@@ -191,10 +127,6 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
         }
     }
 
-
-
-
-
     public void mousePressed(MouseEvent e) {
         if (CutsceneRenderer.get().isPlaying()) return;
         if (session == null) session = GameSession.getInstance();
@@ -204,12 +136,10 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
         boolean middle = e.getButton() == MouseEvent.BUTTON2;
         String act = getAct();
 
-
         if (act.equals("LOBBY")) {
             if (left && canvas != null) {
                 String clicked = canvas.getLobbyRoleAtPoint(x, y);
                 if (!clicked.equals("NONE")) {
-
 
                     LobbyState ls = canvas.getLobbyState();
                     if (ls != null && ls.isReconnectSession) {
@@ -252,7 +182,6 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
             if (session.isArchitectOverride()) {
                 long now = System.currentTimeMillis();
 
-
                 int aimX = x;
                 int aimY = y;
                 if (act.equals("BOSS")) {
@@ -269,15 +198,10 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
         }
     }
 
-
-
-
-
     public void mouseMoved(MouseEvent e) {
         if (CutsceneRenderer.get().isPlaying()) return;
         if (session == null) session = GameSession.getInstance();
         String act = getAct();
-
 
         if (act.equals("LOBBY") && canvas != null) {
             String hovered = canvas.getLobbyRoleAtPoint(e.getX(), e.getY());
@@ -303,7 +227,6 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
         if (session == null) session = GameSession.getInstance();
         String act = getAct();
 
-
         if (act.equals("LOBBY") && canvas != null) {
             String hovered = canvas.getLobbyRoleAtPoint(e.getX(), e.getY());
             if (!hovered.equals(lastLobbyHoverRole)) {
@@ -323,10 +246,6 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
         }
     }
 
-
-
-
-
     public void mouseWheelMoved(MouseWheelEvent e) {
         if (CutsceneRenderer.get().isPlaying()) return;
         if (session == null) session = GameSession.getInstance();
@@ -336,14 +255,9 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
         }
     }
 
-
-
-
-
     public void registerApprenticeKeyBindings(JComponent comp) {
         InputMap im = comp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap am = comp.getActionMap();
-
 
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, 0, false), "apprenticeLight_pressed");
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, 0, true),  "apprenticeLight_released");
@@ -361,7 +275,6 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
             }
         });
 
-
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_E, 0, false), "apprenticeE_pressed");
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_E, 0, true),  "apprenticeE_released");
         am.put("apprenticeE_pressed", new AbstractAction() {
@@ -376,7 +289,6 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
                 }
             }
         });
-
 
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0, false), "apprenticeQ_pressed");
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0, true),  "apprenticeQ_released");
@@ -394,21 +306,14 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
         });
     }
 
-
-
-
-
     public void registerCutsceneBindings(JComponent comp) {
         InputMap im = comp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap am = comp.getActionMap();
-
-
 
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, false), "debugCutsceneSignal");
         am.put("debugCutsceneSignal", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
                 if (session == null) session = GameSession.getInstance();
-
 
                 String trigger = "CUT_TRIGGER|" + CutsceneID.SIGNAL.name();
                 if (session != null) session.sendToServer(trigger);
@@ -417,12 +322,6 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
                 }
             }
         });
-
-
-
-
-
-
 
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0, false), "cutsceneAdvance");
         am.put("cutsceneAdvance", new AbstractAction() {
@@ -440,24 +339,16 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
                     return;
                 }
 
-
-
-
                 if (stunMinigame != null && stunMinigame.isActive()) {
                     stunMinigame.onSpacePressed();
                     return;
                 }
-
 
                 javax.swing.Action jumpAct = comp.getActionMap().get("jump_pressed");
                 if (jumpAct != null) jumpAct.actionPerformed(e);
             }
         });
     }
-
-
-
-
 
     public void mouseReleased(MouseEvent e) {
         MouseApprentice.getInstance().setLeftPressed(false);

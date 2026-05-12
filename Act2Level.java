@@ -1,54 +1,35 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Defines the platform and hazard layout for Act 2, the second playable level.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 public class Act2Level extends LevelGenerator {
 
     @Override
     public LevelRegistry.LoadResult build() {
 
-
         setPhase(LevelState.GamePhase.ACT2);
         setBlockBudget(16);
         setSpawn(60, 652);
 
-
          brickRow(0, 740, 32);
-
 
         platform(Platform.PlatformType.BRICK, 200, 600, 96, 16);
         platform(Platform.PlatformType.BRICK, 400, 520, 128, 16);
         platform(Platform.PlatformType.SLIDE, 600, 480);
         platform(Platform.PlatformType.SPRING, 760, 600);
-
-
 
         fragment("A2-WALL_CLING", 800, 700,
                  LoreFragment.AbilityUnlock.WALL_CLING,
@@ -59,14 +40,10 @@ public class Act2Level extends LevelGenerator {
                  "Entry 069. Warriors strike true. A broken shell reveals what lies underneath.",
                  "resources/sprites/fragments/melee.png");
 
-
-
         altar(2, 15, 95, "POWER_SURGE", "SIGHT_RESTRICTION", "resources/sprites/altars/stone.png");
         lastAltar().setConcealment(BreakableWallConcealment.of());
         platform(Platform.PlatformType.BRICK, 7, 145, 96, 16);
         platform(Platform.PlatformType.BRICK, 137, 345, 30, 16);
-
-
 
         spike(340, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
         spike(434, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
@@ -76,13 +53,9 @@ public class Act2Level extends LevelGenerator {
         spike(730, 7, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
         spike(804, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
 
-
-
         corruptedWall(150, 580, 64, 128, 256, 256, "resources/sprites/hazards/wall.png");
 
-
         lightMover(560, 560, LightLockedMover.MovePattern.LINEAR_X);
-
 
         portal(920, 400);
 

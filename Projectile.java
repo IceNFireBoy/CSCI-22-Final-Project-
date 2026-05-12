@@ -1,33 +1,24 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Represents a charged projectile fired by the Wanderer's ranged attack.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.awt.*;
 import java.util.*;
 import java.util.List;
 public class Projectile extends GameElement {
-
-
-
-
 
     private float velX;
 
@@ -42,10 +33,6 @@ public class Projectile extends GameElement {
     private boolean isFromPlayer;
 
     private List<Platform> platforms;
-
-
-
-
 
     public Projectile(int x, int y, float velX, float velY, int damage, int maxRange,
                       boolean isFromPlayer) {
@@ -62,29 +49,21 @@ public class Projectile extends GameElement {
         this(x, y, velX, velY, damage, maxRange, true);
     }
 
-
-
-
-
     @Override
     public void update(long deltaMs) {
         if (!active) {
             return;
         }
 
-
         x += (int) velX;
         y += (int) velY;
 
-
         traveledDistance += (int) Math.abs(velX);
-
 
         if (traveledDistance >= maxRange) {
             setActive(false);
             return;
         }
-
 
         if (platforms != null) {
             Rectangle projBounds = getBounds();
@@ -106,10 +85,8 @@ public class Projectile extends GameElement {
 
         Composite originalComposite = g.getComposite();
 
-
         g.setColor(new Color(0xf0, 0xcc, 0x7a));
         g.fillOval(x, y, width, height);
-
 
         int trailDir = (velX >= 0) ? -1 : 1;
 
@@ -132,17 +109,9 @@ public class Projectile extends GameElement {
         g.setComposite(originalComposite);
     }
 
-
-
-
-
     public void setPlatforms(List<Platform> platforms) {
         this.platforms = platforms;
     }
-
-
-
-
 
     public float getVelX() { return velX; }
 

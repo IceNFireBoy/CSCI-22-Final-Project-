@@ -1,56 +1,22 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * A moving platform that only activates when lit by the Apprentice's light.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.awt.*;
 public class LightLockedMover extends Platform implements SpriteOverridable {
-
-
-
-
-
 
     public enum MovePattern {
         LINEAR_X,
@@ -58,23 +24,14 @@ public class LightLockedMover extends Platform implements SpriteOverridable {
         CIRCULAR
     }
 
-
     public enum LightBehavior {
         FREEZE_ON_LIGHT,
         MOVE_ON_LIGHT
     }
 
-
-
-
-
     private static final Color BLOCK_FILL    = new Color(0xC8, 0xA0, 0x40);
     private static final Color BLOCK_OUTLINE = new Color(0x60, 0x40, 0x10);
     private static final Color FROZEN_TINT   = new Color(0xA0, 0xC0, 0xE0, 80);
-
-
-
-
 
     private final int originX;
     private final int originY;
@@ -84,31 +41,11 @@ public class LightLockedMover extends Platform implements SpriteOverridable {
 
     private final LightBehavior behaviour;
 
-
-
-
-
-
-
     private long phaseMs;
 
     private boolean motionEnabled;
 
     private String spritePath;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public LightLockedMover(int x, int y, MovePattern pattern, int amplitude,
                             int periodMs, LightBehavior behaviour) {
@@ -121,22 +58,13 @@ public class LightLockedMover extends Platform implements SpriteOverridable {
         this.behaviour = behaviour;
         this.phaseMs = 0L;
 
-
         this.motionEnabled = (behaviour == LightBehavior.FREEZE_ON_LIGHT);
         this.spritePath = null;
     }
 
-
-
-
-
     @Override
     public void setLit(boolean lit) {
         super.setLit(lit);
-
-
-
-
 
         switch (behaviour) {
             case FREEZE_ON_LIGHT: motionEnabled = !lit; break;
@@ -144,20 +72,13 @@ public class LightLockedMover extends Platform implements SpriteOverridable {
         }
     }
 
-
     public boolean isMotionEnabled() { return motionEnabled; }
-
-
-
-
 
     @Override
     public void update(long deltaMs) {
         if (motionEnabled) {
             phaseMs = (phaseMs + deltaMs) % periodMs;
         }
-
-
 
         double t = (double) phaseMs / (double) periodMs;
         double angle = t * 2 * Math.PI;
@@ -177,10 +98,6 @@ public class LightLockedMover extends Platform implements SpriteOverridable {
         }
     }
 
-
-
-
-
     @Override
     public void render(Graphics2D g) {
         if (!isActive()) return;
@@ -195,8 +112,6 @@ public class LightLockedMover extends Platform implements SpriteOverridable {
             return;
         }
 
-
-
         if (spritePath == null) {
             java.awt.image.BufferedImage img = SpriteLoader.getInstance()
                 .tryLoad("resources/sprites/hazards/mover.png");
@@ -210,7 +125,6 @@ public class LightLockedMover extends Platform implements SpriteOverridable {
             }
         }
 
-
         g.setColor(BLOCK_FILL);
         g.fillRect(x, y, width, height);
         g.setColor(BLOCK_OUTLINE);
@@ -223,10 +137,6 @@ public class LightLockedMover extends Platform implements SpriteOverridable {
             g.fillRect(x, y, width, height);
         }
     }
-
-
-
-
 
     @Override public void setSpritePath(String path) { this.spritePath = path; }
     @Override public String getSpritePath() { return spritePath; }

@@ -1,58 +1,22 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Implements a corrupted wall tile that blocks player movement.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.awt.*;
 public class CorruptedWall extends Hazard implements SpriteOverridable {
-
-
-
-
 
     public static final long WARNING_DURATION_MS = 1000L;
     public static final int  FALL_SPEED          = 9;
@@ -64,16 +28,7 @@ public class CorruptedWall extends Hazard implements SpriteOverridable {
     private static final Color WALL_FILL_WARNING = new Color(0x70, 0x18, 0x20);
     private static final Color WALL_OUTLINE      = new Color(0x10, 0x06, 0x0C);
 
-
-
-
-
-
     public enum WallPhase { IDLE, WARNING, FALLING, LANDED }
-
-
-
-
 
     private final int triggerW;
     private final int triggerH;
@@ -86,20 +41,6 @@ public class CorruptedWall extends Hazard implements SpriteOverridable {
     private int  fallTargetY;
 
     private String spritePath;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public CorruptedWall(int x, int y, int w, int h, int triggerW, int triggerH) {
         super(x, y, w, h, IMPACT_DAMAGE, 1);
@@ -114,29 +55,11 @@ public class CorruptedWall extends Hazard implements SpriteOverridable {
         this.spritePath   = null;
     }
 
-
-
-
-
-
-
-
-
-
-
     public Rectangle getTriggerZone() {
         int tx = x + width / 2 - triggerW / 2;
         int ty = initialY + height / 2 - triggerH / 2;
         return new Rectangle(tx, ty, triggerW, triggerH);
     }
-
-
-
-
-
-
-
-
 
     public void checkTrigger(Player player) {
         if (phase == WallPhase.LANDED) return;
@@ -162,17 +85,12 @@ public class CorruptedWall extends Hazard implements SpriteOverridable {
 
     }
 
-
-
-
-
     @Override
     public void update(long deltaMs) {
         if (!active) return;
 
         switch (phase) {
             case WARNING:
-
 
                 shakeOffsetX = (int) ((Math.random() - 0.5) * 2 * SHAKE_AMPLITUDE);
                 shakeOffsetY = (int) ((Math.random() - 0.5) * 2 * SHAKE_AMPLITUDE);
@@ -197,36 +115,20 @@ public class CorruptedWall extends Hazard implements SpriteOverridable {
         }
     }
 
-
-
-
-
-
-
-
     public boolean isDangerous() {
         return phase == WallPhase.FALLING || phase == WallPhase.LANDED;
     }
 
-
     public WallPhase getPhase() { return phase; }
-
-
-
-
 
     @Override
     public void render(Graphics2D g) {
         if (!active) return;
 
-
-
         int rx = x + (phase == WallPhase.WARNING ? shakeOffsetX : 0);
         int ry = y + (phase == WallPhase.WARNING ? shakeOffsetY : 0);
         if (spritePath != null
             && SpriteOverridable.tryDrawSprite(g, this, rx, ry, width, height)) return;
-
-
 
         if (spritePath == null) {
             java.awt.image.BufferedImage img = SpriteLoader.getInstance()
@@ -236,7 +138,6 @@ public class CorruptedWall extends Hazard implements SpriteOverridable {
                 return;
             }
         }
-
 
         Color fill;
         switch (phase) {
@@ -256,7 +157,6 @@ public class CorruptedWall extends Hazard implements SpriteOverridable {
         g.setColor(WALL_OUTLINE);
         g.drawRect(rx, ry, width, height);
 
-
         g.setColor(WALL_OUTLINE);
         for (int row = 16; row < height; row += 16) {
             g.drawLine(rx, ry + row, rx + width, ry + row);
@@ -272,10 +172,6 @@ public class CorruptedWall extends Hazard implements SpriteOverridable {
             }
         }
     }
-
-
-
-
 
     @Override public void setSpritePath(String path) { this.spritePath = path; }
     @Override public String getSpritePath() { return spritePath; }

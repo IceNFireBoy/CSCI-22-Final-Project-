@@ -1,68 +1,38 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Detects and resolves collisions between players, platforms, and game elements.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.awt.*;
 public class CollisionDetector {
-
-
-
-
 
     private static final long CRUMBLE_DELAY_MS = 3000L;
 
     private static final long MIMIC_DELAY_MS = 800L;
 
-
-
-
-
     public CollisionDetector() { }
 
-
-
-
-
     public boolean checkPlayerPlatform(Player p, Platform pl) {
-
-
-
 
         if (pl.getType() == Platform.PlatformType.INVISIBLE && !pl.isLit()) {
             return false;
         }
 
-
         if (!pl.isSolid()) {
             return false;
         }
-
 
         Rectangle pb  = p.getBounds();
         Rectangle hb  = p.getHorizontalBounds();
@@ -75,7 +45,6 @@ public class CollisionDetector {
             return false;
         }
 
-
         long now = System.currentTimeMillis();
 
         if (pl.getType() == Platform.PlatformType.MIMIC
@@ -84,7 +53,6 @@ public class CollisionDetector {
             pl.setMimicStartTime(now);
         }
 
-
         if (pl.getType() == Platform.PlatformType.MIMIC
                 && pl.isMimicTriggered()
                 && (now - pl.getMimicStartTime()) >= MIMIC_DELAY_MS) {
@@ -92,24 +60,19 @@ public class CollisionDetector {
             return false;
         }
 
-
         int overlapTop    = (pb.y + pb.height) - plb.y;
         int overlapBottom = (plb.y + plb.height) - pb.y;
-
 
         int overlapLeft   = (hb.x + hb.width) - plb.x;
         int overlapRight  = (plb.x + plb.width) - hb.x;
 
-
         int minVertical   = Math.min(overlapTop, overlapBottom);
         int minHorizontal = Math.min(overlapLeft, overlapRight);
-
 
         if (pl.getType() == Platform.PlatformType.SLIDE) {
             resolveSlide(p, pl, overlapTop);
             return true;
         }
-
 
         boolean resolveVertical;
         if (verticalOverlap && horizontalOverlap) {
@@ -131,7 +94,6 @@ public class CollisionDetector {
                     p.setVelY(0f);
                 }
 
-
                 if (pl.getType() == Platform.PlatformType.CRUMBLE) {
                     pl.startCrumbling();
                 }
@@ -141,8 +103,6 @@ public class CollisionDetector {
                 p.setVelY(0f);
             }
         } else {
-
-
 
             boolean isWallType = pl.getType() == Platform.PlatformType.WALL;
             boolean platformTopAboveHitboxBottom = plb.y < (p.getY() + 48);
@@ -164,17 +124,9 @@ public class CollisionDetector {
         return true;
     }
 
-
-
-
-
     public boolean checkPlayerHazard(Player p, Hazard h) {
         return p.getBounds().intersects(h.getBounds());
     }
-
-
-
-
 
     public boolean checkProjectileTarget(Projectile proj, GameElement target) {
         if (!proj.isActive() || !target.isActive()) {
@@ -185,24 +137,17 @@ public class CollisionDetector {
             return false;
         }
 
-
         if (target instanceof Damageable) {
             ((Damageable) target).takeDamage(proj.getDamage());
         }
-
 
         proj.setActive(false);
 
         return true;
     }
 
-
-
-
-
     private void resolveSlide(Player p, Platform pl, int overlapTop) {
         Rectangle plb = pl.getBounds();
-
 
         float run  = plb.width;
         float rise = plb.height;
@@ -211,17 +156,13 @@ public class CollisionDetector {
         float sDirX = run  / len;
         float sDirY = rise / len;
 
-
         float normX = -sDirY;
         float normY =  sDirX;
 
-
         float dot = p.getVelX() * normX + p.getVelY() * normY;
-
 
         p.setVelX(p.getVelX() - dot * normX);
         p.setVelY(p.getVelY() - dot * normY);
-
 
         if (overlapTop > 0) {
             p.setY(p.getY() - overlapTop);

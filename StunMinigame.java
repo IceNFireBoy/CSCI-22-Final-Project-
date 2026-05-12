@@ -1,156 +1,50 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Manages the spacebar-timing minigame used to recover from a stun state.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.awt.*;
 public class StunMinigame {
 
-
-
-
-
-
-
-
-
-
     public static final long OPPORTUNITY_DURATION_MS = 3_500L;
-
-
-
-
-
 
     public static final long STUN_DURATION_MS = 5_000L;
 
-
-
-
-
-
     public static final int HITS_REQUIRED = 3;
-
-
-
-
 
     public static final float FREQ_BASE_HZ = 2.0f;
 
-
-
-
-
     public static final float FREQ_MIN_HZ = 0.8f;
-
-
-
-
-
 
     public static final float TARGET_HALF_WIDTH = 0.18f;
 
-
-
-
-
-
     private boolean active = false;
-
 
     private long startMs = 0L;
 
-
     private long endMs = 0L;
-
 
     private int hits = 0;
 
-
-
-
-
-
     private int faithful = 0;
-
-
-
-
-
 
     private float frequencyHz = FREQ_BASE_HZ;
 
-
-
-
-
-
-
     private int pendingResult = -1;
 
-
-
-
-
     private long lastHitMs = 0L;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public synchronized void open(int faithfulScore) {
         this.active  = true;
@@ -165,32 +59,11 @@ public class StunMinigame {
         this.lastHitMs = 0L;
     }
 
-
-
-
-
-
-
-
-
-
     public synchronized void forceClose() {
         this.active        = false;
         this.hits          = 0;
         this.pendingResult = -1;
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
     public synchronized void tick(long nowMs) {
         if (!active) return;
@@ -201,24 +74,6 @@ public class StunMinigame {
             active = false;
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public synchronized boolean onSpacePressed() {
         if (!active) return false;
@@ -238,46 +93,11 @@ public class StunMinigame {
         return true;
     }
 
-
-
-
-
-
-
-
-
-
-
-
     public synchronized boolean isActive() { return active; }
-
-
-
-
-
-
 
     public synchronized int getHits() { return hits; }
 
-
-
-
-
-
-
     public synchronized int getFaithful() { return faithful; }
-
-
-
-
-
-
-
-
-
-
-
-
 
     public synchronized int consumePendingResult() {
         int r = pendingResult;
@@ -285,72 +105,27 @@ public class StunMinigame {
         return r;
     }
 
-
-
-
-
-
-
-
-
-
-
     private float markerPosition(long nowMs) {
         float t = (nowMs - startMs) / 1000f;
         double phase = 2.0 * Math.PI * frequencyHz * t;
         return (float) Math.sin(phase);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public synchronized void render(Graphics2D g, int canvasW, int canvasH) {
         if (!active) return;
         long now = System.currentTimeMillis();
         if (now >= endMs) return;
-
 
         int panelW = 520;
         int panelH = 96;
         int ox = (canvasW - panelW) / 2;
         int oy = canvasH - panelH - 96;
 
-
         Composite prev = g.getComposite();
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.88f));
         g.setColor(new Color(0x05, 0x05, 0x10));
         g.fillRoundRect(ox, oy, panelW, panelH, 12, 12);
         g.setComposite(prev);
-
 
         g.setColor(new Color(0x66, 0x99, 0xFF));
         Stroke prevStroke = g.getStroke();
@@ -362,16 +137,13 @@ public class StunMinigame {
         g.drawString("STUN THE ARCHITECT — SPACE x" + HITS_REQUIRED,
                      ox + 16, oy + 20);
 
-
         int trackX = ox + 24;
         int trackY = oy + 42;
         int trackW = panelW - 48;
         int trackH = 14;
 
-
         g.setColor(new Color(0x10, 0x10, 0x20));
         g.fillRoundRect(trackX, trackY, trackW, trackH, 6, 6);
-
 
         int zoneW     = Math.max(4, (int) (trackW * TARGET_HALF_WIDTH));
         int zoneX     = trackX + trackW / 2 - zoneW;
@@ -383,7 +155,6 @@ public class StunMinigame {
         g.drawRoundRect(zoneX, trackY, zoneFullW, trackH, 6, 6);
         g.setStroke(prevStroke);
 
-
         float p = markerPosition(now);
         int markerX = trackX + (int) ((trackW / 2.0f) * (1.0f + p)) - 4;
         boolean flash = (now - lastHitMs) < 180L;
@@ -391,7 +162,6 @@ public class StunMinigame {
         g.fillRoundRect(markerX, trackY - 3, 8, trackH + 6, 4, 4);
         g.setColor(new Color(0x33, 0x22, 0x00));
         g.drawRoundRect(markerX, trackY - 3, 8, trackH + 6, 4, 4);
-
 
         int pipSize  = 10;
         int pipGap   = 4;
@@ -409,7 +179,6 @@ public class StunMinigame {
             g.drawOval(px, pipRowY, pipSize, pipSize);
         }
 
-
         float remainingFrac = (endMs - now) / (float) OPPORTUNITY_DURATION_MS;
         remainingFrac = Math.max(0f, Math.min(1f, remainingFrac));
         int cbX = ox + 16;
@@ -422,7 +191,6 @@ public class StunMinigame {
         g.fillRect(cbX, cbY, (int) (cbW * remainingFrac), cbH);
         g.setColor(new Color(0x33, 0x44, 0x66));
         g.drawRect(cbX, cbY, cbW, cbH);
-
 
         g.setFont(new Font("Monospaced", Font.PLAIN, 10));
         g.setColor(new Color(0x88, 0x99, 0xCC));

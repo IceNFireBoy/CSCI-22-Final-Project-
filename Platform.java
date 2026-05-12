@@ -1,50 +1,24 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Represents a solid platform tile that players can stand and walk on.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.awt.*;
 import java.awt.image.*;
 import java.util.*;
 public class Platform extends GameElement {
-
-
-
-
-
-
-
-
-
-
 
     public enum PlatformType {
         BRICK,
@@ -54,29 +28,14 @@ public class Platform extends GameElement {
 
         CRUMBLE,
 
-
-
-
-
         INVISIBLE,
-
-
-
-
 
         MIMIC
     }
 
-
-
-
-
-
     public static final int TILE_SIZE = 32;
 
-
     public static final float SPRING_BOUNCE_FORCE = 18f;
-
 
     private static final Color FALLBACK_FILL   = new Color(0x2a, 0x2a, 0x35);
 
@@ -84,32 +43,11 @@ public class Platform extends GameElement {
 
     private static final Color FALLBACK_BORDER = new Color(0x4a, 0x4a, 0x58);
 
-
-
-
-
-
     private PlatformType type;
-
-
-
-
-
 
     private int budgetCost;
 
-
-
-
-
-
     private boolean lit;
-
-
-
-
-
-
 
     private long crumbleTimer = 0;
     private boolean crumbleStarted = false;
@@ -123,58 +61,13 @@ public class Platform extends GameElement {
     private static final int CRACK_STAGE_2 = 1400;
     private Random rand = new Random();
 
-
-
-
-
-
-
-
-
-
     private boolean mimicTriggered;
-
-
-
-
-
-
 
     private long mimicStartTime;
 
-
     private static final long MIMIC_DELAY_MS = 800L;
 
-
-
-
-
-
-
-
-
-
-
     private boolean solid;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public Platform(PlatformType type, int x, int y) {
         super(x, y, defaultWidth(type), defaultHeight(type));
@@ -186,17 +79,6 @@ public class Platform extends GameElement {
         this.mimicStartTime   = -1L;
     }
 
-
-
-
-
-
-
-
-
-
-
-
     private static int defaultWidth(PlatformType type) {
         switch (type) {
             case SLIDE:   return 64;
@@ -206,16 +88,6 @@ public class Platform extends GameElement {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
     private static int defaultHeight(PlatformType type) {
         switch (type) {
             case SPRING:  return 24;
@@ -223,21 +95,6 @@ public class Platform extends GameElement {
             default:      return 16;
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public Platform(PlatformType type, int x, int y, int width, int height) {
         super(x, y, width, height);
@@ -248,26 +105,6 @@ public class Platform extends GameElement {
         this.mimicTriggered   = false;
         this.mimicStartTime   = -1L;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private int resolveBudgetCost(PlatformType type) {
         switch (type) {
@@ -281,38 +118,6 @@ public class Platform extends GameElement {
             default:        return 1;
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public void update(long deltaMs) {
@@ -352,42 +157,11 @@ public class Platform extends GameElement {
         }
     }
 
-
-
-
-
-
-
-
-
     public void startCrumbling() {
         if (type == PlatformType.CRUMBLE && !crumbleStarted) {
             crumbleStarted = true;
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public void render(Graphics2D g) {
@@ -462,20 +236,6 @@ public class Platform extends GameElement {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private void renderSprite(Graphics2D g, String spritePath, Color fallbackFill) {
         BufferedImage sprite = SpriteLoader.getInstance().load(spritePath);
         if (sprite != null) {
@@ -489,134 +249,45 @@ public class Platform extends GameElement {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
     public PlatformType getType() {
         return type;
     }
-
-
-
-
-
-
-
 
     public int getBudgetCost() {
         return budgetCost;
     }
 
-
-
-
-
-
-
     public void setBudgetCost(int budgetCost) {
         this.budgetCost = budgetCost;
     }
-
-
-
-
-
-
-
 
     public boolean isLit() {
         return lit;
     }
 
-
-
-
-
-
-
-
     public void setLit(boolean lit) {
         this.lit = lit;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public boolean isSolid() {
         return solid;
     }
 
-
-
-
-
-
-
-
     public void setSolid(boolean solid) {
         this.solid = solid;
     }
-
-
-
-
-
-
-
-
-
-
-
 
     public boolean isMimicTriggered() {
         return mimicTriggered;
     }
 
-
-
-
-
-
-
     public void setMimicTriggered(boolean mimicTriggered) {
         this.mimicTriggered = mimicTriggered;
     }
 
-
-
-
-
-
-
-
     public long getMimicStartTime() {
         return mimicStartTime;
     }
-
-
-
-
-
-
-
 
     public void setMimicStartTime(long mimicStartTime) {
         this.mimicStartTime = mimicStartTime;

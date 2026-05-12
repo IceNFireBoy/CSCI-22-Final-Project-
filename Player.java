@@ -1,46 +1,26 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Represents the player character with stats, abilities, animations, and rendering.
+ *
+ * @author Marxus Antonio L. Magisa (253602) & Antonio Sebastian B. Pasia (254505)
+ * @version May 12, 2026
+ *
+ * I have not discussed the Java language code in my program
+ * with anyone other than my instructor or the teaching assistants
+ * assigned to this course.
+ *
+ * I have not used Java language code obtained from another student,
+ * or any other unauthorized source, either modified or unmodified.
+ * If any Java language code or documentation used in my program
+ * was obtained from another source, such as a textbook or website,
+ * that has been clearly noted with a proper citation in the comments
+ * of my program.
+ */
 import java.awt.*;
 import java.awt.geom.*;
 import java.awt.image.*;
 import java.util.*;
 import java.util.List;
 public class Player implements Damageable, Renderable {
-
-
-
-
 
     private int maxHealth;
 
@@ -55,342 +35,135 @@ public class Player implements Damageable, Renderable {
     private boolean grounded;
     private boolean wallTouching;
 
-
     private boolean invincible;
-
-
-
-
 
     private long invincibleTimer;
 
-
-
-
-
     private int facingDirection;
-
-
-
-
-
 
     private int consecutiveJumps;
 
-
-
-
-
-
     private boolean dodging;
-
 
     private long dodgeEndTime;
 
-
     private long dodgeCooldownEnd;
-
-
-
-
-
 
     private long shadowDashCooldownEnd;
 
-
-
-
-
-
-
-
-
     private boolean hasMelee;
-
-
-
-
 
     private boolean hasProjectile;
 
-
-
-
-
     private boolean hasDodge;
-
-
-
-
 
     private boolean hasWallCling;
 
-
-
-
-
     private boolean hasShadowDash;
-
-
-
-
-
-
-
-
 
     private boolean hasVeil;
 
-
     private boolean hasEcho;
-
 
     private boolean hasTether;
 
-
     private boolean hasShadowStep;
-
-
-
-
-
 
     private boolean sightRestricted;
 
-
-
-
-
-
     public static final int FAITHFUL_MAX = 5;
 
-
-
-
-
-
-
     private int faithful = 0;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private final Set<LoreFragment.AbilityUnlock> activeBoosts =
             EnumSet.noneOf(LoreFragment.AbilityUnlock.class);
 
-
-
-
-
-
-
-
-
-
-
-
-
     public enum RadiantState { IDLE, CHARGING, ACTIVE, COOLDOWN }
-
 
     public static final long RADIANT_CHARGE_MS   = 2_000L;
 
-
     public static final long RADIANT_ACTIVE_MS   = 5000000_000L;
-
 
     public static final long RADIANT_COOLDOWN_MS = 60_000L;
 
-
     private RadiantState radiantState = RadiantState.IDLE;
-
-
-
-
-
 
     private long radiantStateStartMs = 0L;
 
-
-
-
-
-
-
-
-
     private volatile long radiantActiveUntilMs = 0L;
-
-
-
-
-
 
     private CoreHealthBar coreHealthBar;
 
-
-
-
-
-
     private String animState;
-
 
     private long meleeCooldown;
 
-
-
-
-
-
-
-
     public volatile int pendingCoreHitIndex = -1;
-
 
     private boolean chargeHeld;
 
-
     private long chargeStartTime;
-
 
     private boolean dodgeActive;
 
-
     private long dodgeCooldownRemaining;
-
 
     private long dashCooldownRemaining;
 
-
     private boolean healFlash;
-
 
     private long healFlashEnd;
 
-
     private boolean collectFlash;
-
 
     private long collectFlashStart;
 
-
     private List<GameElement> activeEntities;
-
-
-
-
-
 
     private int respawnX;
 
-
     private int respawnY;
-
 
     private boolean isDead;
 
-
     private long deathTimer;
-
-
-
-
-
 
     private boolean restartToAct1Pending = false;
 
-
-
-
-
-
     public static final int SPRITE_WIDTH  = 64;
-
 
     public static final int SPRITE_HEIGHT = 96;
 
-
     private static final int DEATH_ANIM_MAX_Y = 800;
-
 
     private static final long DEATH_ANIM_MS = 1200L;
 
-
     private static final int FRAME_DELAY = 6;
-
 
     private int frameIndex = 0;
 
-
     private int frameTick = 0;
-
 
     private String currentAnimState = "idle";
 
-
     private String lastAnimState = "";
-
 
     private int deathX;
 
-
     private int deathY;
-
-
-
-
-
-
-
-
-
 
     private boolean wasOnGround = false;
 
-
     private int coyoteFrames = 0;
 
-
     private static final int COYOTE_MAX = 4;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public Player(int x, int y) {
         this.x = x;
         this.y = y;
 
-
         this.velX = 0f;
         this.velY = 0f;
-
 
         this.grounded         = false;
         this.wallTouching     = false;
@@ -399,14 +172,11 @@ public class Player implements Damageable, Renderable {
         this.facingDirection  = 1;
         this.consecutiveJumps = 0;
 
-
         this.dodging          = false;
         this.dodgeEndTime     = 0L;
         this.dodgeCooldownEnd = 0L;
 
-
         this.shadowDashCooldownEnd = 0L;
-
 
         this.hasMelee      = false;
         this.hasProjectile = false;
@@ -415,7 +185,6 @@ public class Player implements Damageable, Renderable {
         this.hasShadowDash = false;
 
         this.coreHealthBar = new CoreHealthBar();
-
 
         this.animState = "wanderer_idle";
         this.meleeCooldown = 0L;
@@ -430,7 +199,6 @@ public class Player implements Damageable, Renderable {
         this.collectFlashStart = 0L;
         this.activeEntities = new ArrayList<>();
 
-
         this.maxHealth = 100;
         this.health    = this.maxHealth;
         this.sightRestricted = false;
@@ -442,31 +210,6 @@ public class Player implements Damageable, Renderable {
         this.deathX    = x;
         this.deathY    = y;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public void render(Graphics2D g) {
@@ -489,7 +232,6 @@ public class Player implements Damageable, Renderable {
         String path = getSpritePathForState(currentAnimState, frameIndex);
         BufferedImage sprite = SpriteLoader.getInstance().load(path);
 
-
         if (invincible && (frameTick % 8 < 4)) {
             g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.4f));
         }
@@ -510,18 +252,6 @@ public class Player implements Damageable, Renderable {
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
     private String getSpritePathForState(String state, int frame) {
         switch (state) {
             case "run":    return "resources/sprites/wanderer/wanderer_run_f"    + (frame + 1) + ".png";
@@ -535,16 +265,6 @@ public class Player implements Damageable, Renderable {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
     private int getFrameCount(String state) {
         switch (state) {
             case "run":    return 4;
@@ -556,64 +276,23 @@ public class Player implements Damageable, Renderable {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
     @Override
     public Rectangle getBounds() {
         return new Rectangle(x + 20, y + 8, 24, 80);
     }
 
-
-
-
-
-
-
     public Rectangle getFullBounds() {
         return new Rectangle(x, y, 64, 96);
     }
-
-
-
-
-
-
 
     public Rectangle getHorizontalBounds() {
         return new Rectangle(x + 10, y + 12, 44, 36);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @Override
     public void takeDamage(int amount) {
         if (amount <= 0) return;
         if (invincible || isDead) return;
-
-
 
         if (hasBoost(LoreFragment.AbilityUnlock.IRON)) {
             int reduced = (int) Math.floor(amount * 0.8);
@@ -626,28 +305,9 @@ public class Player implements Damageable, Renderable {
         }
     }
 
-
-
-
-
-
-
-
-
-
     public void setHealth(int health) {
         this.health = Math.max(0, Math.min(maxHealth, health));
     }
-
-
-
-
-
-
-
-
-
-
 
     public void heal(int amount) {
         this.health = Math.min(maxHealth, this.health + amount);
@@ -655,103 +315,41 @@ public class Player implements Damageable, Renderable {
         this.healFlashEnd = System.currentTimeMillis() + 300;
     }
 
-
-
-
-
-
     @Override
     public int getHealth() {
         return health;
     }
-
-
-
-
-
 
     @Override
     public int getMaxHealth() {
         return maxHealth;
     }
 
-
-
-
-
-
     @Override
     public boolean isAlive() {
         return health > 0;
     }
 
-
-
-
-
-
-
-
-
-
     public int getX() {
         return x;
     }
-
-
-
-
-
-
 
     public void setX(int x) {
         this.x = x;
     }
 
-
-
-
-
-
     public int getY() {
         return y;
     }
-
-
-
-
-
-
 
     public void setY(int y) {
         this.y = y;
     }
 
-
-
-
-
-
-
-
-
-
-
-
     public void setPosition(float x, float y) {
         this.x = (int) x;
         this.y = (int) y;
     }
-
-
-
-
-
-
-
-
-
-
 
     public void setAnimationState(String state) {
         if (state == null || state.isEmpty()) return;
@@ -764,275 +362,109 @@ public class Player implements Damageable, Renderable {
         }
     }
 
-
-
-
-
-
-
-
-
-
     public float getVelX() {
         return velX;
     }
-
-
-
-
-
 
     public void setVelX(float velX) {
         this.velX = velX;
     }
 
-
-
-
-
-
     public float getVelY() {
         return velY;
     }
-
-
-
-
-
 
     public void setVelY(float velY) {
         this.velY = velY;
     }
 
-
-
-
-
-
-
-
-
-
     public boolean isGrounded() {
         return grounded;
     }
-
-
-
-
-
-
 
     public void setGrounded(boolean grounded) {
         this.grounded = grounded;
     }
 
-
-
-
-
-
     public boolean isWallTouching() {
         return wallTouching;
     }
-
-
-
-
-
-
 
     public void setWallTouching(boolean wallTouching) {
         this.wallTouching = wallTouching;
     }
 
-
-
-
-
-
     public boolean isInvincible() {
         return invincible;
     }
-
-
-
-
-
 
     public void setInvincible(boolean invincible) {
         this.invincible = invincible;
     }
 
-
-
-
-
-
-
     public long getInvincibleTimer() {
         return invincibleTimer;
     }
-
-
-
-
-
 
     public void setInvincibleTimer(long invincibleTimer) {
         this.invincibleTimer = invincibleTimer;
     }
 
-
-
-
-
-
     public int getFacingDirection() {
         return facingDirection;
     }
-
-
-
-
-
-
 
     public void setFacingDirection(int facingDirection) {
         this.facingDirection = facingDirection;
     }
 
-
-
-
-
-
     public int getConsecutiveJumps() {
         return consecutiveJumps;
     }
-
-
-
-
-
 
     public void setConsecutiveJumps(int consecutiveJumps) {
         this.consecutiveJumps = consecutiveJumps;
     }
 
-
-
-
-
-
-
-
-
-
     public boolean isDodging() {
         return dodging;
     }
-
-
-
-
-
 
     public void setDodging(boolean dodging) {
         this.dodging = dodging;
     }
 
-
-
-
-
-
     public long getDodgeEndTime() {
         return dodgeEndTime;
     }
-
-
-
-
-
 
     public void setDodgeEndTime(long dodgeEndTime) {
         this.dodgeEndTime = dodgeEndTime;
     }
 
-
-
-
-
-
     public long getDodgeCooldownEnd() {
         return dodgeCooldownEnd;
     }
-
-
-
-
-
 
     public void setDodgeCooldownEnd(long dodgeCooldownEnd) {
         this.dodgeCooldownEnd = dodgeCooldownEnd;
     }
 
-
-
-
-
-
-
-
-
-
     public long getShadowDashCooldownEnd() {
         return shadowDashCooldownEnd;
     }
-
-
-
-
-
 
     public void setShadowDashCooldownEnd(long shadowDashCooldownEnd) {
         this.shadowDashCooldownEnd = shadowDashCooldownEnd;
     }
 
-
-
-
-
-
-
-
-
-
     public boolean isHasMelee() {
         return hasMelee;
     }
 
-
-
-
-
-
     public void setHasMelee(boolean hasMelee) {
         this.hasMelee = hasMelee;
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
     public int consumePendingCoreHit() {
         int idx = pendingCoreHitIndex;
@@ -1040,87 +472,37 @@ public class Player implements Damageable, Renderable {
         return idx;
     }
 
-
-
-
-
-
     public boolean isHasProjectile() {
         return hasProjectile;
     }
-
-
-
-
-
 
     public void setHasProjectile(boolean hasProjectile) {
         this.hasProjectile = hasProjectile;
     }
 
-
-
-
-
-
     public boolean isHasDodge() {
         return hasDodge;
     }
-
-
-
-
-
 
     public void setHasDodge(boolean hasDodge) {
         this.hasDodge = hasDodge;
     }
 
-
-
-
-
-
     public boolean isHasWallCling() {
         return hasWallCling;
     }
-
-
-
-
-
 
     public void setHasWallCling(boolean hasWallCling) {
         this.hasWallCling = hasWallCling;
     }
 
-
-
-
-
-
     public boolean isHasShadowDash() {
         return hasShadowDash;
     }
 
-
-
-
-
-
     public void setHasShadowDash(boolean hasShadowDash) {
         this.hasShadowDash = hasShadowDash;
     }
-
-
-
-
-
-
-
-
-
-
 
     public void unlockAbility(LoreFragment.AbilityUnlock unlock) {
         switch (unlock) {
@@ -1130,24 +512,14 @@ public class Player implements Damageable, Renderable {
             case WALL_CLING:  hasWallCling  = true; break;
             case SHADOW_DASH: hasShadowDash = true; break;
 
-
-
-
             case EMBER:
             case IRON:
                 activateBoost(unlock);
                 break;
 
-
-
             case RADIANT_COLLAPSE:
                 GameSession.getInstance().setRadiantCollapseUnlocked(true);
                 break;
-
-
-
-
-
 
             case VEIL:        hasVeil       = true; break;
             case ECHO:        hasEcho       = true; break;
@@ -1158,18 +530,6 @@ public class Player implements Damageable, Renderable {
         }
         System.out.println("Ability unlocked: " + unlock.name());
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
     public boolean hasUnlock(LoreFragment.AbilityUnlock unlock) {
         if (unlock == null) return false;
@@ -1191,32 +551,9 @@ public class Player implements Damageable, Renderable {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     public void setActiveEntities(List<GameElement> entities) {
         this.activeEntities = entities;
     }
-
-
-
-
-
-
-
-
-
-
 
     public void executeMelee() {
         if (!hasMelee) {
@@ -1227,12 +564,9 @@ public class Player implements Damageable, Renderable {
             return;
         }
 
-
         int hitboxX = (facingDirection == 1) ? (x + 24) : (x - 40);
         int hitboxY = y - 4;
         Rectangle hitbox = new Rectangle(hitboxX, hitboxY, 40, 40);
-
-
 
         boolean ember = hasBoost(LoreFragment.AbilityUnlock.EMBER);
         for (GameElement elem : activeEntities) {
@@ -1259,14 +593,6 @@ public class Player implements Damageable, Renderable {
 
     }
 
-
-
-
-
-
-
-
-
     public void startCharge() {
         if (!hasProjectile) {
             return;
@@ -1275,18 +601,6 @@ public class Player implements Damageable, Renderable {
         chargeStartTime = System.nanoTime();
         animState       = "wanderer_charge";
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
     public Projectile releaseProjectile() {
         if (!hasProjectile || !chargeHeld) {
@@ -1300,7 +614,6 @@ public class Player implements Damageable, Renderable {
             return null;
         }
 
-
         int   projX    = x + 12 - 4;
         int   projY    = y + 16 - 4;
         float projVelX = facingDirection * 6f;
@@ -1309,14 +622,6 @@ public class Player implements Damageable, Renderable {
         animState = "wanderer_idle";
         return proj;
     }
-
-
-
-
-
-
-
-
 
     public void executeDodge() {
         if (!hasDodge || dodgeCooldownRemaining > 0) {
@@ -1335,30 +640,11 @@ public class Player implements Damageable, Renderable {
         animState = "wanderer_dodge";
     }
 
-
-
-
-
-
-
-
-
-
-
-
     public PulseEffect emitPulse() {
         PulseEffect pulse = new PulseEffect(x + 12, y + 16);
 
         return pulse;
     }
-
-
-
-
-
-
-
-
 
     public void executeShadowDash() {
         if (!hasShadowDash || dashCooldownRemaining > 0) {
@@ -1376,16 +662,6 @@ public class Player implements Damageable, Renderable {
 
     }
 
-
-
-
-
-
-
-
-
-
-
     public void updateCooldowns(long deltaMs) {
         if (meleeCooldown > 0) {
             meleeCooldown -= deltaMs;
@@ -1397,49 +673,22 @@ public class Player implements Damageable, Renderable {
             dashCooldownRemaining -= deltaMs;
         }
 
-
         long now = System.currentTimeMillis();
         if (dodgeActive && now >= dodgeEndTime) {
             dodgeActive = false;
             invincible  = false;
         }
 
-
         if (invincible && invincibleTimer > 0 && now >= invincibleTimer) {
             invincible = false;
         }
-
 
         if (healFlash && now >= healFlashEnd) {
             healFlash = false;
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public void update(long deltaMs) {
-
-
-
 
         boolean animGrounded;
         if (grounded) {
@@ -1453,7 +702,6 @@ public class Player implements Damageable, Renderable {
         }
         wasOnGround = animGrounded;
 
-
         String newState;
         if (isDead)                               newState = "death";
         else if (chargeHeld)                      newState = "charge";
@@ -1464,7 +712,6 @@ public class Player implements Damageable, Renderable {
         else if (Math.abs(velX) > 0.5f)           newState = "run";
         else                                      newState = "idle";
 
-
         if (!newState.equals(lastAnimState)) {
             frameIndex    = 0;
             frameTick     = 0;
@@ -1472,9 +719,7 @@ public class Player implements Damageable, Renderable {
         }
         currentAnimState = newState;
 
-
         animState = "wanderer_" + currentAnimState;
-
 
         frameTick++;
         if (frameTick >= FRAME_DELAY) {
@@ -1488,25 +733,11 @@ public class Player implements Damageable, Renderable {
             }
         }
 
-
         GameSession.getInstance().sendToServer(
             Protocol.PLAYER_POS + "|WANDERER|"
             + x + "|" + y + "|" + velX + "|" + velY + "|" + currentAnimState
             + "|" + health);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public void loseLife() {
         if (isDead) return;
@@ -1517,16 +748,6 @@ public class Player implements Damageable, Renderable {
         deathY = Math.min(y, DEATH_ANIM_MAX_Y);
         restartToAct1Pending = true;
     }
-
-
-
-
-
-
-
-
-
-
 
     public void updateRespawn(long deltaMs) {
         if (isDead) {
@@ -1543,97 +764,28 @@ public class Player implements Damageable, Renderable {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
     public void setRespawn(int rx, int ry) {
         this.respawnX = rx;
         this.respawnY = ry;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     public void addMaxHealth(int amount) {
         maxHealth += amount;
     }
-
-
-
-
-
 
     public boolean isSightRestricted() {
         return sightRestricted;
     }
 
-
-
-
-
-
     public void setSightRestricted(boolean sightRestricted) {
         this.sightRestricted = sightRestricted;
     }
 
-
-
-
-
-
-
-
-
-
     public int getFaithful() { return faithful; }
-
-
-
-
-
 
     public void setFaithful(int v) { faithful = Math.max(0, Math.min(FAITHFUL_MAX, v)); }
 
-
-
-
-
-
-
     public void addFaithful(int delta) { setFaithful(faithful + delta); }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public void activateBoost(LoreFragment.AbilityUnlock boost) {
         if (boost == LoreFragment.AbilityUnlock.EMBER
@@ -1643,103 +795,33 @@ public class Player implements Damageable, Renderable {
 
     }
 
-
-
-
-
-
-
-
-
     public boolean hasBoost(LoreFragment.AbilityUnlock boost) {
         return activeBoosts.contains(boost);
     }
-
-
-
-
-
-
 
     public Set<LoreFragment.AbilityUnlock> getActiveBoosts() {
         return Collections.unmodifiableSet(activeBoosts);
     }
 
-
-
-
-
-
-
-
     public boolean isRadiantCollapseUnlocked() {
         return GameSession.getInstance().isRadiantCollapseUnlocked();
     }
 
-
-
-
-
-
     public RadiantState getRadiantState() { return radiantState; }
-
-
-
-
-
-
-
-
-
 
     public boolean isRadiantActive() {
         return System.currentTimeMillis() < radiantActiveUntilMs;
     }
 
-
-
-
-
-
     public long getRadiantActiveUntilMs() { return radiantActiveUntilMs; }
 
-
-
-
-
-
-
-
     public void setRadiantActiveUntilMs(long endMs) { radiantActiveUntilMs = endMs; }
-
-
-
-
-
-
-
 
     public long getRadiantCooldownRemainingMs() {
         if (radiantState != RadiantState.COOLDOWN) return 0L;
         long elapsed = System.currentTimeMillis() - radiantStateStartMs;
         return Math.max(0L, RADIANT_COOLDOWN_MS - elapsed);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public boolean updateRadiantFsm(long nowMs, boolean shiftHeld) {
         boolean transitioned = false;
@@ -1761,8 +843,6 @@ public class Player implements Damageable, Renderable {
                     radiantState         = RadiantState.ACTIVE;
                     radiantStateStartMs  = nowMs;
                     radiantActiveUntilMs = nowMs + RADIANT_ACTIVE_MS;
-
-
 
                     GameSession.getInstance().sendToServer(
                         Protocol.RADIANT_ACTIVE + "|" + radiantActiveUntilMs);
@@ -1790,81 +870,38 @@ public class Player implements Damageable, Renderable {
         return transitioned;
     }
 
-
-
-
-
-
     public boolean isRestartToAct1Pending() {
         return restartToAct1Pending;
     }
-
 
     public void clearRestartToAct1Pending() {
         this.restartToAct1Pending = false;
     }
 
-
-
-
-
-
     public boolean isDead() {
         return isDead;
     }
-
-
-
-
-
 
     public void setDead(boolean dead) {
         this.isDead = dead;
     }
 
-
-
-
-
-
     public int getDeathX() {
         return deathX;
     }
-
-
-
-
-
 
     public int getDeathY() {
         return deathY;
     }
 
-
-
-
-
-
     public long getDeathTimer() {
         return deathTimer;
     }
-
-
-
-
-
-
 
     public void triggerCollectFlash() {
         this.collectFlash      = true;
         this.collectFlashStart = System.currentTimeMillis();
     }
-
-
-
-
-
-
 
     public boolean isCollectFlashActive() {
         if (!collectFlash) return false;
@@ -1875,149 +912,49 @@ public class Player implements Damageable, Renderable {
         return true;
     }
 
-
-
-
-
-
     public long getCollectFlashStart() {
         return collectFlashStart;
     }
-
-
-
-
-
-
-
-
-
 
     public String getAnimState() {
         return animState;
     }
 
-
-
-
-
-
     public void setAnimState(String animState) {
         this.animState = animState;
     }
-
-
-
-
-
 
     public boolean isHealFlash() {
         return healFlash;
     }
 
-
-
-
-
-
     public boolean isDodgeActive() {
         return dodgeActive;
     }
-
-
-
-
-
 
     public boolean isChargeHeld() {
         return chargeHeld;
     }
 
-
-
-
-
-
     public CoreHealthBar getCoreHealthBar() {
         return coreHealthBar;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public class CoreHealthBar {
 
-
-
-
-
-
         private int[] coreHealth;
-
-
-
-
-
-
-
-
 
         public CoreHealthBar() {
             this.coreHealth = new int[]{3, 3, 3, 3, 3};
         }
 
-
-
-
-
-
-
-
-
-
-
-
         public void render(Graphics2D g) {
 
-
-
-
         }
-
-
-
-
-
-
-
-
 
         public int[] getCoreHealth() {
             return coreHealth;
         }
-
-
-
-
-
-
-
-
-
-
-
 
         public void setCoreHealth(int coreIndex, int health) {
             if (coreIndex >= 0 && coreIndex < coreHealth.length) {
