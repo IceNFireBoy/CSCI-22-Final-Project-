@@ -1,52 +1,52 @@
-/**
- Authoritative host for a multiplayer Lumen Architect session. Accepts exactly two clients
- (Wanderer and Apprentice), maintains all shared game state (Core health, victory conditions,
- fragment collection), and broadcasts authoritative updates to both peers every 16 ms at 60 fps.
- The server is the single source of truth — clients never trust their own local values for
- Core health, architect-override status, or attack cooldowns. All mutations to shared state
- occur only on the server game loop thread; the two ClientHandler threads feed packets into
- a thread-safe queue, ensuring no race conditions.
- */
 
-// =========================================================================
-// Citations - CSCI 22 Course Materials Applied
-// =========================================================================
-// Module 4c "Networking in Java" - this file IS the networking-module
-//                                  pattern at scale: ServerSocket binds
-//                                  to a port, accept() blocks until a
-//                                  client connects, and a fresh
-//                                  ClientHandler thread is spawned per
-//                                  client. The server listens on port
-//                                  9876 and accepts exactly two clients
-//                                  before transitioning to game state.
-//                                  Object streams replace the textbook's
-//                                  DataInputStream / DataOutputStream so
-//                                  the protocol can carry typed packet
-//                                  classes (NetworkProtocol.*).
-// Module 4a "Threads"            - per-client ClientHandler threads,
-//                                  separate game-loop thread, and a
-//                                  thread-safe LinkedBlockingQueue
-//                                  shared between them is the textbook
-//                                  producer/consumer threading shape.
-//                                  Volatile fields ensure cross-thread
-//                                  visibility for sessionActive and
-//                                  bothConnected.
-// Module 1d "Inner Classes"      - VictoryState is a nested enum;
-//                                  ClientHandler is a private inner
-//                                  class that owns one socket and one
-//                                  ObjectInputStream. Both are exact
-//                                  textbook examples from 1d.
-// Module 1a "Modifiers"          - private static final constants
-//                                  (PORT, CORE_COUNT, CORE_MAX_HEALTH,
-//                                  TICK_MS, RECONNECT_TIMEOUT_MS),
-//                                  volatile cross-thread fields, and
-//                                  per-instance final arrays follow the
-//                                  modifier conventions from 1a.
-// (Networking optimisation patterns - per-type cooldowns, partial-
-//  disconnect snapshot/reconnect, per-tick throttling - go beyond the
-//  course module 4c and are flagged for external citation in the
-//  accompanying Cowork research prompt.)
-// =========================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 import java.io.*;
 import java.net.*;
@@ -54,248 +54,248 @@ import java.util.*;
 import java.util.concurrent.*;
 public class GameServer {
 
-    // =========================================================================
-    // Enum — VictoryState
-    // =========================================================================
 
-    /**
-     Possible match outcomes. The server transitions from IN_PROGRESS to one of the terminal
-     states when a win condition is detected, then broadcasts a VictoryPacket to both clients.
-     */
+
+
+
+
+
+
+
     public enum VictoryState {
-        IN_PROGRESS,  // Match is ongoing; neither side has won yet
-        WANDERER_WIN, // Wanderer destroyed all four Cores before time expired or health reached zero
-        APPRENTICE_WIN // Apprentice defended all Cores until timer expired or Wanderer died
+        IN_PROGRESS,
+        WANDERER_WIN,
+        APPRENTICE_WIN
     }
 
-    // =========================================================================
-    // Constants
-    // =========================================================================
 
-     
+
+
+
+
     private static final int PORT = 9876;
 
-     
+
     private static final int CORE_COUNT = 4;
 
-     
+
     private static final int CORE_MAX_HEALTH = 3;
 
-     
+
     private static final long TICK_MS = 1000L / 60L;
 
-    public static final int ARENA_W = 3072; // Boss-arena world width in pixels (mirrored by Camera.ARENA_W on client)
-    public static final int ARENA_H = 2304; // Boss-arena world height in pixels
+    public static final int ARENA_W = 3072;
+    public static final int ARENA_H = 2304;
 
-    private static final int SLOT_0 = 0; // First connection slot (role assigned by lobby)
-    private static final int SLOT_1 = 1; // Second connection slot (role assigned by lobby)
+    private static final int SLOT_0 = 0;
+    private static final int SLOT_1 = 1;
 
-    // =========================================================================
-    // Fields — server infrastructure
-    // =========================================================================
 
-    /**
-     * One {@link ObjectOutputStream} per role (index 0 = Wanderer, index 1 = Apprentice).
-     * Opened once at the start of each session in {@link #startSession(ServerSocket)},
-     * then read-shared across threads; individual writes are serialised by
-     * {@link #broadcastToAll(Object)}.
-     */
+
+
+
+
+
+
+
+
+
     private final ObjectOutputStream[] outs = new ObjectOutputStream[2];
 
-    /**
-     * Tracks which clients are still connected. Index 0 = Wanderer, index 1 = Apprentice.
-     * Set to {@code false} by a {@link ClientHandler} on any {@link IOException} and by
-     * the game loop when a write fails.
-     */
+
+
+
+
+
     private final boolean[] clientConnected = new boolean[2];
 
-    /**
-     * Thread-safe queue shared between the two {@link ClientHandler} threads (producers)
-     * and the server game loop thread (consumer). Every inbound packet is placed here
-     * regardless of which client sent it.
-     */
+
+
+
+
+
     private final LinkedBlockingQueue<Object> sharedQueue = new LinkedBlockingQueue<>();
 
-    // =========================================================================
-    // Fields — game state (all written/read on the game loop thread unless noted)
-    // =========================================================================
 
-    /**
-     * Mirrors the health of each of the four Cores. Each element corresponds to the
-     * Core at that index (0–3) and starts at {@link #CORE_MAX_HEALTH}.
-     */
+
+
+
+
+
+
+
     private int[] coreHealth;
 
-    private boolean architectOverride; // Architect override flag; set true when first Core destroyed, cleared when all four destroyed
-    private VictoryState victoryState; // Current match outcome; transitions from IN_PROGRESS to a terminal state when a win condition is detected
+    private boolean architectOverride;
+    private VictoryState victoryState;
 
-    private volatile VictoryState pendingVictoryState; // Victory outcome waiting to be committed once endgame cutscenes finish; null while no condition is pending
-    private NetworkProtocol.PlayerStatePacket latestPlayerState; // Most recent PlayerStatePacket from Wanderer; null until first packet arrives
-    private final boolean[] levelReady = new boolean[2]; // Per-slot level-ready flag; set true when Apprentice signals level completion
-    private final Set<String> serverCollectedFragments = new HashSet<>(); // Server-authoritative set of collected fragment IDs during this session
-    private int destroyedCoreCount = 0; // Running count of destroyed Cores; used to trigger architect-override (first) and Wanderer victory (all four)
+    private volatile VictoryState pendingVictoryState;
+    private NetworkProtocol.PlayerStatePacket latestPlayerState;
+    private final boolean[] levelReady = new boolean[2];
+    private final Set<String> serverCollectedFragments = new HashSet<>();
+    private int destroyedCoreCount = 0;
 
-    // =========================================================================
-    // Fields — cutscene lock-step (P8.0)
-    // =========================================================================
 
-    private volatile String activeCutsceneId = null; // Name of currently playing cutscene; null when inactive; waits for both slots to ack before resuming
-    private final boolean[] cutsceneAcked = new boolean[2]; // Per-slot ack flags for the active cutscene
-    private volatile long cutsceneStartMs = 0L; // System.currentTimeMillis() when activeCutsceneId was started; used for auto-advance guard timeout
-    private static final long CUTSCENE_GUARD_MS = 30_000L; // Auto-advance timeout; forces resume if both acks don't arrive in this time
 
-    // =========================================================================
-    // Fields — boss arena (P8.2)
-    // =========================================================================
 
-    private volatile long bossArenaSeed = 0L; // Deterministic seed for boss arena; set once on first BOSS_ENTER, broadcast so both clients generate identical arena locally
-    private volatile boolean bossArenaStarted = false; // True once session enters boss arena; guards against duplicate BOSS_ENTER messages
 
-    // =========================================================================
-    // Fields — boss-phase light ball (P8.3)
-    // =========================================================================
+    private volatile String activeCutsceneId = null;
+    private final boolean[] cutsceneAcked = new boolean[2];
+    private volatile long cutsceneStartMs = 0L;
+    private static final long CUTSCENE_GUARD_MS = 30_000L;
 
-    private volatile LightBall lightBall = null; // Server-authoritative light instance in BOSS phase; eases toward Apprentice target each tick; position broadcast in ServerStatePacket
-    private volatile boolean bossPhaseActive = false; // True once session enters BOSS phase; guards runGameLoop() so lightBall.step() only runs during boss fight
 
-    // =========================================================================
-    // Fields — boss attack dispatcher (P8.5)
-    // =========================================================================
 
-    /**
-     * Canonical attack-type strings carried inside an
-     * {@link Protocol#ATTACK} request from the Apprentice and echoed back to
-     * both clients inside the resulting {@link Protocol#BOSS_ATK} dispatch.
-     * The array order is also the index space used by
-     * {@link #attackCooldownUntilMs} — any change here must be mirrored by
-     * the client-side {@code GameStarter.spawnBossAttack(...)} switch.
-     */
+
+
+    private volatile long bossArenaSeed = 0L;
+    private volatile boolean bossArenaStarted = false;
+
+
+
+
+
+    private volatile LightBall lightBall = null;
+    private volatile boolean bossPhaseActive = false;
+
+
+
+
+
+
+
+
+
+
+
+
+
     private static final String[] ATTACK_TYPES = {
             "SEARING_BEAM", "BLOCK_RAIN", "CRUSHER", "SPIKE_ARRAY", "SHIELD"
     };
 
-    /**
-     * Per-attack-type cooldowns in milliseconds. Index matches
-     * {@link #ATTACK_TYPES}. The Apprentice cannot spawn another attack of the
-     * same type until this many ms have elapsed since the last successful
-     * dispatch; requests that arrive earlier are silently dropped.
-     */
+
+
+
+
+
+
     private static final long[] ATTACK_COOLDOWN_MS = {
-            5_000L,  // SEARING_BEAM
-            8_000L,  // BLOCK_RAIN
-            10_000L, // CRUSHER
-            4_000L,  // SPIKE_ARRAY
-            6_000L   // SHIELD
+            5_000L,
+            8_000L,
+            10_000L,
+            4_000L,
+            6_000L
     };
 
-    /**
-     * For each attack type (index matches {@link #ATTACK_TYPES}), the wall-clock
-     * time (from {@link System#currentTimeMillis()}) at which the per-type
-     * cooldown expires. Any dispatch request arriving while
-     * {@code currentMs < attackCooldownUntilMs[type]} is rejected. Updated on
-     * successful dispatch in {@link #handleAttackMessage(String, int)}.
-     */
+
+
+
+
+
+
+
     private final long[] attackCooldownUntilMs = new long[ATTACK_TYPES.length];
 
-    // =========================================================================
-    // Fields — stun minigame (P8.8)
-    // =========================================================================
 
-    /**
-     * Wall-clock ms until which the Architect is stunned (boss-attack dispatches
-     * are suppressed). Initialised to 0 so no stun is active at session start;
-     * {@link #handleStunResultMessage(String, int)} stamps this forward by
-     * {@link StunMinigame#STUN_DURATION_MS} on a successful minigame. The
-     * {@link #handleAttackMessage(String, int)} gate checks {@code now <
-     * architectStunnedUntilMs} and silently drops the dispatch while
-     * suppression is active.
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     private volatile long architectStunnedUntilMs = 0L;
 
-    /**
-     * RNG used to roll stun opportunities on each successful
-     * {@link Protocol#BOSS_ATK} dispatch. Probability is
-     * {@code 0.1 + 0.08 * faithful} where {@code faithful} is the Wanderer's
-     * current meter carried in the most recent
-     * {@link NetworkProtocol.PlayerStatePacket}. Seeded from
-     * {@link System#nanoTime()} so two consecutive sessions do not produce
-     * the same opportunity pattern.
-     */
+
+
+
+
+
+
+
+
+
     private final java.util.Random stunRng = new java.util.Random(System.nanoTime());
 
-     
+
     private static final long STUN_OPPORTUNITY_COOLDOWN_MS = 4_000L;
 
-     
+
     private volatile long stunOpportunityCooldownUntilMs = 0L;
 
-    /**
-     * Set to {@code true} once both {@link ClientHandler} threads have been started,
-     * indicating that the server is ready to accept game-state packets from either
-     * client. Included in every {@link NetworkProtocol.ServerStatePacket} so clients
-     * can spin-wait on this flag before starting their game loops.
-     */
+
+
+
+
+
+
     private boolean bothConnected = false;
 
-    /**
-     * Cleared to {@code false} by any {@link ClientHandler} the moment its client
-     * disconnects. The game loop polls this flag so it exits cleanly even when no
-     * formal victory packet is ever sent (e.g. a mid-game crash or early quit).
-     */
+
+
+
+
+
     private volatile boolean sessionActive = true;
 
-    // =========================================================================
-    // Fields — lobby state
-    // =========================================================================
 
-    /**
-     * The role each slot has claimed so far, indexed by slot (0 = first client,
-     * 1 = second client). {@code null} means that slot has not chosen yet.
-     * Values are {@code "WANDERER"} or {@code "APPRENTICE"}.
-     */
+
+
+
+
+
+
+
+
     private final String[] lobbySelectedRole = new String[2];
 
-    /**
-     * The role each slot is currently hovering over, e.g. {@code "WANDERER"},
-     * {@code "APPRENTICE"}, or {@code "NONE"}.
-     */
+
+
+
+
     private final String[] lobbyHoverState = {"NONE", "NONE"};
 
-    // =========================================================================
-    // Fields — session persistence / reconnect
-    // =========================================================================
 
-     
+
+
+
+
     private ServerSocket serverSocket;
 
-    /**
-     * The role name of the slot that disconnected during a partial-disconnect event,
-     * or {@code null} when both clients are connected (or both are gone). E.g.
-     * {@code "WANDERER"} means the Wanderer dropped and the Apprentice is waiting.
-     */
+
+
+
+
+
     private volatile String vacantRole = null;
 
-     
+
     private volatile long partialDisconnectTime = -1;
 
-     
+
     private static final long RECONNECT_TIMEOUT_MS = 90 * 1000L;
 
-     
+
     private SessionSnapshot snapshot = null;
 
-    /**
-     * When {@code true}, the game loop skips packet processing and physics — it only
-     * broadcasts state so the surviving client keeps receiving heartbeat packets and can
-     * render its pause overlay. Set to {@code true} by {@link #handlePartialDisconnect}
-     * and cleared by the reconnect handler.
-     */
+
+
+
+
+
+
     private volatile boolean gamePaused = false;
 
-    // -------------------------------------------------------------------------
-    // Last-known state fields — updated every tick from incoming packets so the
-    // snapshot is accurate at the moment of disconnect.
-    // -------------------------------------------------------------------------
+
+
+
+
 
     private int lastKnownLevel = 1;
     private String lastKnownAct = "ACT1";
@@ -309,36 +309,36 @@ public class GameServer {
     private int lastKnownBlockBudget = 12;
     private String lastKnownBlockType = "BRICK";
 
-    /**
-     * Server-side record of every placed block that is currently on the map.
-     * Each entry is {@code "type|x|y"}.  Updated from {@link Protocol#PLACE_BLOCK}
-     * and {@link Protocol#REMOVE_BLOCK} messages so the snapshot is accurate.
-     */
+
+
+
+
+
     private final List<String> serverPlacedBlocks =
             java.util.Collections.synchronizedList(new ArrayList<>());
 
-    // =========================================================================
-    // Constructor
-    // =========================================================================
 
-    public GameServer() { // Initializes all Cores to CORE_MAX_HEALTH, architect-override disabled, victoryState to IN_PROGRESS
+
+
+
+    public GameServer() {
         this.coreHealth = new int[]{CORE_MAX_HEALTH, CORE_MAX_HEALTH, CORE_MAX_HEALTH, CORE_MAX_HEALTH};
         this.architectOverride = false;
         this.victoryState = VictoryState.IN_PROGRESS;
     }
 
-    // =========================================================================
-    // Entry point
-    // =========================================================================
 
-    public static void main(String[] args) { // Application entry point; binds ServerSocket once and runs infinite outer loop accepting fresh client pairs
+
+
+
+    public static void main(String[] args) {
         System.out.println("Lumen Architect Server starting on port " + PORT + "...");
         ServerSocket serverSocket = null;
         try {
             serverSocket = new ServerSocket(PORT);
-            serverSocket.setReuseAddress(true);   // fast restart on same port
+            serverSocket.setReuseAddress(true);
 
-            while (true) {                        // outer loop — one iteration per session
+            while (true) {
                 System.out.println("[Server] Waiting for players...");
                 GameServer server = new GameServer();
                 server.startSession(serverSocket);
@@ -352,19 +352,19 @@ public class GameServer {
         }
     }
 
-    private static void closeQuietly(ServerSocket s) { // Closes a ServerSocket without throwing
+    private static void closeQuietly(ServerSocket s) {
         if (s != null && !s.isClosed()) {
             try { s.close(); } catch (IOException ignored) {}
         }
     }
 
-    private static void closeQuietly(Socket s) { // Closes a Socket without throwing
+    private static void closeQuietly(Socket s) {
         if (s != null && !s.isClosed()) {
             try { s.close(); } catch (IOException ignored) {}
         }
     }
 
-    private ObjectInputStream readHello(Socket sock) { // Validates freshly-accepted socket by reading RECONNECT_HELLO; returns OIS on success, null if invalid or timeout
+    private ObjectInputStream readHello(Socket sock) {
         ObjectInputStream in = null;
         try {
             sock.setSoTimeout(HELLO_TIMEOUT_MS);
@@ -373,41 +373,41 @@ public class GameServer {
             if (pkt instanceof NetworkProtocol.StringPacket) {
                 String msg = ((NetworkProtocol.StringPacket) pkt).message;
                 if (msg != null && msg.startsWith(Protocol.RECONNECT_HELLO + "|")) {
-                    // Reset the socket timeout so game-loop reads are blocking
-                    // again — a short timeout leaking into the session would
-                    // make the ClientHandler prematurely throw on idle ticks.
+
+
+
                     sock.setSoTimeout(0);
                     return in;
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
-            // fall through to the null return below
+
         }
-        // Best-effort reset of the socket timeout even when rejecting, so a
-        // caller that decides to reuse the socket doesn't inherit the short
-        // validation window.
+
+
+
         try { sock.setSoTimeout(0); } catch (IOException ignored) {}
         return null;
     }
 
-    private static final int HELLO_TIMEOUT_MS = 3000; // Timeout in milliseconds for readHello() to validate client socket
+    private static final int HELLO_TIMEOUT_MS = 3000;
 
-    public void startSession(ServerSocket serverSocket) { // Runs one complete game session; accepts 2 clients, starts handler and game loop threads, blocks until session ends
-        this.serverSocket = serverSocket; // store for reconnect acceptor thread
+    public void startSession(ServerSocket serverSocket) {
+        this.serverSocket = serverSocket;
         try {
-            // Defensive: any prior reconnect-acceptor thread may have leaked a
-            // non-zero SO_TIMEOUT onto this shared ServerSocket. The acceptor's
-            // finally block normally clears it, but a swallowed IOException or
-            // an abrupt thread exit could leave the timeout set, causing this
-            // accept() to throw SocketTimeoutException and kill the new session
-            // before it even begins. Reset to blocking (0) unconditionally.
+
+
+
+
+
+
             try { serverSocket.setSoTimeout(0); }
             catch (IOException ignored) {}
 
-            // ---- Accept first client into SLOT_0 ----
-            // Loop until we get a socket whose RC_HELLO validates. Invalid
-            // sockets (no hello, malformed hello, stray reconnect attempt from
-            // a dead prior session) are silently closed and we accept again.
+
+
+
+
             Socket socket0 = null;
             ObjectInputStream in0 = null;
             while (in0 == null) {
@@ -422,13 +422,13 @@ public class GameServer {
             }
             sockets[SLOT_0] = socket0;
             outs[SLOT_0] = new ObjectOutputStream(socket0.getOutputStream());
-            outs[SLOT_0].flush();   // flush OOS header before client reads it
+            outs[SLOT_0].flush();
             clientConnected[SLOT_0] = true;
-            // Send LOBBY role — actual role is assigned after lobby selection.
+
             outs[SLOT_0].writeObject(new NetworkProtocol.RoleAssignmentPacket("LOBBY"));
             outs[SLOT_0].flush();
 
-            // ---- Accept second client into SLOT_1 ----
+
             Socket socket1 = null;
             ObjectInputStream in1 = null;
             while (in1 == null) {
@@ -448,7 +448,7 @@ public class GameServer {
             outs[SLOT_1].writeObject(new NetworkProtocol.RoleAssignmentPacket("LOBBY"));
             outs[SLOT_1].flush();
 
-            // ---- Start ClientHandler reader threads ----
+
             Thread handler0 = new Thread(
                     new ClientHandler(socket0, in0, SLOT_0),
                     "ClientHandler-SLOT0");
@@ -461,60 +461,60 @@ public class GameServer {
             handler1.setDaemon(true);
             handler1.start();
 
-            // Both handlers running — signal so clients start their game loops
+
             this.bothConnected = true;
 
-            // ---- Start server game loop ----
+
             Thread gameLoop = new Thread(this::runGameLoop, "ServerLoop");
-            gameLoop.setDaemon(true);   // daemon: outer main() loop keeps JVM alive
+            gameLoop.setDaemon(true);
             gameLoop.start();
 
             System.out.println("[Server] Both players connected. Starting game.");
-            gameLoop.join();   // block until the session ends
+            gameLoop.join();
 
         } catch (IOException e) {
             System.out.println("[Server] Session I/O error: " + e.getMessage());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
-            // Close every socket that may have been used during this session,
-            // including any replacement sockets opened by the reconnect handler.
+
+
             for (Socket s : sockets) closeQuietly(s);
             System.out.println("[Server] Session sockets closed.");
         }
     }
 
-    // =========================================================================
-    // Game loop (Thread 3 — 60 fps)
-    // =========================================================================
 
-    /**
-     * Runs the server game loop at approximately 60 fps. Each tick drains the
-     * {@link #sharedQueue}, processes every pending packet, then broadcasts the
-     * consolidated {@link NetworkProtocol.ServerStatePacket} to both clients. Exits
-     * when {@link #victoryState} is no longer {@link VictoryState#IN_PROGRESS}.
-     */
+
+
+
+
+
+
+
+
+
     private void runGameLoop() {
         try {
             while (victoryState == VictoryState.IN_PROGRESS && sessionActive) {
                 long tickStart = System.currentTimeMillis();
 
                 if (gamePaused) {
-                    // PAUSED_WAITING: do not process incoming game packets (they are
-                    // stale from before the disconnect). Just broadcast so the
-                    // surviving client keeps receiving heartbeat state updates.
+
+
+
                     sharedQueue.clear();
                     broadcastState();
                 } else {
-                    // Drain the shared queue and process each packet
+
                     Object packet;
                     while ((packet = sharedQueue.poll()) != null) {
                         processPacket(packet);
                     }
-                    // Cutscene auto-advance guard: if a cutscene has been
-                    // active longer than CUTSCENE_GUARD_MS without both acks,
-                    // force the resume so the session cannot hang on a dropped
-                    // CUT_ACK from either slot.
+
+
+
+
                     if (activeCutsceneId != null
                             && (System.currentTimeMillis() - cutsceneStartMs)
                                     > CUTSCENE_GUARD_MS) {
@@ -522,20 +522,20 @@ public class GameServer {
                                 + "forcing resume of " + activeCutsceneId);
                         endCutscene(activeCutsceneId);
                     }
-                    // P8.3 — step the server-authoritative light ball each
-                    // tick during BOSS so its position eases toward the most
-                    // recent Apprentice target without teleporting. The ball
-                    // is null outside BOSS; inside BOSS, stepping continues
-                    // even when a cutscene is active so the light is already
-                    // in the right place on cutscene resume.
+
+
+
+
+
+
                     if (bossPhaseActive && lightBall != null) {
                         lightBall.step();
                     }
-                    // Broadcast consolidated state snapshot
+
                     broadcastState();
                 }
 
-                // Sleep for the remainder of this tick
+
                 long elapsed = System.currentTimeMillis() - tickStart;
                 long remaining = TICK_MS - elapsed;
                 if (remaining > 0) {
@@ -554,29 +554,29 @@ public class GameServer {
         }
     }
 
-    // =========================================================================
-    // Packet processing (called on the game loop thread)
-    // =========================================================================
 
-    /**
-     * Dispatches a single inbound packet to the appropriate handler. All mutations to
-     * shared game state are performed here, ensuring they occur on the single game loop
-     * thread.
-     *
-     * @param packet the deserialized packet object; never {@code null}
-     */
+
+
+
+
+
+
+
+
+
+
     private void processPacket(Object packet) {
         if (packet instanceof NetworkProtocol.PlayerStatePacket) {
             NetworkProtocol.PlayerStatePacket p = (NetworkProtocol.PlayerStatePacket) packet;
             latestPlayerState = p;
-            // Track last-known wanderer state for snapshot accuracy
+
             lastKnownWandererX = p.x;
             lastKnownWandererY = p.y;
             lastKnownWandererHealth = p.health;
-            // Wanderer death → P8.10: play ARCHITECT_VICTORY cutscene first,
-            // then commit VictoryState and broadcast VictoryPacket in endCutscene.
-            // Only fires during the boss fight; in Acts 1-3 the client restarts
-            // at Act 1 with full health instead of triggering the architect win.
+
+
+
+
             if (p.health <= 0 && bossPhaseActive
                     && victoryState == VictoryState.IN_PROGRESS
                     && pendingVictoryState == null) {
@@ -586,7 +586,7 @@ public class GameServer {
 
         } else if (packet instanceof NetworkProtocol.FragmentCollectedPacket) {
             NetworkProtocol.FragmentCollectedPacket f = (NetworkProtocol.FragmentCollectedPacket) packet;
-            // Only relay if this fragment has not already been recorded (dedup guard)
+
             if (serverCollectedFragments.add(f.fragmentID)) {
                 broadcastToAll(f);
             }
@@ -596,36 +596,36 @@ public class GameServer {
             handleCoreHit(h.coreIndex);
 
         } else if (packet instanceof NetworkProtocol.StringPacket) {
-            // Parse the text-protocol message to update last-known state for snapshot,
-            // then relay to both clients without modification.
+
+
             String msg = ((NetworkProtocol.StringPacket) packet).message;
             if (msg != null) updateLastKnownFromMessage(msg);
             broadcastToAll(packet);
         }
     }
 
-    /**
-     * Inspects an inbound pipe-delimited protocol message and, if it represents a
-     * state-relevant event (position, light, block placement/removal, level change),
-     * updates the corresponding {@code lastKnown*} field so {@link #captureSnapshot()}
-     * reflects the true most-recent state. Unknown or non-state messages are ignored.
-     *
-     * @param msg the inbound message string, e.g. {@code "POS|WANDERER|150|400|0|0|run"}
-     */
+
+
+
+
+
+
+
+
     private void updateLastKnownFromMessage(String msg) {
         try {
             String[] p = msg.split("\\|");
             if (p.length == 0) return;
             switch (p[0]) {
                 case Protocol.PLAYER_POS:
-                    // POS|WANDERER|x|y|vx|vy|state
+
                     if (p.length >= 4 && "WANDERER".equals(p[1])) {
                         lastKnownWandererX = Float.parseFloat(p[2]);
                         lastKnownWandererY = Float.parseFloat(p[3]);
                     }
                     break;
                 case Protocol.LIGHT_UPDATE:
-                    // LIGHT|x|y|radius
+
                     if (p.length >= 4) {
                         lastKnownLightX = Integer.parseInt(p[1]);
                         lastKnownLightY = Integer.parseInt(p[2]);
@@ -633,7 +633,7 @@ public class GameServer {
                     }
                     break;
                 case Protocol.PLACE_BLOCK:
-                    // PLACE|type|x|y
+
                     if (p.length >= 4) {
                         serverPlacedBlocks.add(p[1] + "|" + p[2] + "|" + p[3]);
                         if (lastKnownBlockBudget > 0) lastKnownBlockBudget--;
@@ -641,7 +641,7 @@ public class GameServer {
                     }
                     break;
                 case Protocol.REMOVE_BLOCK:
-                    // REMOVE|x|y — remove the block whose centre is closest to (x,y)
+
                     if (p.length >= 3) {
                         try {
                             int rx = Integer.parseInt(p[1]);
@@ -663,7 +663,7 @@ public class GameServer {
                     }
                     break;
                 case Protocol.LEVEL_CHANGE:
-                    // LEVEL|levelIndex — reset budget and update act string
+
                     if (p.length >= 2) {
                         try {
                             int lvl = Integer.parseInt(p[1]);
@@ -679,51 +679,51 @@ public class GameServer {
                     break;
             }
         } catch (NumberFormatException ignored) {
-            // Malformed message — ignore for snapshot purposes, relay still happens
+
         }
     }
 
-    /**
-     * Maps a one-based level index to its corresponding act string for snapshot
-     * metadata. Must exactly mirror the mapping used by
-     * {@link GameStarter#loadLevel(int, boolean)} on the client:
-     * level 1 → ACT1, level 2 → ACT2, level 3 → ACT3.
-     * Level 4 is the boss arena (phase BOSS); this method returns "ACT3"
-     * as a logging fallback — the BOSS phase is set by the client directly.
-     */
+
+
+
+
+
+
+
+
     private static String actFromLevel(int lvl) {
         if (lvl == 1) return "ACT1";
         if (lvl == 2) return "ACT2";
         if (lvl == 3) return "ACT3";
-        return "ACT3"; // fallback — boss arena (level 4) or any out-of-range value
+        return "ACT3";
     }
 
-    /**
-     * Convenience method: wraps {@code message} in a {@link NetworkProtocol.StringPacket}
-     * and broadcasts it to both connected clients.
-     *
-     * @param message the pipe-delimited protocol message to send
-     */
+
+
+
+
+
+
     private void broadcast(String message) {
         broadcastToAll(new NetworkProtocol.StringPacket(message));
     }
 
-    // =========================================================================
-    // Cutscene lock-step (P8.0)
-    // =========================================================================
 
-    /**
-     * Handles a {@code CUT_TRIGGER|<id>} or {@link Protocol#CUTSCENE_ACK} message
-     * from the given slot. Triggers are authoritative: the first valid trigger
-     * broadcasts a start {@link NetworkProtocol.CutscenePacket} to both clients
-     * and resets the per-slot ack tracker. Acks are counted per-slot so a
-     * duplicate ack from the same client does not prematurely resume; once both
-     * slots have acked (or the 30 s guard has expired in {@link #runGameLoop()})
-     * the server broadcasts the resume packet.
-     *
-     * @param msg  the raw pipe-delimited message
-     * @param slot the slot that sent it (0 or 1)
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private void handleCutsceneMessage(String msg, int slot) {
         String[] parts = msg.split("\\|");
         if (parts.length < 2) return;
@@ -744,13 +744,13 @@ public class GameServer {
         }
     }
 
-    /**
-     * Starts a server-authoritative cutscene: records the id, zeroes per-slot
-     * acks, captures the start timestamp for the 30 s guard, and broadcasts a
-     * start {@link NetworkProtocol.CutscenePacket} to both clients.
-     *
-     * @param id the {@link CutsceneID} name string; ignored if invalid
-     */
+
+
+
+
+
+
+
     void startCutscene(String id) {
         if (id == null) return;
         try { CutsceneID.valueOf(id); }
@@ -763,13 +763,13 @@ public class GameServer {
         System.out.println("[Server] Cutscene start broadcast: " + id);
     }
 
-    /**
-     * Ends the currently-active cutscene by broadcasting a resume packet and
-     * clearing the ack tracker. Only called when both clients have acked or the
-     * 30 s guard fires in {@link #runGameLoop()}.
-     *
-     * @param id the cutscene id that is being resumed
-     */
+
+
+
+
+
+
+
     private void endCutscene(String id) {
         if (id == null || !id.equals(activeCutsceneId)) return;
         broadcastToAll(new NetworkProtocol.CutscenePacket(id, false));
@@ -779,9 +779,9 @@ public class GameServer {
         this.cutsceneAcked[1] = false;
         this.cutsceneStartMs  = 0L;
 
-        // P8.10 — endgame cutscene chain.
-        // Wanderer path: CORE_4_DESTROYED → WANDERER_VICTORY → HOME → VictoryPacket
-        // Architect path: ARCHITECT_VICTORY → VictoryPacket
+
+
+
         if (pendingVictoryState == VictoryState.WANDERER_WIN) {
             if (CutsceneID.CORE_4_DESTROYED.name().equals(id)) {
                 startCutscene(CutsceneID.WANDERER_VICTORY.name());
@@ -802,25 +802,25 @@ public class GameServer {
         }
     }
 
-    // =========================================================================
-    // Boss-arena transition (P8.2)
-    // =========================================================================
 
-    /**
-     * Handles a {@link Protocol#BOSS_ENTER} message from the Wanderer client,
-     * which is sent when the Wanderer collides with the portal on the final
-     * regular level. On the first call per session, the server picks a
-     * deterministic seed, broadcasts {@link Protocol#BOSS_ARENA} so both clients
-     * generate the identical arena locally, then launches the
-     * {@link CutsceneID#ARCHITECT_SPEAKS} cutscene via {@link #startCutscene}
-     * (which reuses the existing P8.0 lock-step path so both clients ack before
-     * gameplay resumes in the boss arena). Subsequent triggers during the same
-     * session are ignored.
-     *
-     * @param slot the slot index (0 or 1) that sent the message; only the slot
-     *             currently holding the {@code WANDERER} role is allowed to
-     *             trigger the transition
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private synchronized void handleBossEnter(int slot) {
         if (bossArenaStarted) return;
         if (slot < 0 || slot >= 2) return;
@@ -832,39 +832,39 @@ public class GameServer {
         bossArenaSeed = System.currentTimeMillis();
         System.out.println("[Server] BOSS_ENTER received — arena seed=" + bossArenaSeed);
 
-        // P8.3 — instantiate the server-authoritative LightBall at arena centre
-        // so the very first ServerStatePacket after arena entry carries a
-        // sensible light position. runGameLoop() will step() it each tick from
-        // here on, and the ball will start chasing real Apprentice input as
-        // soon as the first Protocol.LIGHT_TARGET arrives.
+
+
+
+
+
         this.lightBall = new LightBall(ARENA_W / 2f, ARENA_H / 2f);
         this.bossPhaseActive = true;
 
-        // Broadcast the arena seed first so both clients have the boss arena
-        // built (and their phase set to BOSS) by the time the cutscene ends.
+
+
         broadcast(Protocol.BOSS_ARENA + "|" + bossArenaSeed);
 
-        // Now drive the server-authoritative ARCHITECT_SPEAKS cutscene via the
-        // existing P8.0 lock-step path. Clients will suspend world/HUD rendering
-        // and ack individually; resume fires automatically via endCutscene once
-        // both acks arrive (or after the 30 s auto-advance guard).
+
+
+
+
         startCutscene(CutsceneID.ARCHITECT_SPEAKS.name());
     }
 
-    // =========================================================================
-    // Light ball — inbound target handling (P8.3)
-    // =========================================================================
 
-    /**
-     * Handles a {@link Protocol#LIGHT_TARGET} message from the Apprentice,
-     * updating the chase target of the server-authoritative {@link LightBall}.
-     * Ignored when the session is not in BOSS or the ball has not yet been
-     * instantiated; ignored when sent from the non-Apprentice slot (the
-     * Wanderer has no authority over the light during boss).
-     *
-     * @param msg  the raw pipe-delimited message, e.g. {@code "LT|1536.0|1152.0"}
-     * @param slot the slot index (0 or 1) that sent it
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
     private void handleLightTargetMessage(String msg, int slot) {
         if (!bossPhaseActive || lightBall == null) return;
         if (slot < 0 || slot >= 2) return;
@@ -876,24 +876,24 @@ public class GameServer {
             float ty = Float.parseFloat(parts[2]);
             lightBall.setTarget(tx, ty);
         } catch (NumberFormatException ignored) {
-            // Malformed LT message — silently drop.
+
         }
     }
 
-    // =========================================================================
-    // Pre-boss altar handler (P8.6)
-    // =========================================================================
 
-    /**
-     * Handles an {@link Protocol#ALTAR_CHOICE} message from the Wanderer client.
-     * Validates that the sender is the Wanderer and that the {@code choice} is
-     * one of the two known values, then broadcasts an authoritative
-     * {@link Protocol#ALTAR_RESULT} string packet to both clients so each side
-     * can apply the mechanical effect and dismiss the overlay.
-     *
-     * @param msg  raw pipe-delimited message: {@code ALTAR_CHOICE|<altarId>|<choice>}
-     * @param slot the slot index (0 or 1) that sent it
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
     private synchronized void handleAltarChoice(String msg, int slot) {
         if (!"WANDERER".equals(roleForSlot(slot))) return;
         String[] parts = msg.split("\\|");
@@ -911,44 +911,44 @@ public class GameServer {
         System.out.println("[Server] Altar " + altarId + " resolved: " + choice);
     }
 
-    // =========================================================================
-    // Boss attack dispatcher (P8.5)
-    // =========================================================================
 
-    /**
-     * Handles an {@link Protocol#ATTACK} request message from the Apprentice
-     * client. The message format is {@code ATTACK|<type>|<x>|<y>} where the
-     * type must match one of {@link #ATTACK_TYPES}. Dispatch is gated on:
-     * <ol>
-     *   <li>sender slot role = {@code "APPRENTICE"} (the Wanderer cannot fire
-     *       boss attacks; doing so would let the victim conjure their own
-     *       hazards and desync damage accounting);</li>
-     *   <li>{@link #bossPhaseActive} — attacks are a BOSS-only feature;</li>
-     *   <li>{@link #architectOverride} — the first Core destruction flips this
-     *       flag, which is the design-level unlock for the full boss kit;</li>
-     *   <li>{@code currentMs >= attackCooldownUntilMs[type]} — the per-type
-     *       spawn cooldown.</li>
-     * </ol>
-     * On acceptance the cooldown is stamped forward by {@link #ATTACK_COOLDOWN_MS}
-     * and a {@link Protocol#BOSS_ATK} message is broadcast to both clients so
-     * each side locally instantiates the matching {@link BossAttack} subclass
-     * and renders / applies damage from the same authoritative spawn event.
-     *
-     * <p>Intercepted and handled on the {@link ClientHandler} thread (mirroring
-     * the {@code BOSS_ENTER}/{@code LIGHT_TARGET}/{@code CUT_TRIGGER} pattern)
-     * so the dispatch broadcast fires immediately rather than at the next
-     * game-loop tick, and so the original Apprentice-side {@code ATTACK}
-     * string is never relayed verbatim to both clients.
-     *
-     * @param msg  the raw pipe-delimited message, e.g. {@code "ATTACK|SEARING_BEAM|1536|1152"}
-     * @param slot the slot index (0 or 1) that sent it
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private synchronized void handleAttackMessage(String msg, int slot) {
         if (!bossPhaseActive) return;
         if (!architectOverride) return;
         if (slot < 0 || slot >= 2) return;
         if (!"APPRENTICE".equals(roleForSlot(slot))) {
-            // Silently drop — only the Apprentice may spawn boss attacks.
+
             return;
         }
         String[] parts = msg.split("\\|");
@@ -959,19 +959,19 @@ public class GameServer {
             if (ATTACK_TYPES[i].equals(type)) { typeIdx = i; break; }
         }
         if (typeIdx < 0) {
-            // Unknown attack type — drop without echoing to clients.
+
             return;
         }
         long now = System.currentTimeMillis();
-        // P8.8 — the Architect is stunned while `now < architectStunnedUntilMs`.
-        // All dispatches during the window are silently dropped; the per-type
-        // cooldown is intentionally NOT stamped so the Apprentice's usual
-        // rhythm resumes cleanly once the stun expires.
+
+
+
+
         if (now < architectStunnedUntilMs) {
             return;
         }
         if (now < attackCooldownUntilMs[typeIdx]) {
-            // Per-type cooldown still active — drop without echoing.
+
             return;
         }
 
@@ -983,36 +983,36 @@ public class GameServer {
             return;
         }
 
-        // Stamp the cooldown forward and broadcast the authoritative dispatch.
+
         attackCooldownUntilMs[typeIdx] = now + ATTACK_COOLDOWN_MS[typeIdx];
         broadcast(Protocol.BOSS_ATK + "|" + type + "|" + x + "|" + y + "|" + now);
         System.out.println("[Server] Boss attack dispatched: " + type
                 + " at (" + x + ", " + y + ")");
 
-        // P8.8 — per attack interval, roll a stun opportunity weighted by the
-        // Wanderer's faithful meter: P = 0.1 + 0.08 * faithful. The roll is
-        // gated on STUN_OPPORTUNITY_COOLDOWN_MS so two attacks fired within
-        // the same cooldown window cannot spam back-to-back opportunities.
+
+
+
+
         maybeRollStunOpportunity(now);
     }
 
-    /**
-     * Rolls a stun-opportunity chance tied to the most recent Wanderer
-     * {@link NetworkProtocol.PlayerStatePacket#faithful} value. On success,
-     * broadcasts {@code STUN_OPP|<durationMs>|<faithful>} so the Wanderer
-     * client opens the {@link StunMinigame} overlay; the Apprentice ignores
-     * the payload. A global cooldown ({@link #STUN_OPPORTUNITY_COOLDOWN_MS})
-     * prevents rapid attacks from chaining windows.
-     *
-     * @param now wall-clock ms at the time of the roll
-     */
+
+
+
+
+
+
+
+
+
+
     private void maybeRollStunOpportunity(long now) {
         if (now < stunOpportunityCooldownUntilMs) return;
-        // Opportunities are pointless while the Architect is already stunned.
+
         if (now < architectStunnedUntilMs) return;
         int faithful = (latestPlayerState != null) ? latestPlayerState.faithful : 0;
         faithful = Math.max(0, Math.min(5, faithful));
-        double p = 0.10 + 0.08 * faithful; // faithful=0 → 10%, faithful=5 → 50%
+        double p = 0.10 + 0.08 * faithful;
         if (stunRng.nextDouble() >= p) return;
         stunOpportunityCooldownUntilMs = now + STUN_OPPORTUNITY_COOLDOWN_MS;
         broadcast(Protocol.STUN_OPPORTUNITY + "|"
@@ -1022,22 +1022,22 @@ public class GameServer {
                 + ", P=" + String.format("%.2f", p) + ")");
     }
 
-    /**
-     * Handles a {@link Protocol#STUN_RESULT} message reported by the Wanderer
-     * client. On {@code success=1} the Architect is stunned for
-     * {@link StunMinigame#STUN_DURATION_MS} ms — {@link #handleAttackMessage(String, int)}
-     * silently drops BOSS_ATK dispatches for that window. Both outcomes are
-     * echoed back to clients so the Apprentice HUD can flash a banner. The
-     * Apprentice cannot originate a STUN_RES (defence against a desync-griefing
-     * client); the check is enforced by slot role.
-     *
-     * @param msg  raw pipe-delimited message: {@code STUN_RES|<success>}
-     * @param slot slot index (0 or 1) that sent it
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     private synchronized void handleStunResultMessage(String msg, int slot) {
         if (!bossPhaseActive) return;
         if (slot < 0 || slot >= 2) return;
-        if (!"WANDERER".equals(roleForSlot(slot))) return; // only the Wanderer may report
+        if (!"WANDERER".equals(roleForSlot(slot))) return;
         String[] parts = msg.split("\\|");
         if (parts.length < 2) return;
         int success;
@@ -1054,51 +1054,51 @@ public class GameServer {
         } else {
             System.out.println("[Server] Stun minigame failed");
         }
-        // Echo the authoritative outcome back to both clients.
+
         broadcast(Protocol.STUN_RESULT + "|" + success);
     }
 
-    // =========================================================================
-    // Core destruction logic
-    // =========================================================================
 
-    /**
-     * Applies one point of damage to the Core at {@code coreIndex}. If the Core's
-     * health reaches zero it is marked destroyed: the first destruction activates
-     * architect-override (boss fight begins) and all four destructions trigger a
-     * Wanderer victory.
-     *
-     * @param coreIndex the zero-based index of the Core that was hit; out-of-range or
-     *                  already-destroyed Cores are silently ignored
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     private void handleCoreHit(int coreIndex) {
         if (coreIndex < 0 || coreIndex >= CORE_COUNT) return;
-        if (coreHealth[coreIndex] <= 0) return; // already destroyed
+        if (coreHealth[coreIndex] <= 0) return;
 
         coreHealth[coreIndex]--;
 
-        // P8.5 — broadcast every hit (not just destructions) so the client HUD
-        // can flash / play a hit-confirm SFX alongside the authoritative
-        // CoreStatePacket that carries the new health values.
+
+
+
         broadcast(Protocol.CORE_DAMAGED + "|" + coreIndex);
 
         if (coreHealth[coreIndex] <= 0) {
             destroyedCoreCount++;
 
-            // First Core destroyed — boss fight phase begins
+
             if (destroyedCoreCount == 1) {
                 architectOverride = true;
             }
 
-            // Broadcast updated Core health immediately
+
             broadcastToAll(new NetworkProtocol.CoreStatePacket(coreHealth.clone()));
 
-            // P8.5 — fire the paired CORE_n_DESTROYED cutscene via the P8.0
-            // lock-step path. coreIndex is 0-based on the wire but the cutscene
-            // names are 1-based (CORE_1_DESTROYED … CORE_4_DESTROYED), so we
-            // add one when resolving the enum. The all-four-destroyed case
-            // still broadcasts VictoryPacket below; the WANDERER_VICTORY →
-            // HOME chain itself belongs to P8.10.
+
+
+
+
+
+
             String cutsceneName = "CORE_" + (coreIndex + 1) + "_DESTROYED";
             try {
                 CutsceneID cid = CutsceneID.valueOf(cutsceneName);
@@ -1108,9 +1108,9 @@ public class GameServer {
                         + " — skipping trigger.");
             }
 
-            // All four Cores destroyed — P8.10: set pending state; the
-            // WANDERER_VICTORY → HOME chain starts in endCutscene after the
-            // CORE_4_DESTROYED cutscene (started above) acks on both clients.
+
+
+
             if (destroyedCoreCount >= CORE_COUNT) {
                 architectOverride = false;
                 pendingVictoryState = VictoryState.WANDERER_WIN;
@@ -1118,20 +1118,20 @@ public class GameServer {
         }
     }
 
-    // =========================================================================
-    // Broadcasting
-    // =========================================================================
 
-    /**
-     * Serialises the current server state into a {@link NetworkProtocol.ServerStatePacket}
-     * and writes it to every connected client's output stream. Called once per game loop
-     * tick after all queued packets have been processed.
-     */
+
+
+
+
+
+
+
+
     public synchronized void broadcastState() {
-        // P8.3 — expose the server-authoritative LightBall position so both
-        // clients centre the boss-phase light mask on the same world-space
-        // point. Outside BOSS (lightBall == null) we carry 0/0; the client
-        // explicitly ignores these fields in non-BOSS rendering paths.
+
+
+
+
         float lx = (lightBall != null) ? lightBall.getX() : 0f;
         float ly = (lightBall != null) ? lightBall.getY() : 0f;
         NetworkProtocol.ServerStatePacket state = new NetworkProtocol.ServerStatePacket(
@@ -1147,22 +1147,22 @@ public class GameServer {
         broadcastToAll(state);
     }
 
-    /**
-     * Writes {@code obj} to each connected client's {@link ObjectOutputStream}. If a
-     * write fails for a particular client, that client is marked disconnected. The method
-     * is {@code synchronized} so that the game loop thread and the {@link ClientHandler}
-     * disconnect-notification path cannot interleave writes on the same stream.
-     *
-     * @param obj the serializable packet to send; must not be {@code null}
-     */
+
+
+
+
+
+
+
+
     private synchronized void broadcastToAll(Object obj) {
         for (int i = 0; i < 2; i++) {
             if (clientConnected[i] && outs[i] != null) {
                 try {
                     outs[i].writeObject(obj);
                     outs[i].flush();
-                    // Reset the stream to prevent ObjectOutputStream from caching
-                    // object references, which would stop updated fields from being sent.
+
+
                     outs[i].reset();
                 } catch (IOException e) {
                     System.out.println("Write failed for client slot " + i
@@ -1173,23 +1173,23 @@ public class GameServer {
         }
     }
 
-    // =========================================================================
-    // Slot ↔ role resolution helpers
-    // =========================================================================
 
-    /**
-     * Returns the role string currently bound to the given slot, or {@code null}
-     * if the lobby has not yet assigned a role to that slot.
-     */
+
+
+
+
+
+
+
     private String roleForSlot(int slot) {
         if (slot < 0 || slot >= lobbySelectedRole.length) return null;
         return lobbySelectedRole[slot];
     }
 
-    /**
-     * Returns the slot index that has committed to the given role, or {@code -1}
-     * if no slot currently holds that role.
-     */
+
+
+
+
     private int slotForRole(String role) {
         if (role == null) return -1;
         for (int i = 0; i < lobbySelectedRole.length; i++) {
@@ -1198,25 +1198,25 @@ public class GameServer {
         return -1;
     }
 
-     
+
     private boolean apprenticeLevelReady() {
         int slot = slotForRole("APPRENTICE");
         return slot >= 0 && levelReady[slot];
     }
 
-    // =========================================================================
-    // Lobby logic (called from ClientHandler threads — all methods synchronized)
-    // =========================================================================
 
-    /**
-     * Handles a single LOBBY_HOVER, LOBBY_SELECT, or LOBBY_CANCEL message from a client.
-     * Updates the per-slot lobby state and broadcasts the new {@link Protocol#LOBBY_STATE}
-     * to both clients. When both slots have selected different roles, also calls
-     * {@link #checkLobbyComplete()}.
-     *
-     * @param msg        the raw pipe-delimited message string
-     * @param senderSlot the slot index (0 or 1) of the client that sent the message
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     private synchronized void handleLobbyMessage(String msg, int senderSlot) {
         String[] parts = msg.split("\\|");
         if (parts.length < 2) return;
@@ -1230,10 +1230,10 @@ public class GameServer {
 
             case Protocol.LOBBY_SELECT:
                 if (!rolePart.equals("WANDERER") && !rolePart.equals("APPRENTICE")) break;
-                // Deny if the other slot already holds this role
+
                 int other = 1 - senderSlot;
                 if (rolePart.equals(lobbySelectedRole[other])) {
-                    broadcastLobbyState(); // send update so UI reflects blocked state
+                    broadcastLobbyState();
                     break;
                 }
                 lobbySelectedRole[senderSlot] = rolePart;
@@ -1255,10 +1255,10 @@ public class GameServer {
         }
     }
 
-    /**
-     * Builds and broadcasts a {@link Protocol#LOBBY_STATE} message encoding the current
-     * taken/hovered state of both role cards. Called after every lobby state mutation.
-     */
+
+
+
+
     private synchronized void broadcastLobbyState() {
         boolean wTaken = "WANDERER".equals(lobbySelectedRole[0])
                       || "WANDERER".equals(lobbySelectedRole[1]);
@@ -1276,11 +1276,11 @@ public class GameServer {
         broadcastToAll(new NetworkProtocol.StringPacket(state));
     }
 
-    /**
-     * Checks whether both lobby slots have selected a role. If so, writes a
-     * {@link Protocol#LOBBY_START} message directly to each slot's output stream so each
-     * client learns its own assigned role and can begin loading level 1.
-     */
+
+
+
+
+
     private synchronized void checkLobbyComplete() {
         if (lobbySelectedRole[0] == null || lobbySelectedRole[1] == null) return;
         System.out.println("[Lobby] Both roles selected — sending LOBBY_START to each slot.");
@@ -1300,19 +1300,19 @@ public class GameServer {
         }
     }
 
-    // =========================================================================
-    // Session persistence / reconnect logic
-    // =========================================================================
 
-    /**
-     * Captures a point-in-time snapshot of all server-authoritative game state. The
-     * returned {@link SessionSnapshot} is used by {@link #sendSnapshot} to rebuild the
-     * game world on a reconnecting client. All {@code lastKnown*} fields are maintained
-     * by {@link #updateLastKnownFromMessage} and {@link #processPacket} so the snapshot
-     * reflects the true most-recent state at the moment of capture.
-     *
-     * @return a fresh {@code SessionSnapshot} populated with the current game state
-     */
+
+
+
+
+
+
+
+
+
+
+
+
     private synchronized SessionSnapshot captureSnapshot() {
         SessionSnapshot snap = new SessionSnapshot();
         snap.currentLevel     = lastKnownLevel;
@@ -1336,25 +1336,25 @@ public class GameServer {
         return snap;
     }
 
-    /**
-     * Transitions the session from active play into the paused-waiting state. Called by
-     * {@link ClientHandler#handleClientDisconnect} when exactly one of the two clients
-     * drops and the other is still alive. Captures a snapshot, marks the session
-     * paused, closes the disconnected client's socket, notifies the surviving client
-     * via {@link Protocol#PARTNER_DISCONNECTED} and {@link Protocol#GAME_PAUSE}, and
-     * spawns the reconnect acceptor thread.
-     *
-     * @param disconnectedSlot slot index of the client that just left (0 = Wanderer,
-     *                         1 = Apprentice)
-     */
-    private synchronized void handlePartialDisconnect(int disconnectedSlot) {
-        if (vacantRole != null) return;   // already in partial-disconnect state
-        if (!sessionActive)     return;   // session is ending anyway
 
-        // Lobby must have completed before we can meaningfully hold a session
-        // for a single-client reconnect — we need a committed role-to-slot
-        // mapping. If a client drops during the lobby phase, just terminate so
-        // main() spawns a fresh server for the next pair.
+
+
+
+
+
+
+
+
+
+
+    private synchronized void handlePartialDisconnect(int disconnectedSlot) {
+        if (vacantRole != null) return;
+        if (!sessionActive)     return;
+
+
+
+
+
         String disconnectedRole = lobbySelectedRole[disconnectedSlot];
         if (disconnectedRole == null) {
             System.out.println("[Server] Client dropped before lobby completed — "
@@ -1373,13 +1373,13 @@ public class GameServer {
         snapshot              = captureSnapshot();
         gamePaused            = true;
 
-        // Close the disconnected client's socket cleanly; leave outs[]/sockets[] null
-        // so that broadcastToAll skips the empty slot.
+
+
         closeQuietly(sockets[disconnectedSlot]);
         sockets[disconnectedSlot] = null;
         outs[disconnectedSlot]    = null;
 
-        // Notify the surviving client so it can raise the PAUSED_WAITING overlay.
+
         if (clientConnected[survivingSlot] && outs[survivingSlot] != null) {
             try {
                 outs[survivingSlot].writeObject(new NetworkProtocol.StringPacket(
@@ -1393,7 +1393,7 @@ public class GameServer {
                 System.out.println("[Server] Failed to notify surviving client: "
                         + e.getMessage());
                 clientConnected[survivingSlot] = false;
-                sessionActive = false;   // nobody left — bail out
+                sessionActive = false;
                 return;
             }
         }
@@ -1401,28 +1401,28 @@ public class GameServer {
         startReconnectAcceptor();
     }
 
-    /**
-     * Spawns a daemon thread that waits on the shared {@link ServerSocket} for a
-     * reconnecting client. Uses a short accept timeout so it can periodically
-     * broadcast the remaining reconnect window via {@link Protocol#RECONNECT_TIMER}
-     * and abort if the five-minute cap expires.
-     */
+
+
+
+
+
+
     private void startReconnectAcceptor() {
         Thread t = new Thread(() -> {
             long lastTimerBroadcast = 0;
             try {
-                serverSocket.setSoTimeout(2000); // 2s poll interval
+                serverSocket.setSoTimeout(2000);
                 while (gamePaused && sessionActive && vacantRole != null) {
                     try {
                         Socket newSocket = serverSocket.accept();
-                        // Validate RC_HELLO BEFORE committing the socket to
-                        // the session. This is the critical guard against
-                        // ghost reconnects — a stray TCP connection (e.g. a
-                        // dying client's auto-reconnect attempt, a port scan,
-                        // a stale background process) that cannot produce a
-                        // valid RC_HELLO within 3 seconds is closed and the
-                        // acceptor keeps waiting for the real returning
-                        // player.
+
+
+
+
+
+
+
+
                         ObjectInputStream newIn = readHello(newSocket);
                         if (newIn == null) {
                             System.out.println("[Server] Reconnect acceptor "
@@ -1430,12 +1430,12 @@ public class GameServer {
                                     + newSocket.getInetAddress()
                                     + " — continuing to wait.");
                             closeQuietly(newSocket);
-                            continue; // keep accepting
+                            continue;
                         }
                         System.out.println("[Server] Reconnecting client accepted from "
                                 + newSocket.getInetAddress());
                         handleReconnectingClient(newSocket, newIn);
-                        return; // reconnect complete — stop accepting
+                        return;
                     } catch (SocketTimeoutException ignored) {
                         long elapsed = System.currentTimeMillis() - partialDisconnectTime;
                         long remaining = RECONNECT_TIMEOUT_MS - elapsed;
@@ -1446,7 +1446,7 @@ public class GameServer {
                             sessionActive = false;
                             return;
                         }
-                        // Broadcast RC_TIMER once per second (approximately)
+
                         if (System.currentTimeMillis() - lastTimerBroadcast >= 1000) {
                             broadcast(Protocol.RECONNECT_TIMER + "|" + (remaining / 1000));
                             lastTimerBroadcast = System.currentTimeMillis();
@@ -1458,10 +1458,10 @@ public class GameServer {
                         + e.getMessage());
                 sessionActive = false;
             } finally {
-                // CRITICAL: always reset SO_TIMEOUT so the next call to
-                // serverSocket.accept() (in startSession) blocks normally. A
-                // leaked 2000ms timeout here produces the "Session I/O error:
-                // Accept timed out" symptom on the next session.
+
+
+
+
                 try {
                     if (serverSocket != null && !serverSocket.isClosed()) {
                         serverSocket.setSoTimeout(0);
@@ -1477,33 +1477,33 @@ public class GameServer {
         t.start();
     }
 
-    /**
-     * Wires a newly accepted reconnecting socket into the vacant role slot. Opens
-     * the new {@link ObjectOutputStream}, sends the {@link NetworkProtocol.RoleAssignmentPacket}
-     * with the vacant role, streams the full snapshot, starts a fresh
-     * {@link ClientHandler} reader thread, and finally notifies the surviving client
-     * via {@link Protocol#PARTNER_RECONNECTED} and {@link Protocol#GAME_RESUME}. On
-     * any failure the new socket is closed and the session terminates.
-     *
-     * @param newSocket the freshly accepted client socket from the reconnect listener
-     */
+
+
+
+
+
+
+
+
+
+
     private synchronized void handleReconnectingClient(Socket newSocket,
                                                        ObjectInputStream newIn) {
         if (vacantRole == null || snapshot == null) {
             closeQuietly(newSocket);
             return;
         }
-        // Snapshot the vacant role and payload into locals BEFORE the long I/O
-        // section, then clear the shared state immediately. This prevents the
-        // reconnect-acceptor thread from firing a stale RC_TIMER broadcast
-        // during the (potentially lengthy) sendSnapshot call — the acceptor's
-        // while-loop condition (vacantRole != null) now goes false right away.
+
+
+
+
+
         String            reconnectingRole = vacantRole;
         SessionSnapshot   snap             = snapshot;
         int               slot             = slotForRole(reconnectingRole);
         if (slot < 0) {
-            // No committed slot for this role — impossible in a normal paused
-            // session, but fail safely rather than corrupting the mapping.
+
+
             System.out.println("[Server] No slot matches reconnecting role '"
                     + reconnectingRole + "' — closing reconnect socket.");
             closeQuietly(newSocket);
@@ -1511,9 +1511,9 @@ public class GameServer {
         }
         int               other            = 1 - slot;
 
-        // Clear reconnect-tracking state up front so the acceptor thread sees
-        // a clean slate and exits its poll loop before we start the snapshot
-        // transfer (Debug Task 3 Lead 1).
+
+
+
         vacantRole            = null;
         partialDisconnectTime = -1;
         snapshot              = null;
@@ -1521,26 +1521,26 @@ public class GameServer {
         try {
             sockets[slot] = newSocket;
             outs[slot] = new ObjectOutputStream(newSocket.getOutputStream());
-            outs[slot].flush(); // write OOS header before client reads it
+            outs[slot].flush();
 
-            // 1) Send the role assignment so the client skips the lobby.
+
             outs[slot].writeObject(new NetworkProtocol.RoleAssignmentPacket(reconnectingRole));
             outs[slot].flush();
 
-            // 2) Stream the snapshot.
+
             sendSnapshot(outs[slot], snap);
 
             clientConnected[slot] = true;
 
-            // 3) Start a new reader thread for this client, reusing the OIS
-            //    already built by readHello() during the validation step.
+
+
             Thread handler = new Thread(
                     new ClientHandler(newSocket, newIn, slot),
                     "ClientHandler-" + reconnectingRole + "-RC");
             handler.setDaemon(true);
             handler.start();
 
-            // 4) Notify the surviving client.
+
             if (clientConnected[other] && outs[other] != null) {
                 try {
                     outs[other].writeObject(new NetworkProtocol.StringPacket(
@@ -1557,9 +1557,9 @@ public class GameServer {
                 }
             }
 
-            // 5) Unpause the game loop. The tracking fields (vacantRole,
-            // partialDisconnectTime, snapshot) were already cleared at the top
-            // of this method; this just flips the pause flag for the game loop.
+
+
+
             gamePaused = false;
 
             System.out.println("[Server] Reconnect complete: " + reconnectingRole
@@ -1570,27 +1570,27 @@ public class GameServer {
                     + e.getMessage());
             closeQuietly(newSocket);
             clientConnected[slot] = false;
-            // The reconnect failed mid-handshake — restore the tracking fields
-            // so the acceptor thread (if still alive) knows a reconnect is
-            // still pending, OR the session cleanly ends if it's already gone.
+
+
+
             sessionActive = false;
         }
     }
 
-    /**
-     * Streams a full snapshot to the reconnecting client's output stream as a
-     * sequence of {@link NetworkProtocol.StringPacket}s: one {@link Protocol#SNAPSHOT_BEGIN}
-     * header containing all scalar state, one {@link Protocol#SNAPSHOT_BLOCK} per
-     * placed block, and one terminating {@link Protocol#SNAPSHOT_END}.
-     *
-     * @param out  the reconnecting client's output stream
-     * @param snap the snapshot to serialise
-     * @throws IOException on any write or flush failure
-     */
+
+
+
+
+
+
+
+
+
+
     private void sendSnapshot(ObjectOutputStream out, SessionSnapshot snap)
             throws IOException {
-        // SNAP_BEGIN|level|act|wandX|wandY|wandHealth|wandLives|lightBattery|
-        //           lightX|lightY|lightRadius|lightActive|blockBudget|blockType
+
+
         String header = Protocol.SNAPSHOT_BEGIN + "|"
                 + snap.currentLevel     + "|"
                 + snap.currentAct       + "|"
@@ -1621,69 +1621,69 @@ public class GameServer {
         out.reset();
     }
 
-    // =========================================================================
-    // ClientHandler inner class
-    // =========================================================================
 
-    /**
-     * Reads packets from one connected client's {@link ObjectInputStream} in a loop and
-     * places each packet into the server's {@link GameServer#sharedQueue} for processing
-     * on the game loop thread. On any {@link IOException} (including a clean disconnect),
-     * the handler marks the client as disconnected and broadcasts a notification to the
-     * remaining client via a {@link NetworkProtocol.CutscenePacket}.
-     */
+
+
+
+
+
+
+
+
+
+
     private class ClientHandler implements Runnable {
 
-         
+
         @SuppressWarnings("unused") private final Socket socket;
 
-         
+
         private final int slot;
 
-         
+
         private ObjectInputStream in;
 
-        /**
-         * Constructs a {@code ClientHandler} for the given client socket using
-         * an already-built {@link ObjectInputStream}. The OIS is created in the
-         * {@link GameServer#readHello(Socket)} validation path so the RC_HELLO
-         * packet can be consumed before any game traffic; we cannot re-create it
-         * here because ObjectInputStream headers may only be read once per
-         * underlying stream.
-         *
-         * @param socket the connected client socket; must not be {@code null}
-         * @param in     the already-built OIS whose header and first (hello)
-         *               packet have already been consumed; must not be {@code null}
-         * @param slot   {@link GameServer#SLOT_0} (0) or {@link GameServer#SLOT_1} (1)
-         */
+
+
+
+
+
+
+
+
+
+
+
+
+
         ClientHandler(Socket socket, ObjectInputStream in, int slot) {
             this.socket = socket;
             this.in = in;
             this.slot = slot;
         }
 
-         
+
         private String currentRole() {
             String r = lobbySelectedRole[slot];
             return r != null ? r : ("SLOT_" + slot);
         }
 
-        /**
-         * Reads deserialized objects from the client input stream continuously until the
-         * connection closes or an I/O error occurs. Each object is placed in
-         * {@link GameServer#sharedQueue} for the game loop thread to consume.
-         */
+
+
+
+
+
         @Override
         public void run() {
             try {
-                // OIS was built by readHello() during the handshake — don't
-                // re-create it here, doing so would re-read the stream header
-                // on a stream that has already advanced past it.
+
+
+
                 while (clientConnected[slot] && sessionActive) {
                     Object packet = in.readObject();
 
-                    // Intercept LOBBY_* text messages before they reach the game-loop queue.
-                    // These are handled synchronously here in the ClientHandler thread.
+
+
                     if (packet instanceof NetworkProtocol.StringPacket) {
                         String msg = ((NetworkProtocol.StringPacket) packet).message;
                         if (msg != null
@@ -1691,65 +1691,65 @@ public class GameServer {
                                  || msg.startsWith(Protocol.LOBBY_SELECT + "|")
                                  || msg.startsWith(Protocol.LOBBY_CANCEL + "|"))) {
                             handleLobbyMessage(msg, slot);
-                            continue; // do not queue
+                            continue;
                         }
                         if (msg != null
                                 && (msg.startsWith("CUT_TRIGGER|")
                                  || msg.startsWith(Protocol.CUTSCENE_ACK + "|"))) {
                             handleCutsceneMessage(msg, slot);
-                            continue; // do not queue
+                            continue;
                         }
                         if (msg != null && Protocol.BOSS_ENTER.equals(msg)) {
-                            // Wanderer → server boss-arena trigger (P8.2).
-                            // Handled here rather than queued so the broadcast
-                            // of BOSS_ARENA + the ARCHITECT_SPEAKS cutscene
-                            // fires without being subject to the game-loop
-                            // packet-processing cadence.
+
+
+
+
+
                             handleBossEnter(slot);
-                            continue; // do not queue
+                            continue;
                         }
                         if (msg != null && msg.startsWith(Protocol.ATTACK + "|")) {
-                            // P8.5 — Apprentice → server boss-attack request.
-                            // Intercepted here (rather than queued + relayed
-                            // verbatim) so the dispatcher owns the
-                            // architectOverride + cooldown gates and only
-                            // the server-authored BOSS_ATK broadcast reaches
-                            // clients. Passing through the game-loop queue
-                            // would still fire but the raw ATTACK string
-                            // would also be relayed to the Wanderer,
-                            // causing a double-spawn.
+
+
+
+
+
+
+
+
+
                             handleAttackMessage(msg, slot);
-                            continue; // do not queue, do not relay
+                            continue;
                         }
                         if (msg != null && msg.startsWith(Protocol.LIGHT_TARGET + "|")) {
-                            // P8.3 — Apprentice → server light-ball chase
-                            // target. Intercepted here (rather than queued +
-                            // relayed) because the server is the authority
-                            // for the BOSS-phase light: clients read the
-                            // authoritative position from ServerStatePacket,
-                            // not from a relayed LT message. Skipping the
-                            // queue also avoids broadcasting 20 Hz of LT
-                            // strings back to clients that would just throw
-                            // them away.
+
+
+
+
+
+
+
+
+
                             handleLightTargetMessage(msg, slot);
-                            continue; // do not queue, do not relay
+                            continue;
                         }
                         if (msg != null && msg.startsWith(Protocol.ALTAR_CHOICE + "|")) {
-                            // P8.6 — Wanderer → server altar selection.
-                            // Intercepted here so the server can validate the
-                            // choice (only Wanderer may choose, and only known
-                            // choices are accepted) and broadcast the authoritative
-                            // ALTAR_RESULT to both clients.
+
+
+
+
+
                             handleAltarChoice(msg, slot);
-                            continue; // do not queue, do not relay raw request
+                            continue;
                         }
                         if (msg != null && msg.startsWith(Protocol.STUN_RESULT + "|")) {
-                            // P8.8 — Wanderer → server stun minigame outcome.
-                            // Intercepted here so the server owns the
-                            // architectStunnedUntilMs authority and broadcasts
-                            // the validated outcome back to both clients.
+
+
+
+
                             handleStunResultMessage(msg, slot);
-                            continue; // do not queue, do not relay raw request
+                            continue;
                         }
                     }
 
@@ -1770,78 +1770,78 @@ public class GameServer {
             }
         }
 
-        /**
-         * Decides whether this disconnect is a partial or full drop. If the partner is
-         * still connected and the session is not already in a paused-waiting state,
-         * escalates to {@link #handlePartialDisconnect(int)}. Otherwise (partner gone
-         * or the vacant slot just left mid-pause), ends the session so main() can
-         * spawn a fresh {@code GameServer} for the next pair of players.
-         */
+
+
+
+
+
+
+
         private void handleClientDisconnect() {
             int other = 1 - slot;
-            // If partner is still alive and we are not already in a paused state,
-            // hold the session and wait for a reconnecting client.
+
+
             if (clientConnected[other] && vacantRole == null && sessionActive) {
                 handlePartialDisconnect(slot);
             } else {
-                // Either both clients are gone, or the surviving client just dropped
-                // during the paused-waiting window. Terminate the session.
+
+
                 sessionActive = false;
             }
         }
     }
 
-    // =========================================================================
-    // Accessors
-    // =========================================================================
 
-    /**
-     * Returns the current health array for all four Cores.
-     *
-     * @return a four-element integer array indexed by Core index [0–3]
-     */
+
+
+
+
+
+
+
+
     public int[] getCoreHealth() {
         return coreHealth;
     }
 
-    /**
-     * Returns whether architect-override mode is currently active.
-     *
-     * @return {@code true} if the Apprentice has activated override; {@code false}
-     *         otherwise
-     */
+
+
+
+
+
+
     public boolean isArchitectOverride() {
         return architectOverride;
     }
 
-    /**
-     * Sets the architect-override flag, enabling or disabling the Apprentice's
-     * elevated intervention privileges.
-     *
-     * @param architectOverride {@code true} to enable override; {@code false} to
-     *                          disable it
-     */
+
+
+
+
+
+
+
     public void setArchitectOverride(boolean architectOverride) {
         this.architectOverride = architectOverride;
     }
 
-    /**
-     * Returns the current victory state of the match.
-     *
-     * @return the active {@link VictoryState}
-     */
+
+
+
+
+
     public VictoryState getVictoryState() {
         return victoryState;
     }
 
-    // =========================================================================
-    // Private socket array (used internally alongside outs[])
-    // =========================================================================
 
-    /**
-     * Raw sockets for each role (index 0 = Wanderer, index 1 = Apprentice). Stored so
-     * they can be passed to {@link ClientHandler} after the output streams are opened in
-     * {@link #startServer()}.
-     */
+
+
+
+
+
+
+
+
     private final Socket[] sockets = new Socket[2];
 }

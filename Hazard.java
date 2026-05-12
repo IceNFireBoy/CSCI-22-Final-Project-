@@ -1,101 +1,101 @@
-/**
- Environmental danger dealing damage to Wanderer and receiving damage in return.
- Bridges GameElement hierarchy with Damageable contract; common ancestor for threat
- entities (CorruptedSpike, CorruptedWall, and other hazard subclasses introduced in
- P9.3'). Adds damage, health, maxHealth fields. Update/render/takeDamage methods are
- stubs; concrete subclasses override with their own behaviour and rendering.
 
- GameStarter.checkHazardContact() tests AABB overlap and reads getDamage() to decrement
- Player health. Player melee/projectile calls takeDamage() via server-authoritative path.
- */
 
-// =========================================================================
-// Citations - CSCI 22 Course Materials Applied
-// =========================================================================
-// Module 1c "Abstract Classes" - extends the abstract base GameElement
-//                                while remaining instantiable; concrete
-//                                subclasses (CorruptedSpike, CorruptedWall,
-//                                etc.) further specialise the rendering
-//                                and behaviour - the "concrete-class-
-//                                between-abstract-and-leaf" pattern.
-// Module 1b "Interfaces"       - implements Damageable to gain a
-//                                health/takeDamage contract on top of the
-//                                inherited Renderable contract from
-//                                GameElement. Demonstrates "extends one,
-//                                implements many" from the interfaces
-//                                module.
-// Module 1a "Modifiers"        - protected damage/health/maxHealth fields
-//                                are exposed to subclasses but not to
-//                                unrelated callers - the protected
-//                                visibility level taught in 1a.
-// =========================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 import java.awt.*;
-public class Hazard extends GameElement implements Damageable { // Extends GameElement for entity-list participation; implements Damageable for takeDamage/health contract
+public class Hazard extends GameElement implements Damageable {
 
-    // -------------------------------------------------------------------------
-    // Fields
-    // -------------------------------------------------------------------------
 
-    protected int damage;    // Contact damage per hit; read by GameStarter
-    protected int health;    // Current HP; starts at maxHealth
-    protected int maxHealth; // Constant maximum HP
 
-    // -------------------------------------------------------------------------
-    // Constructor
-    // -------------------------------------------------------------------------
 
-    public Hazard(int x, int y, int width, int height, int damage, int maxHealth) { // Constructor; delegates to GameElement, initializes health/damage
-        super(x, y, width, height);     // Delegate to GameElement: set position (x,y), AABB (width×height), active=true
-        this.damage = damage;           // Store contact-damage value; read by GameStarter.checkHazardContact() on Wanderer overlap
-        this.maxHealth = maxHealth;     // Store the maximum health; used by getMaxHealth() and proportional health-bar rendering
-        this.health = maxHealth;        // Start at full health; decremented by authoritative takeDamage() path
+
+    protected int damage;
+    protected int health;
+    protected int maxHealth;
+
+
+
+
+
+    public Hazard(int x, int y, int width, int height, int damage, int maxHealth) {
+        super(x, y, width, height);
+        this.damage = damage;
+        this.maxHealth = maxHealth;
+        this.health = maxHealth;
     }
 
-    // -------------------------------------------------------------------------
-    // GameElement overrides
-    // -------------------------------------------------------------------------
+
+
+
 
     @Override
-    public void update(long deltaMs) { // Stub; concrete subclasses override with their own per-tick behaviour
-        // Stub — logic implemented per-subclass (e.g. CorruptedWall's IDLE → WARNING → FALLING FSM).
-    }
+    public void update(long deltaMs) {
 
-    @Override
-    public void render(Graphics2D g) { // Stub; concrete subclasses override with sprite/shape rendering
-        // Stub — rendering implemented per-subclass; most use SpriteOverridable.tryDrawSprite first.
-    }
-
-    // -------------------------------------------------------------------------
-    // Damageable implementation
-    // -------------------------------------------------------------------------
-
-    @Override
-    public void takeDamage(int amount) { // Stub; concrete subclasses override with server-authoritative or local damage logic
-        // Stub — damage application logic to be implemented in a later phase.
-        // Future implementation: health -= amount; if (health <= 0) { health = 0; setActive(false); }
     }
 
     @Override
-    public int getHealth() { // Read accessor; returns current HP
-        return health;       // Return the stored health; updated by takeDamage() or directly by the state-packet sync path
+    public void render(Graphics2D g) {
+
+    }
+
+
+
+
+
+    @Override
+    public void takeDamage(int amount) {
+
+
     }
 
     @Override
-    public int getMaxHealth() { // Read accessor; returns maximum HP
-        return maxHealth;       // Return the stored maximum; constant after construction
+    public int getHealth() {
+        return health;
     }
 
     @Override
-    public boolean isAlive() { // Predicate; true if health > 0
-        return health > 0;     // Direct comparison; false means health == 0, hazard is destroyed
+    public int getMaxHealth() {
+        return maxHealth;
     }
 
-    // -------------------------------------------------------------------------
-    // Accessor
-    // -------------------------------------------------------------------------
+    @Override
+    public boolean isAlive() {
+        return health > 0;
+    }
 
-    public int getDamage() { // Read accessor; returns contact damage per hit
-        return damage;       // Return the stored damage amount set by the subclass constructor via super()
+
+
+
+
+    public int getDamage() {
+        return damage;
     }
 }
