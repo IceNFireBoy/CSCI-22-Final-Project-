@@ -40,7 +40,7 @@ public class Act2Level extends LevelGenerator { // Concrete Act 2 generator
         setSpawn(60, 652);                   // Same spawn as Act 1 by default
 
         // ---- Default ground row ----
-        brickRow(0, 740, 32); // 32 BRICK tiles → spans full canvas width
+         brickRow(0, 740, 32); // 32 BRICK tiles → spans full canvas width
 
         // ---- Example platforms ----
         platform(Platform.PlatformType.BRICK, 200, 600, 96, 16);
@@ -52,27 +52,33 @@ public class Act2Level extends LevelGenerator { // Concrete Act 2 generator
         // Combat unlock (WALL_CLING); sprite path optional.
         fragment("A2-WALL_CLING", 800, 700, // id, x, y
                  LoreFragment.AbilityUnlock.WALL_CLING,
-                 "Entry 014. The Apprentice has learned to brace. The walls remember the climb.");
+                 "Entry 014. The Apprentice has learned to brace. The walls remember the climb.",
+                 "resources/sprites/fragments/wall_cling.png"); // null sprite → procedural shard
+         fragment("A2-MELEE", 210, 580, // id, x, y
+                 LoreFragment.AbilityUnlock.MELEE,
+                 "Entry 069. Warriors strike true. A broken shell reveals what lies underneath.",
+                 "resources/sprites/fragments/melee.png");
 
         // ---- Example altar ----
         // Choice altar with the P8.6 power-surge / sight-restriction options.
-        altar(2, 15, 95, "POWER_SURGE", "SIGHT_RESTRICTION");
+        altar(2, 15, 95, "POWER_SURGE", "SIGHT_RESTRICTION", "resources/sprites/altars/stone.png");
+        lastAltar().setConcealment(BreakableWallConcealment.of());
         platform(Platform.PlatformType.BRICK, 7, 145, 96, 16);
         platform(Platform.PlatformType.BRICK, 137, 345, 30, 16);
 
         // ---- Example hazards (P9.3' replaces crawlers with light-driven hazards) ----
         // CorruptedSpike — straightforward contact-damage pickup deterrent.
-        spike(340, 724, 84, 24);
-        spike(434, 724, 84, 24);
-        spike(508, 724, 84, 24);
-        spike(582, 724, 84, 24);
-        spike(656, 724, 84, 24);
-        spike(730, 7, 84, 24);
-        spike(804, 724, 84, 24);
+        spike(340, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
+        spike(434, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
+        spike(508, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
+        spike(582, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
+        spike(656, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
+        spike(730, 7, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
+        spike(804, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
 
         // CorruptedWall — background wall with a 1 s shake-warning before it falls.
         // The trigger zone is 4× the wall footprint so the player has room to react.
-        corruptedWall(150, 580, 64, 128, 256, 256);
+        corruptedWall(150, 580, 64, 128, 256, 256, "resources/sprites/hazards/wall.png");
 
         // LightLockedMover — moving platform that freezes when the Apprentice lights it.
         lightMover(560, 560, LightLockedMover.MovePattern.LINEAR_X);

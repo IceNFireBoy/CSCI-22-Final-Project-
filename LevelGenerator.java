@@ -16,6 +16,13 @@
  * tile is 32×32 px so a 32-tile floor row spans 32 × 32 = 1024 px, which fills
  * the standard canvas width.</p>
  *
+ * <p><b>Sprite overrides</b>: every helper that takes a {@code spritePath}
+ * argument honors it via {@link SpriteOverridable#tryDrawSprite}. Pass
+ * {@code null} for the procedural Graphics2D fallback; pass a path like
+ * {@code "resources/sprites/fragments/dodge.png"} to override the look. If the
+ * file is missing, {@link SpriteLoader#tryLoad(String)} returns {@code null}
+ * and the entity falls back to its procedural draw — no magenta placeholder.</p>
+ *
  * <p>Subclasses produce a {@link LevelRegistry.LoadResult} from {@link #build()};
  * the result is consumed by {@link LevelRegistry#load(int, long)} which is in
  * turn invoked by {@link GameStarter#loadLevel(int)}.</p>
@@ -211,23 +218,27 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
     /**
      * Places a {@link LoreFragment} at world coordinates with a unique ID,
      * an ability unlock (or {@link LoreFragment.AbilityUnlock#NONE} for
-     * narrative-only), and the body text shown in the lore log.
+     * narrative-only), the body text shown in the lore log, and an optional
+     * sprite path.
      *
-     * @param id     unique fragment identifier (e.g. {@code "A1-DODGE"});
-     *               referenced by the network protocol on collection
-     * @param x      world-space left-edge x in pixels
-     * @param y      world-space top-edge y in pixels
-     * @param unlock the ability granted on collection; use
-     *               {@link LoreFragment.AbilityUnlock#NONE} for narrative-only
-     * @param body   narrative text shown in the lore log; may include
-     *               line breaks
+     * @param id         unique fragment identifier (e.g. {@code "A1-DODGE"});
+     *                   referenced by the network protocol on collection
+     * @param x          world-space left-edge x in pixels
+     * @param y          world-space top-edge y in pixels
+     * @param unlock     the ability granted on collection; use
+     *                   {@link LoreFragment.AbilityUnlock#NONE} for narrative-only
+     * @param body       narrative text shown in the lore log; may include
+     *                   line breaks
+     * @param spritePath optional PNG path; {@code null} for the procedural
+     *                   shard render
      */
-    protected void fragment(String id, int x, int y,
+    protected void fragment(String id, int x, int y, // Six-arg single-call placement
                             LoreFragment.AbilityUnlock unlock,
-                            String body) {
-        LoreFragment frag = new LoreFragment(id, body, unlock, x, y);
-        elements.add(frag);
-        this.lastFragment = frag;
+                            String body, String spritePath) {
+        LoreFragment frag = new LoreFragment(id, body, unlock, x, y); // Build the entity at the given position
+        if (spritePath != null) frag.setSpritePath(spritePath);        // Honour the optional sprite override (P10.2 wires this)
+        elements.add(frag);                                            // Add to the level entity list
+        this.lastFragment = frag;                                      // Track for post-hoc configuration via lastFragment()
     }
 
     /**
@@ -244,29 +255,37 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
     // -------------------------------------------------------------------------
 
     /**
-     * Places an {@link Altar} at world coordinates with a binary choice. Adds
-     * both the visible Altar entity (for rendering and overlap detection) and
-     * a matching {@link Trigger} {@code "ALTAR"} entry (for legacy P8.6
-     * dispatch compatibility) so {@link GameStarter#checkAltarTrigger()} fires
-     * on either path.
+     * Places an {@link Altar} at world coordinates with a binary choice and
+     * an optional sprite path. Adds both the visible Altar entity (for
+     * rendering and overlap detection) and a matching {@link Trigger}
+     * {@code "ALTAR"} entry (for legacy P8.6 dispatch compatibility) so
+     * {@link GameStarter#checkAltarTrigger()} fires on either path.
      *
-     * @param id   unique per-level altar identifier; matches
-     *             {@code altarId} in {@link Protocol#ALTAR_CHOICE}
-     * @param x    world-space left-edge x in pixels
-     * @param y    world-space top-edge y in pixels
-     * @param opt1 first choice label (e.g. {@code "POWER_SURGE"})
-     * @param opt2 second choice label (e.g. {@code "SIGHT_RESTRICTION"})
+     * @param id         unique per-level altar identifier; matches
+     *                   {@code altarId} in {@link Protocol#ALTAR_CHOICE}
+     * @param x          world-space left-edge x in pixels
+     * @param y          world-space top-edge y in pixels
+     * @param opt1       first choice label (e.g. {@code "POWER_SURGE"})
+     * @param opt2       second choice label (e.g. {@code "SIGHT_RESTRICTION"})
+     * @param spritePath optional PNG path; {@code null} for the procedural
+     *                   pedestal render
      */
-    protected void altar(int id, int x, int y, String opt1, String opt2) {
-        Altar a = new Altar(id, x, y, opt1, opt2);
-        elements.add(a);
-        this.lastAltar = a;
+    protected void altar(int id, int x, int y, String opt1, String opt2, String spritePath) {
+        Altar a = new Altar(id, x, y, opt1, opt2); // Visible interactable
+        if (spritePath != null) a.setSpritePath(spritePath); // Honour the optional sprite override
+        elements.add(a);                            // Add the visible entity
+        this.lastAltar = a;                         // Track for post-hoc concealment configuration
 
+        // Legacy dispatch: emit a matching invisible Trigger("ALTAR", ...) so
+        // GameStarter.checkAltarTrigger() picks up the overlap without
+        // requiring P10.3's altar-side dispatch to land first. When P10.3
+        // adds Altar-direct overlap detection, this trigger becomes harmless
+        // (the same altarActive latch prevents double-firing).
         Map<String, Object> params = new HashMap<>();
-        params.put("altarId", id);
-        params.put("option1", opt1);
+        params.put("altarId", id);                                    // P8.6's expected key
+        params.put("option1", opt1);                                  // Surfaces both options to the overlay
         params.put("option2", opt2);
-        elements.add(new Trigger("ALTAR", x, y, params));
+        elements.add(new Trigger("ALTAR", x, y, params));             // Invisible companion zone
     }
 
     /**
@@ -292,17 +311,22 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
     }
 
     /**
-     * Places a Portal with explicit dimensions. Note: Portal's current
-     * constructor is fixed-size; the {@code w} and {@code h} arguments are
-     * accepted for forward compatibility with a future custom-size constructor.
+     * Places a Portal with explicit dimensions and an optional sprite path.
+     * Note: Portal's current constructor is fixed-size; the {@code w} and
+     * {@code h} arguments are accepted for forward compatibility with a
+     * future custom-size constructor. They are currently ignored at the
+     * collision level but are propagated to the sprite draw.
      *
-     * @param x world-space left-edge x in pixels
-     * @param y world-space top-edge y in pixels
-     * @param w custom width in pixels (currently ignored by Portal collision)
-     * @param h custom height in pixels (currently ignored by Portal collision)
+     * @param x          world-space left-edge x in pixels
+     * @param y          world-space top-edge y in pixels
+     * @param w          custom width in pixels (currently ignored by Portal collision)
+     * @param h          custom height in pixels (currently ignored by Portal collision)
+     * @param spritePath optional PNG path; {@code null} for the procedural draw
      */
-    protected void portal(int x, int y, int w, int h) {
-        elements.add(new Portal(x, y));
+    protected void portal(int x, int y, int w, int h, String spritePath) { // Forward-compatible variant
+        Portal p = new Portal(x, y);                  // Use the existing constructor (fixed size)
+        if (spritePath != null) p.setSpritePath(spritePath); // Honour the optional sprite override
+        elements.add(p);                              // w/h reserved for future Portal-side support
     }
 
     // -------------------------------------------------------------------------
@@ -322,15 +346,19 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
     }
 
     /**
-     * Places a {@link CorruptedSpike} with explicit dimensions.
+     * Places a {@link CorruptedSpike} with explicit dimensions and an optional
+     * sprite override.
      *
-     * @param x world-space left-edge x in pixels
-     * @param y world-space top-edge y in pixels
-     * @param w width in pixels
-     * @param h height in pixels
+     * @param x          world-space left-edge x in pixels
+     * @param y          world-space top-edge y in pixels
+     * @param w          width in pixels
+     * @param h          height in pixels
+     * @param spritePath optional PNG path; {@code null} for the procedural draw
      */
-    protected void spike(int x, int y, int w, int h) {
-        elements.add(new CorruptedSpike(x, y, w, h));
+    protected void spike(int x, int y, int w, int h, String spritePath) { // Custom-size variant
+        CorruptedSpike s = new CorruptedSpike(x, y, w, h);
+        if (spritePath != null) s.setSpritePath(spritePath);
+        elements.add(s);
     }
 
     /**
@@ -338,16 +366,19 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
      * until the Wanderer enters its trigger zone, then shakes for 1 second
      * (dodge window) before falling and dealing heavy contact damage.
      *
-     * @param x        world-space left-edge x of the visible wall in pixels
-     * @param y        world-space top-edge y of the visible wall in pixels
-     * @param w        visible wall width in pixels
-     * @param h        visible wall height in pixels
-     * @param triggerW trigger zone width in pixels (typically wider than {@code w})
-     * @param triggerH trigger zone height in pixels (typically taller than {@code h})
+     * @param x          world-space left-edge x of the visible wall in pixels
+     * @param y          world-space top-edge y of the visible wall in pixels
+     * @param w          visible wall width in pixels
+     * @param h          visible wall height in pixels
+     * @param triggerW   trigger zone width in pixels (typically wider than {@code w})
+     * @param triggerH   trigger zone height in pixels (typically taller than {@code h})
+     * @param spritePath optional PNG path; {@code null} for the procedural draw
      */
     protected void corruptedWall(int x, int y, int w, int h,
-                                 int triggerW, int triggerH) {
-        elements.add(new CorruptedWall(x, y, w, h, triggerW, triggerH));
+                                 int triggerW, int triggerH, String spritePath) {
+        CorruptedWall cw = new CorruptedWall(x, y, w, h, triggerW, triggerH);
+        if (spritePath != null) cw.setSpritePath(spritePath);
+        elements.add(cw);
     }
 
     /**
@@ -355,13 +386,16 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
      * while lit; fades and becomes non-solid after light leaves it. Persistence
      * scales with how long and how brightly it was previously lit.
      *
-     * @param x world-space left-edge x in pixels
-     * @param y world-space top-edge y in pixels
-     * @param w width in pixels
-     * @param h height in pixels
+     * @param x          world-space left-edge x in pixels
+     * @param y          world-space top-edge y in pixels
+     * @param w          width in pixels
+     * @param h          height in pixels
+     * @param spritePath optional PNG path; {@code null} for the procedural draw
      */
-    protected void phantomBlock(int x, int y, int w, int h) {
-        elements.add(new PhantomBlock(x, y, w, h));
+    protected void phantomBlock(int x, int y, int w, int h, String spritePath) {
+        PhantomBlock pb = new PhantomBlock(x, y, w, h);
+        if (spritePath != null) pb.setSpritePath(spritePath);
+        elements.add(pb);
     }
 
     /**
@@ -380,17 +414,21 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
      * platform moving until illuminated, then freezes it; {@code MOVE_ON_LIGHT}
      * inverts the rule.
      *
-     * @param x         world-space left-edge x at the start of the motion path
-     * @param y         world-space top-edge y at the start of the motion path
-     * @param pattern   the motion pattern (LINEAR_X / LINEAR_Y / CIRCULAR)
-     * @param amplitude amplitude of the motion in pixels (radius for CIRCULAR)
-     * @param periodMs  one full cycle in milliseconds
-     * @param behaviour light gating mode (FREEZE_ON_LIGHT or MOVE_ON_LIGHT)
+     * @param x          world-space left-edge x at the start of the motion path
+     * @param y          world-space top-edge y at the start of the motion path
+     * @param pattern    the motion pattern (LINEAR_X / LINEAR_Y / CIRCULAR)
+     * @param amplitude  amplitude of the motion in pixels (radius for CIRCULAR)
+     * @param periodMs   one full cycle in milliseconds
+     * @param behaviour  light gating mode (FREEZE_ON_LIGHT or MOVE_ON_LIGHT)
+     * @param spritePath optional PNG path; {@code null} for the procedural draw
      */
     protected void lightMover(int x, int y, LightLockedMover.MovePattern pattern,
                               int amplitude, int periodMs,
-                              LightLockedMover.LightBehavior behaviour) {
-        elements.add(new LightLockedMover(x, y, pattern, amplitude, periodMs, behaviour));
+                              LightLockedMover.LightBehavior behaviour,
+                              String spritePath) {
+        LightLockedMover m = new LightLockedMover(x, y, pattern, amplitude, periodMs, behaviour);
+        if (spritePath != null) m.setSpritePath(spritePath);
+        elements.add(m);
     }
 
     /**
@@ -413,18 +451,22 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
     /**
      * Places an invisible {@link Trigger} dispatch zone. Used for
      * {@code "CUTSCENE"}, {@code "WALL_BREAK_HINT"}, and similar one-shot
-     * events. For altar zones, prefer {@link #altar(int, int, int, String, String)}
+     * events. For altar zones, prefer {@link #altar(int, int, int, String, String, String)}
      * which sets up both the visible entity and the trigger at once.
      *
-     * @param type   trigger type string; matched by
-     *               {@link GameStarter}'s dispatch logic
-     * @param x      world-space left-edge x in pixels
-     * @param y      world-space top-edge y in pixels
-     * @param params type-specific parameters; pass {@code null} for an
-     *               empty map
+     * @param type       trigger type string; matched by
+     *                   {@link GameStarter}'s dispatch logic
+     * @param x          world-space left-edge x in pixels
+     * @param y          world-space top-edge y in pixels
+     * @param params     type-specific parameters; pass {@code null} for an
+     *                   empty map
+     * @param spritePath optional PNG path to give this trigger a visible
+     *                   glyph; {@code null} keeps it invisible (the default)
      */
-    protected void trigger(String type, int x, int y, Map<String, Object> params) {
-        elements.add(new Trigger(type, x, y, params != null ? params : new HashMap<>()));
+    protected void trigger(String type, int x, int y, Map<String, Object> params, String spritePath) {
+        Trigger t = new Trigger(type, x, y, params != null ? params : new HashMap<>()); // Construct with non-null params
+        if (spritePath != null) t.setSpritePath(spritePath);                              // Honour the optional sprite override
+        elements.add(t);                                                                  // Add to the level entity list
     }
 
     // -------------------------------------------------------------------------

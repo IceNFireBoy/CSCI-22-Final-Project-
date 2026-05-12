@@ -43,7 +43,7 @@
 // =========================================================================
 import java.awt.*;
 import java.util.*;
-public class Trigger extends GameElement { // Extends GameElement to be stored in the unified elements list and participate in AABB intersection checks
+public class Trigger extends GameElement implements SpriteOverridable { // Extends GameElement to be stored in the unified elements list and participate in AABB intersection checks; implements SpriteOverridable so a level generator may give a trigger a visible glyph
 
     // -------------------------------------------------------------------------
     // Fields
@@ -73,6 +73,14 @@ public class Trigger extends GameElement { // Extends GameElement to be stored i
      */
     private boolean fired; // One-shot guard: true after fire() is called; prevents the same trigger from activating twice
 
+    /**
+     * Optional PNG path that gives this trigger a visible glyph when set.
+     * {@code null} by default — preserves the original "invisible zone"
+     * behaviour. Level generators set this through the
+     * {@code trigger(..., spritePath)} helper in {@link LevelGenerator}.
+     */
+    private String spritePath; // SpriteOverridable backing field; null → invisible (the legacy default)
+
     // -------------------------------------------------------------------------
     // Constructor
     // -------------------------------------------------------------------------
@@ -101,6 +109,7 @@ public class Trigger extends GameElement { // Extends GameElement to be stored i
         this.type = type;                                                   // Store the type tag; used by GameStarter's dispatch logic to identify the event
         this.params = (params != null) ? params : new HashMap<>();          // Use provided map or create an empty one; prevents NullPointerException in dispatch handlers
         this.fired = false;                                                 // Start unfired; will be set to true the first time the Wanderer enters this zone
+        this.spritePath = null;                                             // No sprite override by default; render() stays a no-op (invisible) unless explicitly given a path
     }
 
     // -------------------------------------------------------------------------
@@ -140,8 +149,10 @@ public class Trigger extends GameElement { // Extends GameElement to be stored i
      *          the interface contract even though this implementation does not use it
      */
     @Override
-    public void render(Graphics2D g) {
-        // Trigger zones are invisible.
+    public void render(Graphics2D g) { // Satisfies abstract render() contract; trigger zones are invisible by default but honour the SpriteOverridable hook
+        // Sprite override: if a level generator gave this trigger a visible glyph (non-null spritePath) and the PNG loads, draw it.
+        // No procedural fallback exists — triggers are invisible by default, so missing sprites simply preserve the original behaviour.
+        SpriteOverridable.tryDrawSprite(g, this, x, y, width, height);
     }
 
     // -------------------------------------------------------------------------
@@ -218,5 +229,34 @@ public class Trigger extends GameElement { // Extends GameElement to be stored i
      */
     public boolean isFired() { // Read accessor for the one-shot guard; true once fire() has been called
         return fired;           // Return the stored flag; set permanently to true by fire()
+    }
+
+    // -------------------------------------------------------------------------
+    // SpriteOverridable
+    // -------------------------------------------------------------------------
+
+    /**
+     * Sets the optional PNG path that gives this trigger a visible glyph.
+     * Pass {@code null} to clear the override and return to the default
+     * invisible behaviour; pass a path like
+     * {@code "resources/sprites/triggers/altar_hint.png"} to draw a bitmap
+     * inside the trigger's 32×32 zone.
+     *
+     * @param path the PNG path, or {@code null} to remain invisible
+     */
+    @Override
+    public void setSpritePath(String path) { // SpriteOverridable contract
+        this.spritePath = path;               // Stored as-is; null is the default
+    }
+
+    /**
+     * Returns the configured sprite path, or {@code null} if no override is set
+     * (the default for trigger zones).
+     *
+     * @return the sprite path or {@code null}
+     */
+    @Override
+    public String getSpritePath() { // SpriteOverridable contract
+        return spritePath;          // Null when no override is configured
     }
 }

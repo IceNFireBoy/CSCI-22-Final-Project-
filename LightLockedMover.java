@@ -45,8 +45,7 @@
 //                                 collision module's overlap test.
 // =========================================================================
 import java.awt.*;
-import java.awt.image.*;
-public class LightLockedMover extends Platform { // Light-gated moving platform
+public class LightLockedMover extends Platform implements SpriteOverridable { // Light-gated moving platform
 
     // -------------------------------------------------------------------------
     // Mode enums
@@ -95,6 +94,8 @@ public class LightLockedMover extends Platform { // Light-gated moving platform
 
     private boolean motionEnabled;     // Cached gate state from the light system; written by setLit() / setLightIntensity()
 
+    private String spritePath;          // Optional sprite override
+
     // -------------------------------------------------------------------------
     // Constructor
     // -------------------------------------------------------------------------
@@ -122,6 +123,7 @@ public class LightLockedMover extends Platform { // Light-gated moving platform
         // Initial motion state — depends on behaviour. FREEZE_ON_LIGHT starts moving
         // (no light yet, so not frozen); MOVE_ON_LIGHT starts frozen (no light = no motion).
         this.motionEnabled = (behaviour == LightBehavior.FREEZE_ON_LIGHT);
+        this.spritePath = null;
     }
 
     // -------------------------------------------------------------------------
@@ -182,13 +184,50 @@ public class LightLockedMover extends Platform { // Light-gated moving platform
     @Override
     public void render(Graphics2D g) {
         if (!isActive()) return;
-        BufferedImage img = SpriteLoader.getInstance().tryLoad("resources/sprites/hazards/mover.png");
-        if (img != null) {
-            g.drawImage(img, x, y, width, height, null);
-            if (!motionEnabled) {           // Frozen-tint overlay: drawn on top of sprite to signal light-freeze state
+
+        if (spritePath != null
+            && SpriteOverridable.tryDrawSprite(g, this, x, y, width, height)) {
+            // Sprite override drew the bitmap; just overlay the frozen tint if applicable.
+            if (!motionEnabled) {
                 g.setColor(FROZEN_TINT);
                 g.fillRect(x, y, width, height);
             }
+            return;
+        }
+
+        // P9.6' convention path — try resources/sprites/hazards/mover.png
+        // when no explicit override is set. Frozen tint applies the same way.
+        if (spritePath == null) {
+            java.awt.image.BufferedImage img = SpriteLoader.getInstance()
+                .tryLoad("resources/sprites/hazards/mover.png");
+            if (img != null) {
+                g.drawImage(img, x, y, width, height, null);
+                if (!motionEnabled) {
+                    g.setColor(FROZEN_TINT);
+                    g.fillRect(x, y, width, height);
+                }
+                return;
+            }
+        }
+
+        // Procedural fallback — engineered gold block with frozen tint when applicable.
+        g.setColor(BLOCK_FILL);
+        g.fillRect(x, y, width, height);
+        g.setColor(BLOCK_OUTLINE);
+        g.drawRect(x, y, width, height);
+        // Two horizontal grooves to suggest a mechanical platform.
+        g.drawLine(x + 4, y + height / 2 - 2, x + width - 4, y + height / 2 - 2);
+        g.drawLine(x + 4, y + height / 2 + 2, x + width - 4, y + height / 2 + 2);
+        if (!motionEnabled) {
+            g.setColor(FROZEN_TINT);
+            g.fillRect(x, y, width, height);
         }
     }
+
+    // -------------------------------------------------------------------------
+    // SpriteOverridable
+    // -------------------------------------------------------------------------
+
+    @Override public void setSpritePath(String path) { this.spritePath = path; }
+    @Override public String getSpritePath() { return spritePath; }
 }

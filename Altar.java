@@ -14,6 +14,9 @@
  * {@link AltarConcealment} so subclasses of the concealment can hide the altar
  * until a reveal condition is met (P9.2').</p>
  *
+ * <p>Sprite override: Altar implements {@link SpriteOverridable}, so a level
+ * generator may pass an optional PNG path to swap the procedural pedestal art
+ * for a custom bitmap without touching this class.</p>
  *
  * @author [YOUR NAME]
  * @id [YOUR ID]
@@ -38,8 +41,7 @@
 //                                 follow the constants pattern from 1a.
 // =========================================================================
 import java.awt.*;
-import java.awt.image.*;
-public class Altar extends GameElement { // Visible interactable
+public class Altar extends GameElement implements SpriteOverridable { // Visible interactable; opts into sprite override
 
     // -------------------------------------------------------------------------
     // Default geometry
@@ -64,6 +66,9 @@ public class Altar extends GameElement { // Visible interactable
 
     /** Second choice label shown in the overlay (e.g. {@code "SIGHT_RESTRICTION"}). */
     private final String option2; // Server uses this string verbatim in ALTAR_RESULT
+
+    /** Optional sprite override path; {@code null} → procedural pedestal draw. */
+    private String spritePath; // Set by setSpritePath; honored by SpriteOverridable.tryDrawSprite
 
     /** Optional concealment behaviour; {@code null} → always visible/interactable. */
     private AltarConcealment concealment; // Set by setConcealment after construction by P9.2' helpers
@@ -97,6 +102,7 @@ public class Altar extends GameElement { // Visible interactable
         this.altarId = id;            // Store the ID for ALTAR_CHOICE / ALTAR_RESULT correlation
         this.option1 = opt1;          // Store option 1 label for the overlay and the wire message
         this.option2 = opt2;          // Store option 2 label for the overlay and the wire message
+        this.spritePath = null;       // No sprite override by default; procedural pedestal renders below
         this.concealment = null;      // No concealment by default; altar is always visible
         this.activated = false;       // Fresh altar starts un-activated; first overlap opens the overlay
     }
@@ -118,18 +124,105 @@ public class Altar extends GameElement { // Visible interactable
     }
 
     /**
-     * Renders the altar using the convention sprite, or nothing if the sprite is missing.
-     * Concealed altars are hidden until the concealment reports revealed.
+     * Renders the altar. Order: (1) sprite override if a PNG is set and loadable;
+     * (2) hidden if a concealment exists and reports unrevealed; (3) procedural
+     * stone-pedestal fallback otherwise.
+     *
+     * <p>The procedural fallback paints a dark stone block with a glowing gold
+     * rune ring on top, matching the gold-on-dark visual language of the rest
+     * of the game (Portal pillars, fragment shards). The rune pulses subtly
+     * via a sinusoidal alpha so the altar is easier to spot from a distance.</p>
      *
      * @param g the {@link Graphics2D} context; never {@code null}
      */
     @Override
     public void render(Graphics2D g) {
-        BufferedImage img = SpriteLoader.getInstance().tryLoad("resources/sprites/altars/stone.png");
-        if (img != null) {
-            if (concealment != null && !concealment.isRevealed(null, null)) return;
-            g.drawImage(img, x, y, width, height, null);
+        // (1) Sprite override wins when a path is set and the PNG loads.
+        if (SpriteOverridable.tryDrawSprite(g, this, x, y, width, height)) return;
+
+        // (1.5) P9.6' convention path — try resources/sprites/altars/stone.png
+        // when no explicit override is set. Drop a PNG there to skin every
+        // un-overridden altar in the game without touching code.
+        if (spritePath == null) {
+            java.awt.image.BufferedImage img = SpriteLoader.getInstance()
+                .tryLoad("resources/sprites/altars/stone.png");
+            if (img != null) {
+                g.drawImage(img, x, y, width, height, null);
+                return;
+            }
         }
+
+        // (2) Concealed altars paint nothing until revealed.
+        // Note: when called from GameCanvas there is no LevelState/GameStarter
+        // context here; concealments that need them are honoured by the
+        // GameStarter-side overlap check (which has both). This render-time
+        // check is best-effort and only honours stateless concealments via the
+        // optional render-time hook; gameplay correctness is guaranteed by the
+        // overlap-side check in GameStarter.checkAltarTrigger().
+        if (concealment != null && !concealment.isRevealed(null, null)) {
+            // Subclasses that need state will simply return true here (default
+            // visible) and let the overlap path do the gating. Concealments
+            // that can answer statelessly (e.g. an always-hidden type) hide the
+            // altar visually as well.
+            return;
+        }
+
+        // (3) Procedural fallback — stone pedestal + glowing rune.
+        renderProceduralPedestal(g);
+    }
+
+    /**
+     * Hand-drawn fallback when no sprite is set. Three layers: a back glow,
+     * a dark stone block, and a pulsing gold rune ring at the top.
+     *
+     * @param g the rendering context; non-null
+     */
+    private void renderProceduralPedestal(Graphics2D g) {
+        Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING); // Save AA hint to restore after the rune draw
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON); // AA on so the rune ring is smooth
+
+        // Back glow — broad amber pool behind the pedestal so it pops against dark backgrounds
+        g.setColor(new Color(0xD4, 0xAF, 0x37, 60)); // Translucent gold (alpha 60/255)
+        g.fillOval(x - 8, y + height - 16, width + 16, 32); // Wide ellipse hugging the base
+
+        // Stone block — main pedestal silhouette
+        g.setColor(new Color(0x2A, 0x2A, 0x32)); // Cool dark grey to match the dungeon palette
+        g.fillRect(x, y + height / 4, width, height * 3 / 4); // Lower 3/4 is the block
+        g.setColor(new Color(0x44, 0x44, 0x4E)); // Lighter grey for the top capstone
+        g.fillRect(x - 2, y + height / 4 - 4, width + 4, 8); // Slight overhang for the cap
+
+        // Rune ring — gold circle with sinusoidal pulse
+        long t = System.currentTimeMillis();          // Real-time clock drives the pulse
+        float pulse = (float) (0.6 + 0.4 * Math.sin(t * 0.004)); // Range [0.2, 1.0]
+        int alpha = (int) (160 * pulse) + 80;          // Range [80, 240]
+        g.setStroke(new BasicStroke(2.0f));            // Thin ring outline
+        g.setColor(new Color(0xF0, 0xCC, 0x7A, alpha)); // Bright gold with the pulsing alpha
+        int runeSize = Math.min(width - 12, 28);       // Rune fits inside the pedestal width
+        int runeX = x + (width - runeSize) / 2;        // Centred horizontally
+        int runeY = y + 4;                             // Just below the top edge
+        g.drawOval(runeX, runeY, runeSize, runeSize);  // Outer ring
+
+        // Inner cross — simple two-line glyph so the rune reads clearly
+        int cx = runeX + runeSize / 2;
+        int cy = runeY + runeSize / 2;
+        g.drawLine(cx - runeSize / 3, cy, cx + runeSize / 3, cy); // Horizontal stroke
+        g.drawLine(cx, cy - runeSize / 3, cx, cy + runeSize / 3); // Vertical stroke
+
+        if (oldAA != null) g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA); // Restore AA to the previous value
+    }
+
+    // -------------------------------------------------------------------------
+    // SpriteOverridable
+    // -------------------------------------------------------------------------
+
+    @Override
+    public void setSpritePath(String path) { // Setter for the optional PNG override
+        this.spritePath = path;               // Null clears the override; the next render falls back to procedural
+    }
+
+    @Override
+    public String getSpritePath() { // Read accessor for the helper in SpriteOverridable.tryDrawSprite
+        return spritePath;          // Returns null when no override is configured
     }
 
     // -------------------------------------------------------------------------

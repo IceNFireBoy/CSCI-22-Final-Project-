@@ -15,14 +15,14 @@
  *   platform(type, x, y, w, h)
  *   brickRow(startX, y, count)               // 32-px gap by default
  *   brickRow(startX, y, count, gap)
- *   fragment(id, x, y, unlock, body)
- *   altar(id, x, y, opt1, opt2)
+ *   fragment(id, x, y, unlock, body, spritePath)
+ *   altar(id, x, y, opt1, opt2, spritePath)
  *   portal(x, y)
- *   spike(x, y) / spike(x, y, w, h)
- *   corruptedWall(x, y, w, h, triggerW, triggerH)
- *   phantomBlock(x, y) / phantomBlock(x, y, w, h)
- *   lightMover(x, y, MovePattern) / lightMover(x, y, pattern, amp, periodMs, behaviour)
- *   trigger(type, x, y, params)
+ *   spike(x, y) / spike(x, y, w, h, spritePath)
+ *   corruptedWall(x, y, w, h, triggerW, triggerH, spritePath)
+ *   phantomBlock(x, y) / phantomBlock(x, y, w, h, spritePath)
+ *   lightMover(x, y, MovePattern) / lightMover(x, y, pattern, amp, periodMs, behaviour, spritePath)
+ *   trigger(type, x, y, params, spritePath)
  *   lastFragment().setGated(true)            // post-hoc fragment config
  *   lastAltar().setConcealment(...)          // post-hoc altar config
  * </pre>
@@ -65,14 +65,17 @@ public class Act1Level extends LevelGenerator { // Concrete Act 1 generator
         // ---- Example platforms ----
         // Mid-air ledge with a CRUMBLE trap on top.
         platform(Platform.PlatformType.CRUMBLE, 480, 660);
-        platform(Platform.PlatformType.BRICK, 560, 660, 96, 16);
+        platform(Platform.PlatformType.CRUMBLE, 560, 660, 96, 16);
         platform(Platform.PlatformType.CRUMBLE, 580, 660);
         platform(Platform.PlatformType.CRUMBLE, 660, 560, 96, 16);
+        
+
 
 
         // Vertical wall — uses the explicit-size variant.
         platform(Platform.PlatformType.WALL, 410, 596, 16, 64);
         platform(Platform.PlatformType.WALL, 820, 450, 16, 84);
+        corruptedWall(160, 570, 80, 90, 320, 320,  "resources/sprites/hazards/wall.png");
 
         // High ledge near the portal.
         platform(Platform.PlatformType.CRUMBLE, 880, 480);
@@ -81,8 +84,9 @@ public class Act1Level extends LevelGenerator { // Concrete Act 1 generator
         // ---- Example fragment ----
         // Narrative-only (NONE unlock); sprite path null → procedural shard render.
         fragment("A1-INTRO", 244, 716, // id, x, y
-                 LoreFragment.AbilityUnlock.NONE,
-                 "Entry 001. The first platform held. The apprentice is learning the grammar of light.");
+                 LoreFragment.AbilityUnlock.NONE, // unlock (unlocks the Apprentice's first ability on pickup)
+                 "Entry 001. The first platform held. The apprentice is learning the grammar of light.",
+                 null); // sprite path (null for procedural shard)
 
         // ---- Example portal ----
         // Default 48×80; collision with the Wanderer triggers level 2 load.

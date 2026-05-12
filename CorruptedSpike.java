@@ -8,7 +8,8 @@
  * {@code GameStarter} hazard-contact path (AABB overlap → {@code getDamage()}
  * → {@code Player.takeDamage(int)}) handles it without modification. The
  * overrides here are the per-instance damage cooldown (so 60 fps × 1 hp does
- * not equal 60 hp/sec) and the sprite rendering.</p>
+ * not equal 60 hp/sec) and the procedural rendering with an optional sprite
+ * override via {@link SpriteOverridable}.</p>
  *
  * @author [YOUR NAME]
  * @id [YOUR ID]
@@ -35,8 +36,7 @@
 //                                 collision module's overlap test.
 // =========================================================================
 import java.awt.*;
-import java.awt.image.*;
-public class CorruptedSpike extends Hazard { // Static damage hazard
+public class CorruptedSpike extends Hazard implements SpriteOverridable { // Static damage hazard with sprite override
 
     // -------------------------------------------------------------------------
     // Constants
@@ -57,6 +57,9 @@ public class CorruptedSpike extends Hazard { // Static damage hazard
 
     /** Wall-clock ms timestamp at which this spike may damage the Wanderer again. */
     private long nextDamageMs; // Cooldown latch updated each time the spike deals damage
+
+    /** Optional PNG path that replaces the procedural spike row when set. */
+    private String spritePath; // Honoured by {@link SpriteOverridable#tryDrawSprite}
 
     // -------------------------------------------------------------------------
     // Constructors
@@ -83,6 +86,7 @@ public class CorruptedSpike extends Hazard { // Static damage hazard
     public CorruptedSpike(int x, int y, int w, int h) {
         super(x, y, w, h, /*damage*/ 1, /*maxHealth*/ 1); // Hazard handles AABB + Damageable; 1 HP so a melee can clear it later if needed
         this.nextDamageMs = 0L;                            // No cooldown on the first overlap
+        this.spritePath = null;                            // Procedural fallback by default
     }
 
     // -------------------------------------------------------------------------
@@ -115,7 +119,44 @@ public class CorruptedSpike extends Hazard { // Static damage hazard
     @Override
     public void render(Graphics2D g) {
         if (!active) return;
-        BufferedImage img = SpriteLoader.getInstance().tryLoad("resources/sprites/hazards/spike.png");
-        if (img != null) g.drawImage(img, x, y, width, height, null);
+        if (SpriteOverridable.tryDrawSprite(g, this, x, y, width, height)) return; // Sprite override wins
+
+        // P9.6' convention path — try resources/sprites/hazards/spike.png when
+        // no explicit override is set.
+        if (spritePath == null) {
+            java.awt.image.BufferedImage img = SpriteLoader.getInstance()
+                .tryLoad("resources/sprites/hazards/spike.png");
+            if (img != null) {
+                g.drawImage(img, x, y, width, height, null);
+                return;
+            }
+        }
+
+        // Procedural fallback — dark base strip with triangular teeth on top.
+        g.setColor(BASE_COLOUR);
+        g.fillRect(x, y + height * 2 / 3, width, height / 3);
+
+        // Number of teeth scales with width; one tooth per 16 px (rounded up so even narrow spikes have ≥1 tooth).
+        int toothCount = Math.max(1, width / 16);
+        int toothW = width / toothCount;
+        for (int i = 0; i < toothCount; i++) {
+            int leftX = x + i * toothW;
+            Polygon tooth = new Polygon(
+                new int[]{ leftX, leftX + toothW / 2, leftX + toothW },
+                new int[]{ y + height, y, y + height },
+                3
+            );
+            g.setColor(SPIKE_FILL);
+            g.fillPolygon(tooth);
+            g.setColor(SPIKE_OUTLINE);
+            g.drawPolygon(tooth);
+        }
     }
+
+    // -------------------------------------------------------------------------
+    // SpriteOverridable
+    // -------------------------------------------------------------------------
+
+    @Override public void setSpritePath(String path) { this.spritePath = path; }
+    @Override public String getSpritePath() { return spritePath; }
 }

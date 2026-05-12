@@ -51,44 +51,55 @@ public class Act3Level extends LevelGenerator { // Concrete Act 3 generator
         platform(Platform.PlatformType.INVISIBLE, 380, 540);
         platform(Platform.PlatformType.INVISIBLE, 460, 480);
 
-        platform(Platform.PlatformType.BRICK, 560, 440, 64, 16);
+        platform(Platform.PlatformType.MIMIC, 560, 440, 64, 16);
         platform(Platform.PlatformType.MIMIC, 700, 440);    // Looks like BRICK; collapses on first contact
         platform(Platform.PlatformType.BRICK, 820, 400, 96, 16);
 
         // ---- Example fragments ----
         fragment("A3-SHADOW_DASH", 580, 416,
                  LoreFragment.AbilityUnlock.SHADOW_DASH,
-                 "Entry 027. The veil thins. The Wanderer steps between strides.");
+                 "Entry 027. The veil thins. The Wanderer steps between strides.",
+                 "resources/sprites/fragments/shadow_dash.png");
 
         fragment("A3-IRON", 850, 372,
                  LoreFragment.AbilityUnlock.IRON,
-                 "Entry 031. Iron settles into the breath. Hits land lighter.");
+                 "Entry 031. Iron settles into the breath. Hits land lighter.",
+                 "resources/sprites/fragments/iron.png");
+
+        fragment("A3-DODGE", 850, 700,
+                 LoreFragment.AbilityUnlock.DODGE,
+                 "Entry 067. Agile is the survivor. Dodge the killing blow.",
+                 "resources/sprites/fragments/dodge.png");
+        
 
         // ---- Example altars (two for Act 3) ----
-        altar(3, 300, 692, "POWER_SURGE", "SIGHT_RESTRICTION");
-        altar(4, 760, 692, "POWER_SURGE", "SIGHT_RESTRICTION");
+        altar(3, 300, 692, "POWER_SURGE", "SIGHT_RESTRICTION", null);
+        lastAltar().setConcealment(BreakableWallConcealment.of());
+
+        altar(4, 760, 692, "POWER_SURGE", "SIGHT_RESTRICTION", null);
+        lastAltar().setConcealment(GhostWallConcealment.of());
 
         // ---- Example hazards (P9.3' — Act 3 mixes the full hazard suite) ----
         // PhantomBlock — solid only while the Apprentice paints it with light;
         // fades out and becomes traversable shortly after the light leaves.
-        phantomBlock(420, 580, 64, 32);
+        phantomBlock(420, 580, 64, 32, "resources/sprites/hazards/phantom_block.png");
 
         // LightLockedMover with circular pattern — orbits a centre until lit.
         lightMover(700, 540, LightLockedMover.MovePattern.CIRCULAR,
-                   72, 4000, LightLockedMover.LightBehavior.FREEZE_ON_LIGHT);
+                   72, 4000, LightLockedMover.LightBehavior.FREEZE_ON_LIGHT, "resources/sprites/hazards/light_mover.png");
 
         // CorruptedSpike row at the lower edge — punishes falls.
-        spike(160, 724);
-        spike(220, 724);
-        spike(280, 724);
-        spike(335, 724);
-        spike(380, 724);
-        spike(740, 724);
-        spike(790, 724);
+        spike(160, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
+        spike(220, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
+        spike(280, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
+        spike(335, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
+        spike(380, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
+        spike(740, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
+        spike(790, 724, 84, 24, "resources/sprites/hazards/corrupted_spike.png");
 
         // CorruptedWall guarding the portal approach — wider trigger so the
         // player gets the warning shake even from afar.
-        corruptedWall(840, 320, 80, 160, 320, 320);
+        corruptedWall(840, 320, 80, 160, 320, 320, "resources/sprites/hazards/corrupted_wall.png");
 
         // ---- Portal ----
         // Reaching this portal fires Protocol.BOSS_ENTER (handled by GameStarter

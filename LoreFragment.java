@@ -37,8 +37,7 @@
 //                                 follow the constants pattern from 1a.
 // =========================================================================
 import java.awt.*;
-import java.awt.image.*;
-public class LoreFragment extends GameElement { // Extends GameElement for position, AABB, active flag, and update/render contract
+public class LoreFragment extends GameElement implements SpriteOverridable { // Extends GameElement for position, AABB, active flag, and update/render contract; implements SpriteOverridable so a level generator can swap the procedural shard for a PNG
 
     // =========================================================================
     // Enum — AbilityUnlock
@@ -184,6 +183,14 @@ public class LoreFragment extends GameElement { // Extends GameElement for posit
      */
     private boolean gated; // Prerequisite gate flag; CollisionDetector skips collection if gated==true
 
+    /**
+     * Optional PNG path that, when set, replaces the procedural 6-point shard
+     * render with a {@link SpriteLoader#tryLoad(String)} bitmap. {@code null}
+     * by default; level generators set this through
+     * {@link #setSpritePath(String)} when they want a custom look.
+     */
+    private String spritePath; // SpriteOverridable backing field; null → procedural fallback
+
     // -------------------------------------------------------------------------
     // Constructor
     // -------------------------------------------------------------------------
@@ -213,6 +220,7 @@ public class LoreFragment extends GameElement { // Extends GameElement for posit
         this.unlock     = unlock;     // Store the ability unlock constant; read by GameSession on collection
         this.collected  = false;      // Fragment starts uncollected; collect() sets this to true and deactivates the element
         this.gated      = false;      // Fragment starts ungated; CollisionDetector or GameStarter may gate it later
+        this.spritePath = null;       // No sprite override by default; render() falls through to the procedural shard draw
     }
 
     // -------------------------------------------------------------------------
@@ -262,12 +270,63 @@ public class LoreFragment extends GameElement { // Extends GameElement for posit
      */
     @Override
     public void render(Graphics2D g) {
-        if (collected) return;
-        String conv = defaultSpritePath(unlock);
-        if (conv != null) {
-            BufferedImage img = SpriteLoader.getInstance().tryLoad(conv);
-            if (img != null) g.drawImage(img, x, y, width, height, null);
+        if (collected) return; // Skip rendering for already-collected fragments; should never reach here if active=false, but guards anyway
+
+        // (1) Sprite override: if an explicit PNG path is set and loadable, draw it and return.
+        if (SpriteOverridable.tryDrawSprite(g, this, x, y, width, height)) return;
+
+        // (2) P9.6' auto-sprite-resolution: when no explicit override is set,
+        // try the convention path for this fragment's AbilityUnlock. This lets
+        // a level author drop new art at e.g.
+        // {@code resources/sprites/fragments/dodge.png} and have every DODGE
+        // fragment in the game pick it up automatically — no per-call sprite
+        // path needed in the level Java files.
+        if (spritePath == null) {
+            String conv = defaultSpritePath(unlock);
+            if (conv != null) {
+                java.awt.image.BufferedImage img = SpriteLoader.getInstance().tryLoad(conv);
+                if (img != null) {
+                    g.drawImage(img, x, y, width, height, null);
+                    return; // Bitmap drawn; skip procedural fallback
+                }
+            }
         }
+
+        boolean isCombat = (unlock != AbilityUnlock.NONE); // True for any fragment that grants a gameplay ability; drives the colour choice
+
+        // ---- Outer pulse glow ----
+        long now = System.currentTimeMillis();                      // Wall-clock time for the sine-wave pulse calculation
+        float pulse = (float)(Math.sin(now * 0.004) * 0.3 + 0.7); // Pulse oscillates between 0.4 and 1.0 at ~0.64 Hz; makes the fragment feel alive
+        int glowSize = (int)(pulse * 8);                            // Glow radius ranges from ~3 to 8 px beyond the shard boundary
+        if (isCombat) {                                             // Combat fragments: bright amber glow to signal their high value
+            g.setColor(new Color(0xf0, 0xcc, 0x7a, 50));          // Amber-gold glow at alpha=50: subtle but visible in the dark arena
+        } else {                                                    // Narrative fragments: slightly muted antique-gold glow
+            g.setColor(new Color(0xc9, 0xa8, 0x4c, 40));          // Antique gold glow at alpha=40: slightly less prominent than combat type
+        }
+        g.fillOval(x - glowSize, y - glowSize,                    // Expand the oval symmetrically beyond the AABB
+                   width + glowSize * 2, height + glowSize * 2);  // Total oval is (width + 2*glowSize) × (height + 2*glowSize)
+
+        // ---- Six-point angular shard polygon ----
+        int cx = x + width / 2;   // Centre x of the fragment AABB; shard polygon is built relative to this
+        int cy = y + height / 2;  // Centre y of the fragment AABB
+        int r  = width / 2;       // Radius of the shard (half of 20 px = 10 px)
+        // Build the 6 vertices of an angular shard shape: top tip, right, lower-right, bottom, lower-left, left
+        int[] xPoints = {cx, cx + r, cx + r / 2, cx, cx - r / 2, cx - r};          // x coordinates for the 6 vertices
+        int[] yPoints = {cy - r, cy - r / 3, cy + r / 2, cy + r, cy + r / 2, cy - r / 3}; // y coordinates; creates an asymmetric shard silhouette
+        Polygon shard = new Polygon(xPoints, yPoints, 6);                             // Construct the 6-point polygon
+
+        if (isCombat) {                                // Combat fragments use a brighter gold fill
+            g.setColor(new Color(0xf0, 0xcc, 0x7a)); // Bright warm gold: high-value fragment colour
+        } else {                                       // Narrative fragments use a softer antique gold
+            g.setColor(new Color(0xc9, 0xa8, 0x4c)); // Antique gold: subtly duller to signal lower gameplay impact
+        }
+        g.fill(shard); // Draw the filled shard polygon
+
+        // ---- Inner highlight line (gemstone facet simulation) ----
+        g.setColor(new Color(0xff, 0xff, 0xf0, 180)); // Near-white with alpha=180: bright but translucent facet highlight
+        g.setStroke(new BasicStroke(0.8f));            // Very thin 0.8 px stroke; a hairline facet line on a small shard
+        g.drawLine(cx - r / 3, cy - r / 2,            // Facet starts upper-left of the shard centre
+                   cx + r / 4, cy);                   // Facet ends at the horizontal centre, creating a diagonal sparkle
     }
 
     /**
@@ -365,6 +424,37 @@ public class LoreFragment extends GameElement { // Extends GameElement for posit
      */
     public void setGated(boolean gated) {
         this.gated = gated; // Toggle gate state; CollisionDetector reads this flag before calling collect()
+    }
+
+    // -------------------------------------------------------------------------
+    // SpriteOverridable
+    // -------------------------------------------------------------------------
+
+    /**
+     * Sets the optional PNG path that replaces the procedural shard render.
+     * Pass {@code null} to clear the override; pass a path like
+     * {@code "resources/sprites/fragments/dodge.png"} to use a bitmap.
+     *
+     * <p>Level generators call this through the
+     * {@code fragment(..., spritePath)} helper in {@link LevelGenerator};
+     * direct call sites work the same way.</p>
+     *
+     * @param path the PNG path, or {@code null} for procedural rendering
+     */
+    @Override
+    public void setSpritePath(String path) { // SpriteOverridable contract
+        this.spritePath = path;               // Stored as-is; null is valid
+    }
+
+    /**
+     * Returns the configured sprite path, or {@code null} if no override is set.
+     * Read by {@link SpriteOverridable#tryDrawSprite} each frame.
+     *
+     * @return the sprite path or {@code null}
+     */
+    @Override
+    public String getSpritePath() { // SpriteOverridable contract
+        return spritePath;          // Null when no override is configured
     }
 
     // -------------------------------------------------------------------------
