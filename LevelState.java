@@ -1,8 +1,8 @@
 /**
  Shared mutable state for the active level, including current act, block budget,
- countdown timer, and remote player state. All game-loop subsystems (GameStarter,
- GameCanvas, InputRouter, NetworkIO) read/write fields directly. Enum GamePhase
- drives renderer and input-routing selection each frame.
+ and remote player state. All game-loop subsystems (GameStarter, GameCanvas,
+ InputRouter, NetworkIO) read/write fields directly. Enum GamePhase drives
+ renderer and input-routing selection each frame.
 
  Remote-state fields (remote*) are populated from incoming network packets by
  GameStarter.handleMessage() and read by GameCanvas to draw partner avatars and
@@ -51,10 +51,6 @@ public class LevelState { // Plain mutable state bag; public fields allow direct
 
     public int blockBudget; // Placement token allowance; decremented by block placement, reset per level
 
-    public long timeRemainingMs; // Countdown in milliseconds; decremented 16 ms/tick when timerActive is true
-
-    public boolean timerActive; // Timer running flag; false during lobby, cutscenes, pause
-
     public GamePhase currentPhase; // Active phase; drives renderer and input dispatch every frame
 
     public int[] coreHealth = {3, 3, 3, 3}; // HP of each Core (index 0-3); server-authoritative, updated from network packets
@@ -94,8 +90,6 @@ public class LevelState { // Plain mutable state bag; public fields allow direct
     public LevelState() {                              // Default constructor: initialise to safe pre-session values
         this.currentLevel = 1;                         // Start at level 1; LevelLoader.loadLevel(1) will be called on session start
         this.blockBudget = 20;                         // Default 20 placement tokens; reset by GameStarter.loadLevel() per-level spec
-        this.timeRemainingMs = 300_000L;               // 5 minutes (300,000 ms) default timer; overridden by per-level timer specs
-        this.timerActive = false;                      // Timer starts paused; GameStarter.resumeTimer() starts it after level load completes
         this.currentPhase = GamePhase.MENU;            // Start in MENU phase; transitions to LOBBY once the network connection is established
     }
 

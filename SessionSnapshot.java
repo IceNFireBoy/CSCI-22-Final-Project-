@@ -88,11 +88,12 @@ public class SessionSnapshot { // Plain data-transfer object; no methods beyond 
     public int wandererHealth; // Integer HP; max is Player.MAX_HEALTH = 5
 
     /**
-     * Wanderer remaining lives at capture time. Transmitted as field [6]. Applied to
-     * {@link Player#setLives(int)} during restore; preserves the run's difficulty state
-     * so the reconnecting client doesn't accidentally get bonus lives.
+     * Legacy lives field retained for wire-format parity. The lives system has
+     * been removed in favour of the unified 0-100 health bar; this field is
+     * still serialised at field [6] for backward compatibility but is ignored
+     * during restore on the client side.
      */
-    public int wandererLives; // Remaining attempt count; default start is 3
+    public int wandererLives; // Legacy field; no longer affects gameplay
 
     // -------------------------------------------------------------------------
     // Apprentice / light state

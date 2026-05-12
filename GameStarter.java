@@ -1148,31 +1148,20 @@ public class GameStarter {
                     // (2) Update player respawn state (death timer).
                     player.updateRespawn(TICK_MS);
 
-                    // Game-over checks — before physics and portal checks
-                    if (player != null && player.getLives() <= 0 && !player.isGameOverPending() && player.isDead()) {
-                        int currentLevel = levelState.currentLevel;
-                        loadLevel(currentLevel);
-                        canvas.showNotification("Attempt failed — " + player.getTotalAttempts() + " attempt(s) remaining");
-                        continue;
-                    }
-                    if (player != null && player.isGameOverPending()) {
-                        player.setGameOverPending(false);
-                        GameStarter.getInstance().stopGame();
-                        GameStarter.getInstance().resetToMenu();
-                        canvas.showNotification("No attempts remaining — run ended");
-                        new Thread(() -> {
-                            try { Thread.sleep(MENU_RETURN_DELAY_MS); } catch (InterruptedException ex) {}
-                            javax.swing.SwingUtilities.invokeLater(() -> {
-                                GameFrame frame = GameStarter.getInstance().getGameFrame();
-                                if (frame != null) {
-                                    frame.getIpField().setVisible(true);
-                                    frame.getConnectButton().setVisible(true);
-                                }
-                                canvas.setPhase(LevelState.GamePhase.MENU);
-                                canvas.repaint();
-                            });
-                        }).start();
-                        continue;
+                    // Death-restart check — Acts 1-3 reload Act 1 with full health.
+                    // BOSS phase deaths flow through the server (ARCHITECT_VICTORY)
+                    // and are not handled here.
+                    if (player != null && player.isRestartToAct1Pending()) {
+                        player.clearRestartToAct1Pending();
+                        if (levelState.currentPhase != LevelState.GamePhase.BOSS) {
+                            player.setHealth(player.getMaxHealth());
+                            player.setDead(false);
+                            loadLevel(1);
+                            if (canvas != null) {
+                                canvas.showNotification("You fell — restarting at Act 1");
+                            }
+                            continue;
+                        }
                     }
 
                     // (3) Advance physics simulation by one fixed tick.
@@ -1335,12 +1324,6 @@ public class GameStarter {
                             Protocol.REMOVE_BLOCK + "|"
                                 + pb.getBounds().x + "|" + pb.getBounds().y);
                     }
-                }
-
-                // Decrement the level countdown timer if it is running.
-                if (levelState.timerActive) {
-                    levelState.timeRemainingMs =
-                            Math.max(0L, levelState.timeRemainingMs - TICK_MS);
                 }
 
                 // (5-7) Wanderer-only: these checks all act on the local Player's
@@ -1810,7 +1793,8 @@ public class GameStarter {
                 player.setVelX(0);
                 player.setVelY(0);
                 player.setHealth(wandHealth);
-                player.setLives(wandLives);
+                // Lives field is no longer used; the wandLives value in the
+                // snapshot is read above for wire-format parity and ignored here.
             }
             levelState.setWandererPosition(wandX, wandY);
             levelState.setWandererHealth(wandHealth);
@@ -2269,7 +2253,7 @@ public class GameStarter {
     public void resetToMenu() {
         elements.clear();
         if (player != null) {
-            player.setLives(3);
+            player.setHealth(player.getMaxHealth());
             player.setX(60);
             player.setY(652);
             player.setVelX(0);
@@ -2444,10 +2428,10 @@ public class GameStarter {
             player.addMaxHealth(10);
             if (canvas != null) canvas.showNotification("Fragment offered — Max HP +10");
         } else if ("SIGHT_RESTRICTION".equals(choice)) {
-            player.setLives(player.getLives() + 1);
+            player.addMaxHealth(20);
             player.setSightRestricted(true);
             player.addFaithful(1); // accepting the harder path earns faith
-            if (canvas != null) canvas.showNotification("Sight Restricted — Lives +1, Light -25%, Faith +1");
+            if (canvas != null) canvas.showNotification("Sight Restricted — Max HP +20, Light -25%, Faith +1");
         }
         altarActive = false;
         altarActiveTrigger = -1;
@@ -2512,16 +2496,8 @@ public class GameStarter {
      * <p><b>Win condition:</b> at least one {@link Core} exists in the element list
      * and every Core is destroyed ({@link Core#isDestroyed()} returns {@code true}).
      *
-     * <p><b>Loss conditions:</b>
-     * <ul>
-     *   <li>The Wanderer's health reaches zero ({@link Player#isAlive()} returns
-     *       {@code false}).</li>
-     *   <li>The level countdown timer has reached zero while
-     *       {@link LevelState#timerActive} is {@code true}.</li>
-     * </ul>
-     *
-     * <p>Win is checked before loss so that a simultaneous last-hit and death resolves
-     * as a win.
+     * <p><b>Loss condition:</b> the Wanderer is dead during the BOSS phase. In
+     * Acts 1-3 a death triggers an Act-1 restart instead of a loss.
      */
     private void checkWinLoss() {
         // --- Win: all Cores present in the world must be destroyed ---
@@ -2541,14 +2517,8 @@ public class GameStarter {
             return;
         }
 
-        // --- Loss: Wanderer out of health ---
-        if (!player.isAlive()) {
-            handleLoss();
-            return;
-        }
-
-        // --- Loss: countdown expired ---
-        if (levelState.timerActive && levelState.timeRemainingMs <= 0L) {
+        // --- Loss: Wanderer out of health during boss fight only ---
+        if (levelState.currentPhase == LevelState.GamePhase.BOSS && !player.isAlive()) {
             handleLoss();
         }
     }

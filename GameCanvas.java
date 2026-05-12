@@ -1244,8 +1244,8 @@ public class GameCanvas extends JComponent {
         // Ghost block preview
         renderGhostBlock(g);
 
-        // HUD: health bar top-left, budget top-right, timer top-center
-        renderHUD(g, true, true);
+        // HUD: health bar top-left, budget top-right
+        renderHUD(g, true);
 
         // On-screen notifications
         renderNotifications(g);
@@ -1266,7 +1266,7 @@ public class GameCanvas extends JComponent {
         if (!isLightEffectivelyOn()) {
             g.setColor(new Color(0, 0, 0, 255));
             g.fillRect(0, 0, getWidth(), getHeight());
-            renderHUD(g, false, true);
+            renderHUD(g, false);
             return;
         }
 
@@ -1297,8 +1297,8 @@ public class GameCanvas extends JComponent {
 
         renderDarkness(g, lightSourcePosition, effectiveRadius2);
 
-        // HUD: timer only (no budget in Act 2)
-        renderHUD(g, false, true);
+        // HUD: health bar only (no budget in Act 2)
+        renderHUD(g, false);
 
         // On-screen notifications
         renderNotifications(g);
@@ -1319,7 +1319,7 @@ public class GameCanvas extends JComponent {
         if (!isLightEffectivelyOn()) {
             g.setColor(new Color(0, 0, 0, 255));
             g.fillRect(0, 0, getWidth(), getHeight());
-            renderHUD(g, true, true);
+            renderHUD(g, true);
             return;
         }
 
@@ -1347,8 +1347,8 @@ public class GameCanvas extends JComponent {
 
         renderDarkness(g, lightSourcePosition, effectiveRadius3);
 
-        // HUD: health bar, budget, and timer
-        renderHUD(g, true, true);
+        // HUD: health bar and budget
+        renderHUD(g, true);
 
         // On-screen notifications
         renderNotifications(g);
@@ -1483,8 +1483,8 @@ public class GameCanvas extends JComponent {
             }
         }
 
-        // HUD: health bar and timer (no budget in boss)
-        renderHUD(g, false, true);
+        // HUD: health bar (no budget in boss)
+        renderHUD(g, false);
 
         // On-screen notifications
         renderNotifications(g);
@@ -1737,34 +1737,16 @@ public class GameCanvas extends JComponent {
     }
 
     /**
-     * Renders the HUD: health bar (top-left), optional budget (top-right),
-     * and timer (top-center).
+     * Renders the HUD: health bar (top-left) and optional budget (top-right).
      *
      * @param showBudget whether to show the Apprentice's block budget
-     * @param showTimer  whether to show the countdown timer
      */
-    private void renderHUD(Graphics2D g, boolean showBudget, boolean showTimer) {
+    private void renderHUD(Graphics2D g, boolean showBudget) {
         // --- Wanderer-only HUD elements ---
         if (session.isWanderer()) {
-            // Lives bar — top-left: 3 pips as small rounded rects
-            int maxLives = 3;
-            int lives = (player != null) ? player.getLives() : 3;
-            for (int i = 0; i < maxLives; i++) {
-                int px = 8 + i * (18 + 4);
-                Color fill = (i < lives) ? new Color(0xC9, 0xA8, 0x4C) : new Color(0x1A, 0x1A, 0x20);
-                g.setColor(fill);
-                g.fill(new RoundRectangle2D.Float(px, 8, 18, 14, 3, 3));
-                g.setColor(new Color(0x3A, 0x3A, 0x48));
-                g.draw(new RoundRectangle2D.Float(px, 8, 18, 14, 3, 3));
-            }
-            g.setFont(new Font("Monospaced", Font.PLAIN, 11));
-            g.setColor(new Color(0x88, 0x80, 0x70));
-            g.drawString("LIVES", 8, 36);
-            g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 10));
-            g.setColor(new Color(0x88, 0x70, 0x50));
-            g.drawString("ATTEMPTS: " + (player != null ? player.getTotalAttempts() : 3), 8, 50);
-
-            // HP bar — below ATTEMPTS, shows current / max as a segmented fill
+            // HP bar — top-left; the 0-100 health bar is the unified survivability meter
+            int hpBarY = 12;
+            int hpLabelY = 32;
             if (player != null) {
                 int maxHp = player.getMaxHealth();
                 int curHp = player.getHealth();
@@ -1776,14 +1758,14 @@ public class GameCanvas extends JComponent {
                              : (hpFrac > 0.25f) ? new Color(0xAA, 0x88, 0x22)
                                                 : new Color(0xBB, 0x22, 0x22);
                 g.setColor(new Color(0x1A, 0x1A, 0x20));
-                g.fillRect(8, 58, hpBarW, hpBarH);
+                g.fillRect(8, hpBarY, hpBarW, hpBarH);
                 g.setColor(hpFill);
-                if (hpFillW > 0) g.fillRect(8, 58, hpFillW, hpBarH);
+                if (hpFillW > 0) g.fillRect(8, hpBarY, hpFillW, hpBarH);
                 g.setColor(new Color(0x3A, 0x3A, 0x48));
-                g.drawRect(8, 58, hpBarW, hpBarH);
+                g.drawRect(8, hpBarY, hpBarW, hpBarH);
                 g.setFont(new Font("Monospaced", Font.PLAIN, 9));
                 g.setColor(new Color(0x88, 0x80, 0x70));
-                g.drawString("HP " + curHp + "/" + maxHp, 8, 78);
+                g.drawString("HP " + curHp + "/" + maxHp, 8, hpLabelY);
             }
 
             // P8.7 — Faithful meter: 5 pips next to HP (only shown in BOSS phase)
@@ -1794,7 +1776,7 @@ public class GameCanvas extends JComponent {
                 int pipH = 10;
                 int pipGap = 3;
                 int faithStartX = 116; // right of the HP bar (bar ends at 8+100=108)
-                int faithY = 58;
+                int faithY = hpBarY;
                 for (int i = 0; i < faithMax; i++) {
                     Color pipFill = (i < faithful)
                             ? new Color(0xE8, 0xD0, 0x60)   // gold — earned pip
@@ -1806,29 +1788,7 @@ public class GameCanvas extends JComponent {
                 }
                 g.setFont(new Font("Monospaced", Font.PLAIN, 9));
                 g.setColor(new Color(0x88, 0x80, 0x70));
-                g.drawString("FAITH", faithStartX, 78);
-            }
-
-            // Timer — top-center
-            if (showTimer) {
-                long secs = levelState.timeRemainingMs / 1000;
-                long mins = secs / 60;
-                secs = secs % 60;
-                String timeText = String.format("%d:%02d", mins, secs);
-                Font timerFont = new Font("Serif", Font.PLAIN, 16);
-                g.setFont(timerFont);
-                g.setColor(new Color(0xC9, 0xA8, 0x4C));
-                FontMetrics fm = g.getFontMetrics();
-                int textW = fm.stringWidth(timeText);
-                g.drawString(timeText, 512 - textW / 2, 22);
-                float timeRatio = Math.max(0f, Math.min(1f, levelState.timeRemainingMs / 300000f));
-                g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, timeRatio));
-                g.setStroke(new BasicStroke(1.5f));
-                g.setColor(new Color(0xC9, 0xA8, 0x4C));
-                int lineHalfW = (int) (40 * timeRatio);
-                g.draw(new Line2D.Float(512 - lineHalfW, 28, 512 + lineHalfW, 28));
-                g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
-                g.setStroke(new BasicStroke(1.0f));
+                g.drawString("FAITH", faithStartX, hpLabelY);
             }
 
             // Ability bar — bottom-left: 5 icon slots

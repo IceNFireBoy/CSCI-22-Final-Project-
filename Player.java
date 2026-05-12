@@ -52,7 +52,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     // Constants
     // -------------------------------------------------------------------------
 
-    private int maxHealth; // Dynamic max health cap; starts at 60 (lives * 20), raised by 10 on POWER_SURGE altar choice
+    private int maxHealth; // Dynamic max health cap; starts at 100, raised by altar offerings
 
     private int x; // World-space X coordinate (left edge); set by PhysicsEngine each tick; read by Camera and render()
     private int y; // World-space Y coordinate (top edge); set by PhysicsEngine each tick; read by Camera and render()
@@ -300,11 +300,8 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     private List<GameElement> activeEntities; // Injected by setActiveEntities(); iterated in executeMelee() for hit detection
 
     // -------------------------------------------------------------------------
-    // Lives and respawn state
+    // Respawn state (lives system removed — health bar is the single source of truth)
     // -------------------------------------------------------------------------
-
-    /** Number of lives remaining. Starts at 3. */
-    private int lives; // Decremented in loseLife(); when it reaches 0 an attempt is consumed and lives reset to 3
 
     /** X-coordinate of the respawn point. */
     private int respawnX; // Set by setRespawn() when the Wanderer passes a checkpoint; used by updateRespawn()
@@ -318,11 +315,12 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     /** Timer tracking elapsed ms since death, for respawn delay. */
     private long deathTimer; // Incremented each tick in updateRespawn() while isDead; respawn fires at 1200 ms
 
-    /** Whether a total game over is pending (return to menu). */
-    private boolean gameOverPending = false; // Set true when totalAttempts reaches 0; causes GameStarter to trigger the game-over screen
-
-    /** Total attempts remaining across the entire run. Starts at 3. */
-    private int totalAttempts = 3; // Decremented when all 3 lives are lost; hitting 0 sets gameOverPending
+    /**
+     * Set true when the Wanderer dies (health hits 0 or falls off the world) in
+     * Acts 1-3, signalling {@link GameStarter} to reload Act 1 with full health.
+     * The BOSS-phase death path is handled server-side (ARCHITECT_VICTORY).
+     */
+    private boolean restartToAct1Pending = false;
 
     // -------------------------------------------------------------------------
     // Animation state machine
@@ -442,9 +440,8 @@ public class Player implements Damageable, Renderable { // Implements Damageable
         this.collectFlashStart = 0L;       // No collect flash timer
         this.activeEntities = new ArrayList<>(); // Empty list; injected by setActiveEntities() before first melee
 
-        // Lives and respawn
-        this.lives     = 3;                 // Start with 3 lives; each death decrements this
-        this.maxHealth = this.lives * 20;   // 60 HP at game start; altar can raise this via addMaxHealth()
+        // Health (unified — lives system removed)
+        this.maxHealth = 100;               // 0-100 health bar; altar can raise this via addMaxHealth()
         this.health    = this.maxHealth;    // Start at full health
         this.sightRestricted = false;       // No sight penalty at spawn
         this.faithful  = 0;                 // Faithful meter starts at 0
@@ -635,7 +632,7 @@ public class Player implements Damageable, Renderable { // Implements Damageable
 
         health = Math.max(0, health - amount); // Deduct damage, clamping health at 0 to prevent negative values
         if (health <= 0) {
-            loseLife(); // Health depleted: trigger death sequence (deduct life, enter death animation)
+            loseLife(); // Health depleted: enter death animation and queue Act-1 restart
         }
     }
 
@@ -1513,33 +1510,22 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     // -------------------------------------------------------------------------
 
     /**
-     * Deducts one life and enters the death state. If all lives are lost, either
-     * restores lives for a new attempt (if attempts remain) or sets
-     * {@link #gameOverPending} for a final game-over screen. Does nothing if
-     * already in the death state to prevent multiple triggers per fall.
+     * Enters the death state. In Acts 1-3, sets the {@link #restartToAct1Pending}
+     * flag so {@link GameStarter} reloads Act 1 with full health; during the
+     * BOSS fight the server detects {@code health <= 0} and triggers the
+     * ARCHITECT_VICTORY cutscene instead.
      *
      * <p>Architecture role: Called by {@link #takeDamage(int)} when health reaches
-     * zero, and directly by out-of-bounds detection in {@link GameStarter}. The
-     * faithful meter loses 2 points on each death.</p>
+     * zero, and directly by out-of-bounds detection in {@link PhysicsEngine}.</p>
      */
     public void loseLife() {
         if (isDead) return;              // Guard: already dead; prevent double-death from same frame
-        lives--;                         // Deduct one life
         isDead    = true;                // Enter death animation state
         deathTimer = 0;                  // Reset death countdown
         addFaithful(-2);                 // Penalise faithful meter by 2 for dying
         deathX = x;                      // Snapshot X for death animation position
         deathY = Math.min(y, DEATH_ANIM_MAX_Y); // Clamp so the death animation is always visible on screen
-        if (lives <= 0) {               // All lives exhausted: consume one attempt
-            totalAttempts--;
-            if (totalAttempts <= 0) {
-                gameOverPending = true;  // No attempts remain: full game over, return to menu
-                System.out.println("TOTAL GAME OVER — no attempts remaining, returning to menu");
-            } else {
-                lives = 3;              // Restore full lives for the next attempt
-                System.out.println("Attempt failed — " + totalAttempts + " attempt(s) remaining — restarting level");
-            }
-        }
+        restartToAct1Pending = true;     // GameStarter consumes this flag to reload Act 1 (no-op in BOSS)
     }
 
     /**
@@ -1815,21 +1801,17 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     }
 
     /**
-     * Returns the number of lives remaining.
+     * Returns whether a restart-to-Act 1 is queued for {@link GameStarter} to consume.
      *
-     * @return lives count; starts at 3
+     * @return {@code true} if the Wanderer died in Acts 1-3 and the level should reload
      */
-    public int getLives() {
-        return lives; // Read by HUD to display the life counter
+    public boolean isRestartToAct1Pending() {
+        return restartToAct1Pending;
     }
 
-    /**
-     * Sets the number of lives.
-     *
-     * @param lives the new lives count
-     */
-    public void setLives(int lives) {
-        this.lives = lives; // Used by server reconnect to restore saved lives count
+    /** Clears the pending restart flag once {@link GameStarter} has handled it. */
+    public void clearRestartToAct1Pending() {
+        this.restartToAct1Pending = false;
     }
 
     /**
@@ -1849,27 +1831,6 @@ public class Player implements Damageable, Renderable { // Implements Damageable
     public void setDead(boolean dead) {
         this.isDead = dead; // Used by server reconnect to restore saved death state
     }
-
-    /**
-     * Returns whether a total game over is pending.
-     *
-     * @return {@code true} when no attempts remain and the game should return to menu
-     */
-    public boolean isGameOverPending() { return gameOverPending; } // Read by GameStarter to trigger the game-over screen
-
-    /**
-     * Sets the game-over pending flag.
-     *
-     * @param b {@code true} to signal a total game over
-     */
-    public void setGameOverPending(boolean b) { gameOverPending = b; } // Reset to false when the player restarts from the menu
-
-    /**
-     * Returns the total attempts remaining across the entire run.
-     *
-     * @return total attempts; starts at 3
-     */
-    public int getTotalAttempts() { return totalAttempts; } // Read by HUD to display the attempt counter
 
     /**
      * Returns the x-coordinate where the player died.
