@@ -88,14 +88,14 @@ public class CutsceneScript {
             "..."
         };
         SCRIPTS[CutsceneID.WANDERER_VICTORY.ordinal()] = new String[]{
-            "The darkness breaks through. Yet here you remain. I thought we could both live to see it. Goodbye."
+            "The darkness breaks through. Yet you will remain. To design is all I am. Yet my creations are hollow. You will see upon my death. And witness the horrors of the void."
         };
         SCRIPTS[CutsceneID.HOME.ordinal()] = new String[]{
             "The lattice is broken. A gate opens. To other slices of reality. It's time for new beginnings."
         };
         SCRIPTS[CutsceneID.ARCHITECT_VICTORY.ordinal()] = new String[]{
-            "\"Your lantern is mine again.\"",
-            "\"This world is broken, but I will make it anew. Again. I will make it, make you, perfect this time.\""
+            "\"You were so close.\"",
+            "\"Fear not, dear friend. I will remake you, as I will remake this dead world. I will make you perfect.\""
         };
     }
 
