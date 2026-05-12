@@ -51,7 +51,8 @@
 //                                 collision module's overlap test.
 // =========================================================================
 import java.awt.*;
-public class PhantomBlock extends Platform implements SpriteOverridable { // Light-charging memory block
+import java.awt.image.*;
+public class PhantomBlock extends Platform { // Light-charging memory block
 
     // -------------------------------------------------------------------------
     // Tuning constants
@@ -66,10 +67,6 @@ public class PhantomBlock extends Platform implements SpriteOverridable { // Lig
     /** Per-tick drain when unlit; total persistence after a full charge ≈ MAX_CHARGE / DECAY_RATE ticks (≈ 5 s at default). */
     public static final int DEFAULT_DECAY_RATE = 5;
 
-    private static final Color BLOCK_FILL    = new Color(0x88, 0xB0, 0xD8); // Cool blue tint to read as "ghostly light memory"
-    private static final Color BLOCK_OUTLINE = new Color(0x44, 0x60, 0x80); // Slightly darker outline for definition
-    private static final Color BLOCK_HIGHLIGHT = new Color(0xE0, 0xEC, 0xF6); // Soft top-edge highlight when fully charged
-
     // -------------------------------------------------------------------------
     // Per-instance state
     // -------------------------------------------------------------------------
@@ -79,8 +76,6 @@ public class PhantomBlock extends Platform implements SpriteOverridable { // Lig
     private final int chargeRate;  // Per-tick gain when lit (scaled by intensity)
     private final int decayRate;   // Per-tick drain when unlit
     private float lightIntensity;  // Last-set intensity factor in [0, 1]; written by GameStarter each tick
-
-    private String spritePath;     // Optional sprite override
 
     // -------------------------------------------------------------------------
     // Constructors
@@ -118,7 +113,6 @@ public class PhantomBlock extends Platform implements SpriteOverridable { // Lig
         this.chargeRate = chargeRate;
         this.decayRate = decayRate;
         this.lightIntensity = 0f;
-        this.spritePath = null;
         setSolid(false);                        // Begin non-solid; update() flips this on as charge accumulates
     }
 
@@ -178,42 +172,8 @@ public class PhantomBlock extends Platform implements SpriteOverridable { // Lig
         Composite oldComposite = g.getComposite();
         g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
 
-        // Sprite override wins; tryDrawSprite respects the alpha composite.
-        boolean drewSprite = false;
-        if (spritePath != null) {
-            drewSprite = SpriteOverridable.tryDrawSprite(g, this, x, y, width, height);
-        } else {
-            // P9.6' convention path — try resources/sprites/hazards/phantom.png
-            // when no explicit override is set. The alpha composite is already
-            // configured above (proportional to charge), so the sprite fades in
-            // and out the same way the procedural draw does.
-            java.awt.image.BufferedImage img = SpriteLoader.getInstance()
-                .tryLoad("resources/sprites/hazards/phantom.png");
-            if (img != null) {
-                g.drawImage(img, x, y, width, height, null);
-                drewSprite = true;
-            }
-        }
-        if (!drewSprite) {
-            // Procedural fallback — cool blue block with a top highlight.
-            g.setColor(BLOCK_FILL);
-            g.fillRect(x, y, width, height);
-            g.setColor(BLOCK_OUTLINE);
-            g.drawRect(x, y, width, height);
-            // Top highlight stripe — only paints fully when nearly maxed out.
-            if (alpha > 0.7f) {
-                g.setColor(BLOCK_HIGHLIGHT);
-                g.fillRect(x + 2, y + 2, width - 4, 3);
-            }
-        }
-
+        BufferedImage img = SpriteLoader.getInstance().tryLoad("resources/sprites/hazards/phantom.png");
+        if (img != null) g.drawImage(img, x, y, width, height, null);
         g.setComposite(oldComposite);
     }
-
-    // -------------------------------------------------------------------------
-    // SpriteOverridable
-    // -------------------------------------------------------------------------
-
-    @Override public void setSpritePath(String path) { this.spritePath = path; }
-    @Override public String getSpritePath() { return spritePath; }
 }

@@ -58,26 +58,24 @@ public class Act3Level extends LevelGenerator { // Concrete Act 3 generator
         // ---- Example fragments ----
         fragment("A3-SHADOW_DASH", 580, 416,
                  LoreFragment.AbilityUnlock.SHADOW_DASH,
-                 "Entry 027. The veil thins. The Wanderer steps between strides.",
-                 null);
+                 "Entry 027. The veil thins. The Wanderer steps between strides.");
 
         fragment("A3-IRON", 850, 372,
                  LoreFragment.AbilityUnlock.IRON,
-                 "Entry 031. Iron settles into the breath. Hits land lighter.",
-                 null);
+                 "Entry 031. Iron settles into the breath. Hits land lighter.");
 
         // ---- Example altars (two for Act 3) ----
-        altar(3, 300, 692, "POWER_SURGE", "SIGHT_RESTRICTION", null);
-        altar(4, 760, 692, "POWER_SURGE", "SIGHT_RESTRICTION", null);
+        altar(3, 300, 692, "POWER_SURGE", "SIGHT_RESTRICTION");
+        altar(4, 760, 692, "POWER_SURGE", "SIGHT_RESTRICTION");
 
         // ---- Example hazards (P9.3' — Act 3 mixes the full hazard suite) ----
         // PhantomBlock — solid only while the Apprentice paints it with light;
         // fades out and becomes traversable shortly after the light leaves.
-        phantomBlock(420, 580, 64, 32, null);
+        phantomBlock(420, 580, 64, 32);
 
         // LightLockedMover with circular pattern — orbits a centre until lit.
         lightMover(700, 540, LightLockedMover.MovePattern.CIRCULAR,
-                   72, 4000, LightLockedMover.LightBehavior.FREEZE_ON_LIGHT, null);
+                   72, 4000, LightLockedMover.LightBehavior.FREEZE_ON_LIGHT);
 
         // CorruptedSpike row at the lower edge — punishes falls.
         spike(160, 724);
@@ -90,7 +88,7 @@ public class Act3Level extends LevelGenerator { // Concrete Act 3 generator
 
         // CorruptedWall guarding the portal approach — wider trigger so the
         // player gets the warning shake even from afar.
-        corruptedWall(840, 320, 80, 160, 320, 320, null);
+        corruptedWall(840, 320, 80, 160, 320, 320);
 
         // ---- Portal ----
         // Reaching this portal fires Protocol.BOSS_ENTER (handled by GameStarter
