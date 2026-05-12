@@ -97,6 +97,11 @@ public class BossArenaGenerator {
         }
 
 
+        final int spawnSideCoreX = CENTER_X + 192;
+        final int spawnSideCoreY = ARENA_H - BOSS_SPAWN_Y_OFFSET - 32;
+        out.add(new Core(4, spawnSideCoreX, spawnSideCoreY));
+
+
 
 
 

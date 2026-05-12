@@ -410,6 +410,7 @@ public class GameStarter {
         GameSession.getInstance().setPlacedBlocks(this.placedBlocks);
         this.levelState    = new LevelState();
         this.running       = false;
+        this.player.setActiveEntities(this.elements);
     }
 
 
@@ -1295,6 +1296,25 @@ public class GameStarter {
                     if (el.isActive()
                             || (el instanceof Platform && !((Platform) el).fullyGone)) {
                         el.update(TICK_MS);
+                    }
+                }
+
+
+                if (!GameSession.getInstance().isApprentice() && player != null) {
+                    for (GameElement projEl : elements) {
+                        if (!(projEl instanceof Projectile)) continue;
+                        Projectile proj = (Projectile) projEl;
+                        if (!proj.isActive() || !proj.isFromPlayer()) continue;
+                        for (GameElement targetEl : elements) {
+                            if (!(targetEl instanceof Core)) continue;
+                            if (!targetEl.isActive()) continue;
+                            Core c = (Core) targetEl;
+                            if (proj.getBounds().intersects(c.getBounds())) {
+                                proj.setActive(false);
+                                player.pendingCoreHitIndex = c.getCoreIndex();
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -2229,6 +2249,11 @@ public class GameStarter {
             player.setHealth(player.getMaxHealth());
             player.setDead(false);
             player.clearRestartToAct1Pending();
+
+
+            if (GameSession.getInstance().isWanderer()) {
+                grantAllAbilities();
+            }
         }
 
 
@@ -2244,6 +2269,16 @@ public class GameStarter {
 
         System.out.println("[BossArena] Arena built with " + elements.size()
                 + " entities; phase=BOSS");
+    }
+
+
+    private void grantAllAbilities() {
+        if (player == null) return;
+        for (LoreFragment.AbilityUnlock unlock : LoreFragment.AbilityUnlock.values()) {
+            if (unlock == LoreFragment.AbilityUnlock.NONE) continue;
+            player.unlockAbility(unlock);
+        }
+        System.out.println("[BossArena] All Wanderer abilities granted.");
     }
 
 

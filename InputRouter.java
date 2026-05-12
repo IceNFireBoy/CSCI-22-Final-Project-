@@ -48,6 +48,7 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
     private long lastBlockRainTime = 0;
     private long lastShieldTime = 0;
     private long lastSpikeTime = 0;
+    private boolean prevChargeHeld = false;
     private static final long BLOCK_RAIN_COOLDOWN = 8000;
     private static final long SHIELD_COOLDOWN = 8000;
     private static final long SPIKE_COOLDOWN = 6000;
@@ -135,6 +136,18 @@ public class InputRouter implements MouseListener, MouseMotionListener, MouseWhe
 
 
         if (input.dodgePressed) { physicsEngine.dodgeRoll(player); input.dodgePressed = false; }
+
+
+        if (input.chargeHeld && !prevChargeHeld) {
+            player.startCharge();
+        } else if (!input.chargeHeld && prevChargeHeld) {
+            Projectile fired = player.releaseProjectile();
+            if (fired != null) {
+                GameStarter starter = GameStarter.getInstance();
+                if (starter != null) starter.getElements().add(fired);
+            }
+        }
+        prevChargeHeld = input.chargeHeld;
 
 
 

@@ -1975,7 +1975,7 @@ public class Player implements Damageable, Renderable {
 
 
         public CoreHealthBar() {
-            this.coreHealth = new int[]{3, 3, 3, 3};
+            this.coreHealth = new int[]{3, 3, 3, 3, 3};
         }
 
 

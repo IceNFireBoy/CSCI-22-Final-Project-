@@ -76,7 +76,7 @@ public class GameServer {
     private static final int PORT = 9876;
 
 
-    private static final int CORE_COUNT = 4;
+    private static final int CORE_COUNT = 5;
 
 
     private static final int CORE_MAX_HEALTH = 3;
@@ -322,7 +322,8 @@ public class GameServer {
 
 
     public GameServer() {
-        this.coreHealth = new int[]{CORE_MAX_HEALTH, CORE_MAX_HEALTH, CORE_MAX_HEALTH, CORE_MAX_HEALTH};
+        this.coreHealth = new int[CORE_COUNT];
+        for (int i = 0; i < CORE_COUNT; i++) this.coreHealth[i] = CORE_MAX_HEALTH;
         this.architectOverride = false;
         this.victoryState = VictoryState.IN_PROGRESS;
     }

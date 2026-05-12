@@ -1382,17 +1382,17 @@ public class GameCanvas extends JComponent {
         g.drawString("ARCHITECT", panelX + 12, 30);
         if (player != null && player.getCoreHealthBar() != null) {
             int[] coreHealth = player.getCoreHealthBar().getCoreHealth();
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < coreHealth.length; i++) {
                 int ch = coreHealth[i];
                 g.setColor(new java.awt.Color(60, 20, 20));
-                g.fillRect(panelX + 12, 50 + i * 40, panelW - 24, 28);
+                g.fillRect(panelX + 12, 50 + i * 34, panelW - 24, 24);
                 for (int h = 0; h < ch; h++) {
                     g.setColor(java.awt.Color.RED);
-                    g.fillRect(panelX + 14 + h * 22, 53 + i * 40, 18, 22);
+                    g.fillRect(panelX + 14 + h * 22, 52 + i * 34, 18, 20);
                 }
                 g.setColor(java.awt.Color.DARK_GRAY);
                 g.setFont(new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 11));
-                g.drawString("CORE " + (i + 1), panelX + 14, 48 + i * 40);
+                g.drawString("CORE " + (i + 1), panelX + 14, 48 + i * 34);
             }
         }
         g.setColor(new java.awt.Color(200, 200, 200));

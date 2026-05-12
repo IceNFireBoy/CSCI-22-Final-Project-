@@ -143,6 +143,9 @@ public class Physics {
         }
 
 
+        wallCling(player);
+
+
         if (player.getY() > fallDeathY) {
             player.loseLife();
         }
