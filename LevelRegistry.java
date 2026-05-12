@@ -92,8 +92,6 @@ public class LevelRegistry { // Stateless factory; no instance methods
         LevelState state = new LevelState();                     // Fresh state object
         state.currentLevel = 4;                                  // Player-facing level 4 (the boss)
         state.currentPhase = LevelState.GamePhase.BOSS;          // Renderer flips into the boss arena view
-        state.timeRemainingMs = 0L;                              // Boss has no time limit
-        state.timerActive = false;                               // Timer disabled during boss
         return new LoadResult(arena, state);                     // Bundle and return
     }
 

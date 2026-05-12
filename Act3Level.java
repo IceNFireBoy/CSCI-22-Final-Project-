@@ -37,7 +37,6 @@ public class Act3Level extends LevelGenerator { // Concrete Act 3 generator
 
         // ---- State ----
         setPhase(LevelState.GamePhase.ACT3); // Act 3 phase: INVISIBLE platforms + full hazard suite
-        setTimeLimit(240);                   // 4-minute timer for the wider darkness sections
         setBlockBudget(20);                  // Largest Apprentice budget — Wanderer's hardest run
         setSpawn(60, 652);                   // Same spawn convention
 

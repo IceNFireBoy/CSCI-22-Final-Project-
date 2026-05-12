@@ -73,9 +73,9 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
 
     /**
      * The mutable {@link LevelState} for this level, populated by
-     * {@link #setPhase(LevelState.GamePhase)}, {@link #setTimeLimit(int)},
-     * {@link #setBlockBudget(int)}, and {@link #setSpawn(int, int)}.
-     * Defaults match {@link LevelState}'s no-arg constructor.
+     * {@link #setPhase(LevelState.GamePhase)}, {@link #setBlockBudget(int)},
+     * and {@link #setSpawn(int, int)}. Defaults match {@link LevelState}'s
+     * no-arg constructor.
      */
     protected final LevelState state = new LevelState(); // Pre-configured; helpers overwrite fields
 
@@ -111,16 +111,6 @@ public abstract class LevelGenerator { // Abstract — every level subclass over
      */
     protected void setPhase(LevelState.GamePhase phase) { // Direct write to state.currentPhase
         state.currentPhase = phase;                        // Caller is responsible for consistency with the level number
-    }
-
-    /**
-     * Sets the level countdown timer in seconds.
-     *
-     * @param seconds the per-level time budget; converted to milliseconds for
-     *                {@link LevelState#timeRemainingMs}
-     */
-    protected void setTimeLimit(int seconds) { // Helper for the common per-level field
-        state.timeRemainingMs = seconds * 1000L; // Convert to ms for the countdown loop
     }
 
     /**

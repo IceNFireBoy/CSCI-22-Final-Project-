@@ -10,7 +10,7 @@
  *
  * <p>Helper reference (inherited from {@link LevelGenerator}):
  * <pre>
- *   setPhase(GamePhase) / setTimeLimit(seconds) / setBlockBudget(blocks) / setSpawn(x, y)
+ *   setPhase(GamePhase) / setBlockBudget(blocks) / setSpawn(x, y)
  *   platform(BRICK|SLIDE|SPRING|WALL|CRUMBLE|INVISIBLE|MIMIC, x, y)
  *   platform(type, x, y, w, h)
  *   brickRow(startX, y, count)               // 32-px gap by default
@@ -55,7 +55,6 @@ public class Act1Level extends LevelGenerator { // Concrete Act 1 generator
 
         // ---- State ----
         setPhase(LevelState.GamePhase.ACT1); // Act 1 phase: full light, no special darkness mechanics
-        setTimeLimit(90);                    // 90 second timer
         setBlockBudget(12);                  // Apprentice has 12 placement tokens
         setSpawn(60, 652);                   // Wanderer spawn near the bottom-left ground
 

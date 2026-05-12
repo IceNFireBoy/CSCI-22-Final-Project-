@@ -36,7 +36,6 @@ public class Act2Level extends LevelGenerator { // Concrete Act 2 generator
 
         // ---- State ----
         setPhase(LevelState.GamePhase.ACT2); // Act 2 phase: hazard suite + faithful meter
-        setTimeLimit(180);                   // 3-minute timer for the wider mid-act layout
         setBlockBudget(16);                  // Slightly larger Apprentice budget for harder traversal
         setSpawn(60, 652);                   // Same spawn as Act 1 by default
 

@@ -3,13 +3,11 @@
  * permanently once a configured duration has elapsed. Encourages the players
  * to commit to the choice early rather than backtracking late in the level.
  *
- * <p>Implementation note: {@link LevelState#timeRemainingMs} is the level's
- * countdown timer (counts down from the per-level limit toward zero). We
- * cache the {@code timeRemainingMs} on the first call (effectively "level
- * start") and then report revealed only while less than {@code durationMs}
- * has elapsed since that snapshot. This avoids needing a per-instance "level
- * start" wall-clock — we read it lazily on the first tick the concealment is
- * polled.</p>
+ * <p>Implementation note: we cache {@link System#currentTimeMillis()} on the
+ * first call (effectively "level start") and then report revealed only while
+ * less than {@code durationMs} has elapsed since that snapshot. This avoids
+ * needing a per-instance "level start" wall-clock — we read it lazily on the
+ * first tick the concealment is polled.</p>
  *
  * @author [YOUR NAME]
  * @id [YOUR ID]
