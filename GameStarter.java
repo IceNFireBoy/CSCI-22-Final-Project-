@@ -2093,6 +2093,11 @@ public class GameStarter {
         levelReadyDelay = 0;
 
 
+        if (physicsEngine != null) {
+            physicsEngine.setFallDeathY(Physics.DEFAULT_FALL_DEATH_Y);
+        }
+
+
 
         if (broadcast && GameSession.getInstance().isWanderer()) {
             lastHandledLevel = levelNum;
@@ -2200,7 +2205,15 @@ public class GameStarter {
         levelReadyDelay = 0;
 
 
+        if (physicsEngine != null) {
+            physicsEngine.setFallDeathY(BossArenaGenerator.ARENA_H + 256);
+        }
 
+
+        levelState.currentPhase = LevelState.GamePhase.BOSS;
+        GameSession.getInstance().setCurrentAct("BOSS");
+        levelState.currentLevel = 4;
+        lastHandledLevel = 4;
 
 
         if (player != null) {
@@ -2213,11 +2226,10 @@ public class GameStarter {
             player.setVelX(0);
             player.setVelY(0);
             player.setRespawn(spawnX, spawnY);
+            player.setHealth(player.getMaxHealth());
+            player.setDead(false);
+            player.clearRestartToAct1Pending();
         }
-
-
-        levelState.currentPhase = LevelState.GamePhase.BOSS;
-        GameSession.getInstance().setCurrentAct("BOSS");
 
 
 

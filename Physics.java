@@ -41,7 +41,11 @@ public class Physics {
     private static final float TERMINAL_VELOCITY = 18f;
 
 
-    private static final int FALL_DEATH_Y = 900;
+    public static final int DEFAULT_FALL_DEATH_Y = 900;
+    private int fallDeathY = DEFAULT_FALL_DEATH_Y;
+
+    public void setFallDeathY(int y) { this.fallDeathY = y; }
+    public int  getFallDeathY()      { return fallDeathY; }
 
 
 
@@ -139,7 +143,7 @@ public class Physics {
         }
 
 
-        if (player.getY() > FALL_DEATH_Y) {
+        if (player.getY() > fallDeathY) {
             player.loseLife();
         }
     }
